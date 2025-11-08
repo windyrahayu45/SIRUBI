@@ -26,6 +26,7 @@ class SanitasiRumah extends Model
         'kondisi_sumber_air_minum_id',
         'sumber_listrik_id',
     ];
+    
 
     // ======================
     // 🔗 RELASI ANTAR TABEL

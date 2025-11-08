@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class DBangunanBeradaLimbah extends Model
 {
     protected $table = 'd_bangunan_berada_limbah';
+    protected $primaryKey = 'id_bangunan_berada_limbah';
     protected $fillable = ['id_bangunan_berada_limbah', 'bangunan_berada_limbah'];
     public $timestamps = false;
 

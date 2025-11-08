@@ -4,12 +4,16 @@ namespace App\Livewire\Rumah;
 
 use App\Models\Rumah;
 use App\Models\TblBantuan;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Livewire\Component;
 
 class Show extends Component
 {
-    public $rumah;
+    public $rumah, $namaPemilik = '';
     public $bantuanRiwayat = [];
+
+    
+       protected $listeners = ['deleteRumah'];
 
     public function mount($id)
     {
@@ -33,7 +37,54 @@ class Show extends Component
         $this->bantuanRiwayat = TblBantuan::whereIn('kk', $noKkList)
             ->orderBy('tahun', 'desc')
             ->get();
+
+         $kepala = $this->rumah->kepalaKeluarga?->sortBy('id')->first();
+
+        // Dari kepala keluarga pertama, ambil anggota pertama (berdasarkan id)
+        $anggotaPertama = $kepala?->anggota?->sortBy('id')->first();
+
+        // Jika ada nama anggota, tampilkan
+        $this->namaPemilik = $anggotaPertama ? e($anggotaPertama->nama) : '-';
     }
+
+    public function cetakPdf()
+    {
+        
+
+        $pdf = Pdf::loadView('pdf.rumah-full', [
+            'rumah' => $this->rumah,
+            'namaPemilik' => $this->namaPemilik,
+            'bantuanRiwayat' => $this->bantuanRiwayat
+        ])->setPaper('a4', 'portrait');
+
+        return response()->streamDownload(
+            fn () => print($pdf->output()),
+            'Data_Rumah_' . ($this->namaPemilik ?? 'Tanpa_Nama') . '.pdf'
+        );
+    }
+
+    public function goToEdit($id)
+    {
+        return redirect()->route('rumah.edit', $id);
+    }
+
+    public function deleteRumah($payload = [])
+    {
+        $id = $payload['id'] ?? null;
+
+        if (!$id) return;
+
+        $rumah = Rumah::find($id);
+
+        if ($rumah) {
+            //$rumah->delete();
+            
+            $this->dispatch('rumahDeleted', [
+                'message' => "Data rumah ID {$id} berhasil dihapus!"
+            ]);
+        }
+    }
+
 
     public function render()
     {

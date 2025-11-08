@@ -340,7 +340,7 @@
 
 									<div class="menu-item">
 										<!--begin:Menu link-->
-										<a class="menu-link {{ request()->routeIs('data*')  ? 'active' : '' }} " href="{{ url('data') }}">
+										<a class="menu-link {{ request()->routeIs('data*') || request()->routeIs('rumah*')  ? 'active' : '' }} " href="{{ url('data') }}">
 											<span class="menu-icon">
 												<!--begin::Svg Icon | path: icons/duotune/general/gen014.svg-->
 												<span class="svg-icon svg-icon-2">

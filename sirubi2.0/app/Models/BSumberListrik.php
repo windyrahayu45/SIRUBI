@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class BSumberListrik extends Model
 {
     protected $table = 'b_sumber_listrik';
+    protected $primaryKey = 'id_sumber_listrik';
     protected $fillable = ['id_sumber_listrik', 'sumber_listrik'];
     public $timestamps = false;
 

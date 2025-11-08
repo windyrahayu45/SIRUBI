@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class IStatusImb extends Model
 {
     protected $table = 'i_status_imb';
+    protected $primaryKey = 'id_status_imb';
     protected $fillable = ['id_status_imb', 'status_imb'];
     public $timestamps = false;
 

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class IStatusKepemilikanTanah extends Model
 {
     protected $table = 'i_status_kepemilikan_tanah';
+    protected $primaryKey = 'id_status_kepemilikan_tanah';
     protected $fillable = ['id_status_kepemilikan_tanah', 'status_kepemilikan_tanah'];
     public $timestamps = false;
 

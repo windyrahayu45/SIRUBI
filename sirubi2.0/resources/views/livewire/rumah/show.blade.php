@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
 <div>
     <div class="d-flex flex-column flex-column-fluid">
         <!--begin::Toolbar-->
@@ -33,91 +33,47 @@
                 <div class="d-flex align-items-center gap-2 gap-lg-3">
                     <!--begin::Filter menu-->
                     <div class="m-0">
-                        <!--begin::Menu toggle-->
-                        <a href="#" class="btn  btn-sm fw-bold btn-primary" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
-                        <!--begin::Svg Icon | path: icons/duotune/general/gen031.svg-->
-                        <span class="svg-icon svg-icon-6 svg-icon-muted me-1">
+                       
+
+                    
+                        <a href="#" class="btn btn-light btn-active-light-primary btn-sm show menu-dropdown" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">Actions
+                        <!--begin::Svg Icon | path: icons/duotune/arrows/arr072.svg-->
+                        <span class="svg-icon svg-icon-5 m-0">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z" fill="currentColor" />
+                                <path d="M11.4343 12.7344L7.25 8.55005C6.83579 8.13583 6.16421 8.13584 5.75 8.55005C5.33579 8.96426 5.33579 9.63583 5.75 10.05L11.2929 15.5929C11.6834 15.9835 12.3166 15.9835 12.7071 15.5929L18.25 10.05C18.6642 9.63584 18.6642 8.96426 18.25 8.55005C17.8358 8.13584 17.1642 8.13584 16.75 8.55005L12.5657 12.7344C12.2533 13.0468 11.7467 13.0468 11.4343 12.7344Z" fill="currentColor"></path>
                             </svg>
                         </span>
-                        <!--end::Svg Icon-->Actions</a>
-                        <!--end::Menu toggle-->
-                        <!--begin::Menu 1-->
-                        <div class="menu menu-sub menu-sub-dropdown w-250px w-md-300px" data-kt-menu="true" id="kt_menu_637dc78d8451e">
-                            <!--begin::Header-->
-                            <div class="px-7 py-5">
-                                <div class="fs-5 text-dark fw-bold">Filter Options</div>
+                        <!--end::Svg Icon--></a>
+                        <!--begin::Menu-->
+                        <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-125px py-4" data-kt-menu="true" data-popper-placement="bottom-end" style="z-index: 107; position: fixed; inset: 0px 0px auto auto; margin: 0px; transform: translate(-219px, 443px);">
+                            <!--begin::Menu item-->
+                            <div class="menu-item px-3">
+                                <a href="#" class="menu-link px-3"
+                                wire:click.prevent="goToEdit({{ $rumah->id_rumah }})">
+                                    <i class="ki-duotone ki-pencil fs-5 text-success me-2"></i>
+                                    Edit
+                                </a>
                             </div>
-                            <!--end::Header-->
-                            <!--begin::Menu separator-->
-                            <div class="separator border-gray-200"></div>
-                            <!--end::Menu separator-->
-                            <!--begin::Form-->
-                            <div class="px-7 py-5">
-                                <!--begin::Input group-->
-                                <div class="mb-10">
-                                    <!--begin::Label-->
-                                    <label class="form-label fw-semibold">Status:</label>
-                                    <!--end::Label-->
-                                    <!--begin::Input-->
-                                    <div>
-                                        <select class="form-select form-select-solid" data-kt-select2="true" data-placeholder="Select option" data-dropdown-parent="#kt_menu_637dc78d8451e" data-allow-clear="true">
-                                            <option></option>
-                                            <option value="1">Approved</option>
-                                            <option value="2">Pending</option>
-                                            <option value="2">In Process</option>
-                                            <option value="2">Rejected</option>
-                                        </select>
-                                    </div>
-                                    <!--end::Input-->
-                                </div>
-                                <!--end::Input group-->
-                                <!--begin::Input group-->
-                                <div class="mb-10">
-                                    <!--begin::Label-->
-                                    <label class="form-label fw-semibold">Member Type:</label>
-                                    <!--end::Label-->
-                                    <!--begin::Options-->
-                                    <div class="d-flex">
-                                        <!--begin::Options-->
-                                        <label class="form-check form-check-sm form-check-custom form-check-solid me-5">
-                                            <input class="form-check-input" type="checkbox" value="1" />
-                                            <span class="form-check-label">Author</span>
-                                        </label>
-                                        <!--end::Options-->
-                                        <!--begin::Options-->
-                                        <label class="form-check form-check-sm form-check-custom form-check-solid">
-                                            <input class="form-check-input" type="checkbox" value="2" checked="checked" />
-                                            <span class="form-check-label">Customer</span>
-                                        </label>
-                                        <!--end::Options-->
-                                    </div>
-                                    <!--end::Options-->
-                                </div>
-                                <!--end::Input group-->
-                                <!--begin::Input group-->
-                                <div class="mb-10">
-                                    <!--begin::Label-->
-                                    <label class="form-label fw-semibold">Notifications:</label>
-                                    <!--end::Label-->
-                                    <!--begin::Switch-->
-                                    <div class="form-check form-switch form-switch-sm form-check-custom form-check-solid">
-                                        <input class="form-check-input" type="checkbox" value="" name="notifications" checked="checked" />
-                                        <label class="form-check-label">Enabled</label>
-                                    </div>
-                                    <!--end::Switch-->
-                                </div>
-                                <!--end::Input group-->
-                                <!--begin::Actions-->
-                                <div class="d-flex justify-content-end">
-                                    <button type="reset" class="btn btn-sm btn-light btn-active-light-primary me-2" data-kt-menu-dismiss="true">Reset</button>
-                                    <button type="submit" class="btn btn-sm btn-primary" data-kt-menu-dismiss="true">Apply</button>
-                                </div>
-                                <!--end::Actions-->
+
+                            <div class="menu-item px-3">
+                                <a href="#" class="menu-link px-3 text-danger"
+                                onclick="confirmDelete({{ $rumah->id_rumah }})">
+                                    <i class="ki-duotone ki-trash fs-5 text-danger me-2"></i>
+                                    Hapus
+                                </a>
                             </div>
-                            <!--end::Form-->
+
+                           <div class="menu-item px-3">
+                                <a href="#" class="menu-link px-3 text-primary" id="btnCetakPdf">
+                                    <i class="ki-duotone ki-printer fs-5 text-primary me-2"></i>
+                                    Cetak PDF
+                                </a>
+                            </div>
+
+                            <!--end::Menu item-->
                         </div>
+                        <!--end::Menu-->
+													
                         <!--end::Menu 1-->
                     </div>
                     <!--end::Filter menu-->
@@ -1095,90 +1051,90 @@
                 </div>
 
 
-@php
-    $penilaian = $rumah->penilaian;
+                @php
+                    $penilaian = $rumah->penilaian;
 
-    // Status rumah
-    $isLayak = ($penilaian->status_rumah === 'RLH');
-    $warna = $isLayak ? 'success' : 'danger';
-    $judul = $isLayak ? 'RUMAH LAYAK HUNI' : 'RUMAH TIDAK LAYAK HUNI';
+                    // Status rumah
+                    $isLayak = ($penilaian->status_rumah === 'RLH');
+                    $warna = $isLayak ? 'success' : 'danger';
+                    $judul = $isLayak ? 'RUMAH LAYAK HUNI' : 'RUMAH TIDAK LAYAK HUNI';
 
-    // Backlog
-    $backlog = ($rumah->kepalaKeluarga->count() > 1) ? 'BACKLOG' : 'TIDAK BACKLOG';
-    $warnaBacklog = ($rumah->kepalaKeluarga->count() > 1) ? 'warning' : 'primary';
+                    // Backlog
+                    $backlog = ($rumah->kepalaKeluarga->count() > 1) ? 'BACKLOG' : 'TIDAK BACKLOG';
+                    $warnaBacklog = ($rumah->kepalaKeluarga->count() > 1) ? 'warning' : 'primary';
 
-    // Luas rumah
-    $statusLuas = ($penilaian->status_luas == 1) ? 'LUAS RUMAH CUKUP' : 'LUAS RUMAH KURANG';
-    $warnaLuas = ($penilaian->status_luas == 1) ? 'success' : 'danger';
+                    // Luas rumah
+                    $statusLuas = ($penilaian->status_luas == 1) ? 'LUAS RUMAH CUKUP' : 'LUAS RUMAH KURANG';
+                    $warnaLuas = ($penilaian->status_luas == 1) ? 'success' : 'danger';
 
-    $nilaiTotal = $penilaian->nilai ?? '-';
-@endphp
+                    $nilaiTotal = $penilaian->nilai ?? '-';
+                @endphp
 
-<div class="card card-flush border border-gray-200 shadow-sm mt-5">
-    <!--begin::Header-->
-    <div class="card-header pt-5">
-        <h3 class="card-title align-items-start flex-column">
-            <span class="card-label fw-bold text-dark fs-3">{{ $judul }}</span>
-            <span class="text-gray-500 mt-1 fw-semibold fs-7">
-                Nilai Total Penilaian: <span class="fw-bold text-{{ $warna }}">{{ $nilaiTotal }}</span>
-            </span>
-        </h3>
+                <div class="card card-flush border border-gray-200 shadow-sm mt-5">
+                    <!--begin::Header-->
+                    <div class="card-header pt-5">
+                        <h3 class="card-title align-items-start flex-column">
+                            <span class="card-label fw-bold text-dark fs-3">{{ $judul }}</span>
+                            <span class="text-gray-500 mt-1 fw-semibold fs-7">
+                                Nilai Total Penilaian: <span class="fw-bold text-{{ $warna }}">{{ $nilaiTotal }}</span>
+                            </span>
+                        </h3>
 
-        <div class="card-toolbar">
-            <span class="badge badge-light-{{ $warna }} fs-base mt-n3">
-                <span class="svg-icon svg-icon-5 svg-icon-{{ $warna }} ms-n1 me-1">
-                    <i class="ki-duotone ki-home fs-5 text-{{ $warna }}"></i>
-                </span>
-                {{ strtoupper($penilaian->status_rumah ?? '-') }}
-            </span>
-        </div>
-    </div>
-    <!--end::Header-->
-
-    <!--begin::Body-->
-    <div class="card-body d-flex align-items-end pt-6">
-        <div class="row align-items-center mx-0 w-100">
-            <div class="col-7 px-0">
-                <div class="d-flex flex-column content-justify-center">
-                    <!-- Status Rumah -->
-                    <div class="d-flex fs-6 fw-semibold align-items-center mb-4">
-                        <div class="bullet bg-{{ $warna }} me-3" style="border-radius:3px;width:12px;height:12px"></div>
-                        <div class="fs-5 fw-bold text-gray-700 me-5">Status Rumah</div>
-                        <div class="ms-auto fw-bolder text-gray-800">{{ $judul }}</div>
+                        <div class="card-toolbar">
+                            <span class="badge badge-light-{{ $warna }} fs-base mt-n3">
+                                <span class="svg-icon svg-icon-5 svg-icon-{{ $warna }} ms-n1 me-1">
+                                    <i class="ki-duotone ki-home fs-5 text-{{ $warna }}"></i>
+                                </span>
+                                {{ strtoupper($penilaian->status_rumah ?? '-') }}
+                            </span>
+                        </div>
                     </div>
+                    <!--end::Header-->
 
-                    <!-- Backlog -->
-                    <div class="d-flex fs-6 fw-semibold align-items-center mb-4">
-                        <div class="bullet bg-{{ $warnaBacklog }} me-3" style="border-radius:3px;width:12px;height:12px"></div>
-                        <div class="fs-5 fw-bold text-gray-700 me-5">Kondisi Backlog</div>
-                        <div class="ms-auto fw-bolder text-gray-800">{{ $backlog }}</div>
-                    </div>
+                    <!--begin::Body-->
+                    <div class="card-body d-flex align-items-end pt-6">
+                        <div class="row align-items-center mx-0 w-100">
+                            <div class="col-7 px-0">
+                                <div class="d-flex flex-column content-justify-center">
+                                    <!-- Status Rumah -->
+                                    <div class="d-flex fs-6 fw-semibold align-items-center mb-4">
+                                        <div class="bullet bg-{{ $warna }} me-3" style="border-radius:3px;width:12px;height:12px"></div>
+                                        <div class="fs-5 fw-bold text-gray-700 me-5">Status Rumah</div>
+                                        <div class="ms-auto fw-bolder text-gray-800">{{ $judul }}</div>
+                                    </div>
 
-                    <!-- Luas Rumah -->
-                    <div class="d-flex fs-6 fw-semibold align-items-center">
-                        <div class="bullet bg-{{ $warnaLuas }} me-3" style="border-radius:3px;width:12px;height:12px"></div>
-                        <div class="fs-5 fw-bold text-gray-700 me-5">Status Luas Rumah</div>
-                        <div class="ms-auto fw-bolder text-gray-800">{{ $statusLuas }}</div>
+                                    <!-- Backlog -->
+                                    <div class="d-flex fs-6 fw-semibold align-items-center mb-4">
+                                        <div class="bullet bg-{{ $warnaBacklog }} me-3" style="border-radius:3px;width:12px;height:12px"></div>
+                                        <div class="fs-5 fw-bold text-gray-700 me-5">Kondisi Backlog</div>
+                                        <div class="ms-auto fw-bolder text-gray-800">{{ $backlog }}</div>
+                                    </div>
+
+                                    <!-- Luas Rumah -->
+                                    <div class="d-flex fs-6 fw-semibold align-items-center">
+                                        <div class="bullet bg-{{ $warnaLuas }} me-3" style="border-radius:3px;width:12px;height:12px"></div>
+                                        <div class="fs-5 fw-bold text-gray-700 me-5">Status Luas Rumah</div>
+                                        <div class="ms-auto fw-bolder text-gray-800">{{ $statusLuas }}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-5 d-flex justify-content-end px-0">
+                                <!-- Grafik dummy / ring status -->
+                                <div id="status_rumah_chart" class="h-150px w-150px position-relative">
+                                    <canvas id="rumahChart"></canvas>
+                                    <div class="position-absolute top-50 start-50 translate-middle text-center">
+                                        <span class="fw-bold fs-3 text-gray-700">{{ $nilaiTotal }}</span>
+                                        <div class="text-gray-500 fs-8">Nilai</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <small><i>*Kriteria RLH atau RTLH dilihat dari kondisi <strong>Atap</strong>, <strong>Lantai</strong> dan <strong>Dinding</strong> (<strong>ALADIN</strong>).</i></small>
+                        </div>
                     </div>
+                    <!--end::Body-->
                 </div>
-            </div>
-
-            <div class="col-5 d-flex justify-content-end px-0">
-                <!-- Grafik dummy / ring status -->
-                <div id="status_rumah_chart" class="h-150px w-150px position-relative">
-                    <canvas id="rumahChart"></canvas>
-                    <div class="position-absolute top-50 start-50 translate-middle text-center">
-                        <span class="fw-bold fs-3 text-gray-700">{{ $nilaiTotal }}</span>
-                        <div class="text-gray-500 fs-8">Nilai</div>
-                    </div>
-                </div>
-            </div>
-
-             <small><i>*Kriteria RLH atau RTLH dilihat dari kondisi <strong>Atap</strong>, <strong>Lantai</strong> dan <strong>Dinding</strong> (<strong>ALADIN</strong>).</i></small>
-        </div>
-    </div>
-    <!--end::Body-->
-</div>
 
             </div>
         </div>
@@ -1186,6 +1142,8 @@
 
 @push('js')
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const lat = {{ $rumah->latitude ?? '0' }};
@@ -1234,6 +1192,122 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // --- Fix rendering in hidden containers (delay size update) ---
     setTimeout(() => map.invalidateSize(), 500);
+
+
+
+     window.confirmDelete = function(id) {
+        event.preventDefault(); // 🧩 Hindari reload form/link
+
+        Swal.fire({
+            title: 'Yakin hapus data ini?',
+            text: 'Data akan dihapus secara permanen!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ya, hapus!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // 🔥 Dispatch event ke Livewire TANPA render ulang tabel
+                console.log('🔥 Dispatch deleteRumah untuk ID:', id);
+           Livewire.dispatch('deleteRumah', [{ id: id }]);
+
+        }
+        });
+    };
+    
 });
 </script>
+
+
+<script>
+document.addEventListener('livewire:init', () => {
+    console.log('✅ Livewire initialized');
+
+   
+
+    // ✅ Tangkap event dari Livewire
+    Livewire.on('rumahDeleted', (data) => {
+        if (window.rumahTable) {
+            window.rumahTable.ajax.reload(null, false);
+        }
+
+      Swal.fire({
+            toast: true,
+            icon: 'success',
+            text: 'Data berhasil dihapus!',
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
+        });
+
+        setTimeout(() => {
+            window.location.href = "{{ route('data') }}";
+        }, 1500);
+    });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const btn = document.getElementById('btnCetakPdf');
+    if (!btn) return;
+
+    btn.addEventListener('click', async function (e) {
+        e.preventDefault();
+
+        Swal.fire({
+            title: 'Mempersiapkan PDF...',
+            text: 'Mohon tunggu sebentar, sistem sedang membuat dokumen.',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        try {
+            // Ambil file dari route PDF (return response()->streamDownload)
+            const response = await fetch("{{ route('rumah.pdf', $rumah->id_rumah) }}");
+
+            if (!response.ok) throw new Error('Gagal membuat PDF.');
+
+            // Konversi ke blob (file binary)
+            const blob = await response.blob();
+
+            // Buat URL download
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+
+            // Nama file hasil download
+            a.download = "Data_Rumah_{{ $namaPemilik ?? 'Tanpa_Nama' }}.pdf";
+
+            // Jalankan download
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+
+            // Bersihkan URL blob
+            window.URL.revokeObjectURL(url);
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: 'File PDF berhasil diunduh.',
+                timer: 2500,
+                showConfirmButton: false
+            });
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                text: error.message || 'Terjadi kesalahan saat membuat PDF.',
+            });
+        }
+    });
+});
+</script>
+
+
+
 @endpush

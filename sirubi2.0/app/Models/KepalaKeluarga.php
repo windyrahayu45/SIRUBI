@@ -9,8 +9,9 @@ use Illuminate\Database\Eloquent\Model;
 class KepalaKeluarga extends Model
 {
     protected $table = 'kepala_keluarga';
+    protected $primaryKey = 'id';
     protected $fillable = [
-        'rumah_id', 'no_kk', 'nama_kepala', 'nik_kepala', 'jumlah_anggota'
+        'rumah_id', 'no_kk', 'kode_kk'
     ];
 
     public function rumah()

@@ -27,8 +27,7 @@
 
                 <!--begin::Actions-->
                 <div class="d-flex align-items-center gap-2 gap-lg-3">
-                    <a href="#" class="btn btn-sm fw-bold btn-primary" data-bs-toggle="modal"
-                        data-bs-target="#kt_modal_add_rumah">Tambah Rumah</a>
+                    <a href="{{ route('rumah.add') }}" class="btn btn-sm fw-bold btn-primary">Tambah Rumah</a>
                 </div>
                 <!--end::Actions-->
             </div>

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class DKondisiPenutupAtap extends Model
 {
     protected $table = 'd_kondisi_penutup_atap';
+    protected $primaryKey = 'id_kondisi_penutup_atap';
     protected $fillable = ['id_kondisi_penutup_atap', 'kondisi_penutup_atap'];
     public $timestamps = false;
 

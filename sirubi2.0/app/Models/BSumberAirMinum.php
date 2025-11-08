@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class BSumberAirMinum extends Model
 {
     protected $table = 'b_sumber_air_minum';
+    protected $primaryKey = 'id_sumber_air_minum';
     protected $fillable = ['id_sumber_air_minum', 'sumber_air_minum'];
     public $timestamps = false;
 

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class DMaterialLantaiTerluas extends Model
 {
     protected $table = 'd_material_lantai_terluas';
+    protected $primaryKey = 'id_material_lantai_terluas';
     protected $fillable = ['id_material_lantai_terluas', 'material_lantai_terluas'];
     public $timestamps = false;
 

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class IPendidikanTerakhir extends Model
 {
     protected $table = 'i_pendidikan_terakhir';
+    protected $primaryKey = 'id_pendidikan_terakhir';
     protected $fillable = ['id_pendidikan_terakhir', 'pendidikan_terakhir'];
     public $timestamps = false;
 

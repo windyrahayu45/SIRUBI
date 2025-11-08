@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class DKondisiDinding extends Model
 {
     protected $table = 'd_kondisi_dinding';
+    protected $primaryKey = 'id_kondisi_dinding';
     protected $fillable = ['id_kondisi_dinding', 'kondisi_dinding'];
     public $timestamps = false;
 
