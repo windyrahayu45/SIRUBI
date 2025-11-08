@@ -984,7 +984,7 @@ class Add extends Component
 
             foreach (array_keys($requiredPhotos) as $field) {
                 $path = $this->$field->storeAs(
-                    "public/rumah/{$rumah->id_rumah}",
+                    "rumah/{$rumah->id_rumah}",
                     "{$field}.jpg"
                 );
                // $dokumen->$field = str_replace('public/', 'storage/', $path);
