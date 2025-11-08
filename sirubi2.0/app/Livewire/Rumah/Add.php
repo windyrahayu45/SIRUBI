@@ -987,7 +987,9 @@ class Add extends Component
                     "public/rumah/{$rumah->id_rumah}",
                     "{$field}.jpg"
                 );
-                $dokumen->$field = str_replace('public/', 'storage/', $path);
+               // $dokumen->$field = str_replace('public/', 'storage/', $path);
+
+                $dokumen->$field = "rumah/{$rumah->id_rumah}/{$field}.jpg";
             }
             $dokumen->save();
 
