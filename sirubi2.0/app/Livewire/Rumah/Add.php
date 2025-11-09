@@ -392,43 +392,43 @@ class Add extends Component
             }
         }
 
-        if ($this->currentStep === 2 && $step > 2) {
-            if (count($this->kks) < 1) {
-                $this->dispatch('swal:error', [
-                    'title' => 'Data Belum Lengkap',
-                    'text'  => 'Harus menambahkan minimal 1 KK sebelum melanjutkan.',
-                ]);
-                return;
-            }
+        // if ($this->currentStep === 2 && $step > 2) {
+        //     if (count($this->kks) < 1) {
+        //         $this->dispatch('swal:error', [
+        //             'title' => 'Data Belum Lengkap',
+        //             'text'  => 'Harus menambahkan minimal 1 KK sebelum melanjutkan.',
+        //         ]);
+        //         return;
+        //     }
 
-            foreach ($this->kks as $kkIndex => $kk) {
-                if (empty($kk['no_kk'])) {
-                    $this->dispatch('swal:error', [
-                        'title' => 'Nomor KK Belum Diisi',
-                        'text'  => 'Nomor KK ke-' . ($kkIndex + 1) . ' wajib diisi.',
-                    ]);
-                    return;
-                }
+        //     foreach ($this->kks as $kkIndex => $kk) {
+        //         if (empty($kk['no_kk'])) {
+        //             $this->dispatch('swal:error', [
+        //                 'title' => 'Nomor KK Belum Diisi',
+        //                 'text'  => 'Nomor KK ke-' . ($kkIndex + 1) . ' wajib diisi.',
+        //             ]);
+        //             return;
+        //         }
 
-                if (count($kk['anggota']) < 1) {
-                    $this->dispatch('swal:error', [
-                        'title' => 'Anggota Belum Ada',
-                        'text'  => 'KK ke-' . ($kkIndex + 1) . ' harus memiliki minimal 1 anggota.',
-                    ]);
-                    return;
-                }
+        //         if (count($kk['anggota']) < 1) {
+        //             $this->dispatch('swal:error', [
+        //                 'title' => 'Anggota Belum Ada',
+        //                 'text'  => 'KK ke-' . ($kkIndex + 1) . ' harus memiliki minimal 1 anggota.',
+        //             ]);
+        //             return;
+        //         }
 
-                foreach ($kk['anggota'] as $anggotaIndex => $anggota) {
-                    if (empty($anggota['nama']) || empty($anggota['nik'])) {
-                        $this->dispatch('swal:error', [
-                            'title' => 'Data Anggota Belum Lengkap',
-                            'text'  => 'Nama dan NIK anggota pada KK ke-' . ($kkIndex + 1) . ' wajib diisi.',
-                        ]);
-                        return;
-                    }
-                }
-            }
-        }
+        //         foreach ($kk['anggota'] as $anggotaIndex => $anggota) {
+        //             if (empty($anggota['nama']) || empty($anggota['nik'])) {
+        //                 $this->dispatch('swal:error', [
+        //                     'title' => 'Data Anggota Belum Lengkap',
+        //                     'text'  => 'Nama dan NIK anggota pada KK ke-' . ($kkIndex + 1) . ' wajib diisi.',
+        //                 ]);
+        //                 return;
+        //             }
+        //         }
+        //     }
+        // }
 
         if ($this->currentStep === 3 && $step > 3) {
         // daftar field wajib
@@ -680,6 +680,15 @@ class Add extends Component
     public function submitForm()
     {
         $requiredPhotos = [
+            // 'foto_kk'          => 'Foto Kartu Keluarga (KK)',
+            // 'foto_ktp'         => 'Foto Kartu Tanda Penduduk (KTP)',
+            'foto_rumah_satu'  => 'Foto Rumah 1',
+            'foto_rumah_dua'   => 'Foto Rumah 2',
+            'foto_rumah_tiga'  => 'Foto Rumah 3',
+            //'foto_imb'         => 'Foto IMB',
+        ];
+
+        $wajibFoto = [
             'foto_kk'          => 'Foto Kartu Keluarga (KK)',
             'foto_ktp'         => 'Foto Kartu Tanda Penduduk (KTP)',
             'foto_rumah_satu'  => 'Foto Rumah 1',
@@ -687,6 +696,7 @@ class Add extends Component
             'foto_rumah_tiga'  => 'Foto Rumah 3',
             'foto_imb'         => 'Foto IMB',
         ];
+
 
         foreach ($requiredPhotos as $field => $label) {
             if (empty($this->$field)) {
@@ -982,15 +992,23 @@ class Add extends Component
                 'uploaded_at'  => now(),
             ]);
 
-            foreach (array_keys($requiredPhotos) as $field) {
-                $path = $this->$field->storeAs(
-                    "rumah/{$rumah->id_rumah}",
-                    "{$field}.jpg"
-                );
-               // $dokumen->$field = str_replace('public/', 'storage/', $path);
+            // foreach (array_keys($wajibFoto) as $field) {
+            //     $path = $this->$field->storeAs(
+            //         "rumah/{$rumah->id_rumah}",
+            //         "{$field}.jpg"
+            //     );
+            //    // $dokumen->$field = str_replace('public/', 'storage/', $path);
 
+            //     $dokumen->$field = "rumah/{$rumah->id_rumah}/{$field}.jpg";
+            // }
+
+            foreach (array_keys($wajibFoto) as $field) {
+            if (!empty($this->$field)) {
+                $path = $this->$field->storeAs("rumah/{$rumah->id_rumah}", "{$field}.jpg");
                 $dokumen->$field = "rumah/{$rumah->id_rumah}/{$field}.jpg";
             }
+        }
+
             $dokumen->save();
 
             DB::commit();
@@ -998,7 +1016,7 @@ class Add extends Component
             // ✅ SweetAlert success
             $this->dispatch('swal:success', [
                 'title' => 'Berhasil!',
-                'text'  => 'Data rumah beserta semua komponen dan 6 foto berhasil disimpan.',
+                'text'  => 'Data rumah beserta semua komponen dan dokumentasi berhasil disimpan.',
             ]);
 
             // Reset form & step

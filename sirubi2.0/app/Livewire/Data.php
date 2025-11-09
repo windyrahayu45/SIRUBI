@@ -2,13 +2,175 @@
 
 namespace App\Livewire;
 
+use App\Exports\BantuanSheet;
+use App\Exports\RumahExport;
 use App\Models\Rumah;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
+use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
+use ZipArchive;
 
 class Data extends Component
 {
    protected $listeners = ['refreshTable' => '$refresh', 'loadDetailRumah','deleteRumah'];
+
+   public $exportFormat = '';
+
+   public function exportData()
+    {
+        if (empty($this->exportFormat)) {
+            $this->dispatch('swal:error', [
+                'title' => 'Format belum dipilih!',
+                'text'  => 'Silakan pilih format export terlebih dahulu.',
+            ]);
+            return;
+        }
+
+        if ($this->exportFormat === 'excel') {
+            return $this->exportExcel();
+        }
+
+        if ($this->exportFormat === 'geojson') {
+            return $this->exportGeoJson();
+        }
+    }
+
+    
+   public function exportExcel()
+{
+    try {
+        ini_set('memory_limit', '4096M');
+        ini_set('max_execution_time', '1800');
+
+        $timestamp = now()->format('Ymd_His');
+        $folder = "exports_$timestamp";
+        $disk = 'public'; // gunakan disk Laravel agar lebih aman
+
+        // Buat folder public/storage/exports_20251109_1900/
+        $exportPath = storage_path("app/public/$folder");
+        if (!file_exists($exportPath)) mkdir($exportPath, 0777, true);
+
+        $files = [];
+        $maxRows = 1000;
+
+        // 🏠 1️⃣ Ekspor Rumah & KK (chunked)
+        $total = DB::table('rumah')->count();
+        $chunkCount = ceil($total / $maxRows);
+
+        for ($i = 0; $i < $chunkCount; $i++) {
+            $offset = $i * $maxRows;
+            $filename = "data_rumah_" . ($i + 1) . ".xlsx";
+
+            // Simpan file ke disk public
+            Excel::store(
+                new RumahExport($offset, $maxRows),
+                "$folder/$filename",
+                $disk
+            );
+
+            // Ambil path absolut setelah tersimpan
+            $files[] = storage_path("app/public/$folder/$filename");
+        }
+
+        // 💰 2️⃣ Ekspor Bantuan
+        $bantuanFile = "data_bantuan.xlsx";
+        Excel::store(
+            new BantuanSheet(),
+            "$folder/$bantuanFile",
+            $disk
+        );
+        $files[] = storage_path("app/public/$folder/$bantuanFile");
+
+        // 🗜️ 3️⃣ Buat ZIP
+        $zipFile = storage_path("app/public/export_data_$timestamp.zip");
+        $zip = new \ZipArchive();
+
+        if ($zip->open($zipFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
+            foreach ($files as $f) {
+                if (file_exists($f)) {
+                    $zip->addFile($f, basename($f));
+                } else {
+                    Log::warning("⚠️ File tidak ditemukan: $f");
+                }
+            }
+            $zip->close();
+        } else {
+            throw new \Exception("Gagal membuat ZIP file di: $zipFile");
+        }
+
+        // 🧹 4️⃣ Bersihkan file sementara
+        foreach ($files as $f) {
+            if (file_exists($f)) @unlink($f);
+        }
+        if (is_dir($exportPath)) @rmdir($exportPath);
+
+        // 🚀 5️⃣ Download ZIP
+        return response()->download($zipFile)->deleteFileAfterSend(true);
+
+    } catch (\Throwable $e) {
+        dd($e->getMessage(), $e->getFile(), $e->getLine());
+    }
+}
+
+
+
+public function exportGeoJson()
+{
+    try {
+        $features = [];
+
+        Rumah::with(['kelurahan.kecamatan', 'penilaian','kepalaKeluarga.anggota'])
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->chunk(500, function ($chunk) use (&$features) {
+                foreach ($chunk as $r) {
+                    $kepala = $r->kepalaKeluarga?->sortBy('id')->first();
+                    $anggotaPertama = $kepala?->anggota?->sortBy('id')->first();
+                    $namaPemilik =  $anggotaPertama ? e($anggotaPertama->nama) : '-';
+
+                    $features[] = [
+                        'type' => 'Feature',
+                        'geometry' => [
+                            'type' => 'Point',
+                            'coordinates' => [(float) $r->longitude, (float) $r->latitude],
+                        ],
+                        'properties' => [
+                            'id_rumah' => $r->id_rumah,
+                            'alamat' => $r->alamat,
+                            'nama' => $namaPemilik,
+                            'kelurahan' => $r->kelurahan->nama_kelurahan ?? '-',
+                            'kecamatan' => $r->kelurahan->kecamatan->nama_kecamatan ?? '-',
+                            'status_rumah' => $r->penilaian->status_rumah ?? '-',
+                        ],
+                    ];
+                }
+            });
+
+        $geojson = [
+            'type' => 'FeatureCollection',
+            'features' => $features,
+        ];
+
+        $fileName = 'export_rumah_' . now()->format('Ymd_His') . '.geojson';
+        $filePath = Storage::disk('public')->path($fileName);
+
+        Storage::disk('public')->put($fileName, json_encode($geojson, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+        return response()->download($filePath)->deleteFileAfterSend(true);
+    } catch (\Throwable $e) {
+        Log::error('Export GeoJSON gagal: '.$e->getMessage());
+        $this->dispatch('swal:error', [
+            'title' => 'Export Gagal!',
+            'text' => 'Kesalahan saat export GeoJSON: ' . $e->getMessage(),
+        ]);
+    }
+}
+
+
+
 
     public function render()
     {
@@ -31,7 +193,8 @@ class Data extends Component
             'bantuan',
             'kepalaKeluarga.anggota',
             'kelurahan.kecamatan',  // nested: kelurahan -> kecamatan
-        ]);
+        ])
+        ->orderBy('id_rumah', 'desc'); // 🔹 urutkan dari terbaru ke terlama
 
         return DataTables::eloquent($query)
             ->addIndexColumn()

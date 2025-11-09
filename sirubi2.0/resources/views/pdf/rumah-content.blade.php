@@ -103,6 +103,15 @@
                                             <table class="table align-middle table-row-dashed gy-3 fs-7 fw-semibold text-gray-700 mb-0">
                                                 <tbody>
                                                     <tr>
+                                                        <td class="w-40 text-gray-600">Jenis Kelamin</td>
+                                                        <td>{{ $rumah->sosialEkonomi->jenisKelamin->jenis_kelamin ?? '-' }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Usia</td>
+                                                        <td>{{ $rumah->sosialEkonomi->usia ?? '-' }} Tahun</td>
+                                                    </tr>
+
+                                                    <tr>
                                                         <td class="w-40 text-gray-600">Alamat</td>
                                                         <td>{{ $rumah->alamat ?? '-' }}</td>
                                                     </tr>
@@ -319,7 +328,7 @@
                            
                             <!--end::Card header-->
                             <!--begin::Card body-->
-                               <div class="card-body p-5">
+                                <div class="card-body p-5">
                                  <h3 class="fw-bold text-gray-800 mb-3">Aspek Keselamatan</h3>
                                     <div class="table-responsive">
                                         <table class="table align-middle table-row-dashed gy-3 fs-7 fw-semibold text-gray-700 mb-0">
@@ -520,7 +529,7 @@
                                                     </tr>
                                                     <tr>
                                                         <td>Keterangan Ventilasi</td>
-                                                        <td>{{ $rumah->sanitasi->keteranganVentilasi->keterangan_ventilasi ?? '-' }}</td>
+                                                        <td>{{ $rumah->sanitasi->keterangan_ventilasi ?? '-' }}</td>
                                                     </tr>
                                                     <tr>
                                                         <td>Kondisi Ventilasi</td>
@@ -727,7 +736,7 @@
                             <tr>
                                 @foreach($row as $label => $path)
                                     <td width="50%" style="text-align: center; vertical-align: top; padding: 10px;">
-                                        @if($path && file_exists(public_path('storage/' . $path)))
+                                        @if($path )
                                             <img 
                                                 src="{{ public_path('storage/' . $path) }}" 
                                                 alt="{{ $label }}" 

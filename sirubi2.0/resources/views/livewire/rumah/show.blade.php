@@ -108,7 +108,11 @@
                                     <a href="#" class="fs-3 text-gray-800 text-hover-primary fw-bold mb-1">Foto Rumah</a>
                                     <!--end::Name-->
                                     <div class="separator separator-dashed my-3"></div>
+                                   
                                     @if($rumah->dokumen && $rumah->dokumen->foto_rumah_satu)
+                                    {{-- @php
+    dd(asset('storage/' . $rumah->dokumen->foto_rumah_satu));
+@endphp --}}
                                         <img src="{{ asset('storage/' . $rumah->dokumen->foto_rumah_satu) }}"
                                             class="img-fluid rounded shadow-sm mb-2 preview-foto"
                                             style="max-height: 200px; object-fit: cover; cursor: pointer;"
@@ -566,6 +570,14 @@
                                             <table class="table align-middle table-row-dashed gy-3 fs-7 fw-semibold text-gray-700 mb-0">
                                                 <tbody>
                                                     <tr>
+                                                        <td class="w-40 text-gray-600">Jenis Kelamin</td>
+                                                        <td>{{ $rumah->sosialEkonomi->jenisKelamin->jenis_kelamin ?? '-' }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Kecamatan</td>
+                                                        <td>{{ $rumah->sosialEkonomi->usia ?? '-' }} Tahun</td>
+                                                    </tr>
+                                                    <tr>
                                                         <td class="w-40 text-gray-600">Alamat</td>
                                                         <td>{{ $rumah->alamat ?? '-' }}</td>
                                                     </tr>
@@ -903,9 +915,11 @@
 
                             <div class="row g-5">
                                 @foreach($fotos as $label => $path)
+
+                              
                                     <div class="col-md-4 col-sm-6">
                                         <div class="card card-bordered shadow-sm hover-elevate-up transition-all h-100">
-                                            @if($path && file_exists(public_path('storage/' . $path)))
+                                            @if($path)
                                                 <div class="overlay">
                                                     
                                                     

@@ -8,9 +8,18 @@ use App\Livewire\Rumah\Add;
 use App\Livewire\Rumah\Edit;
 use App\Livewire\Rumah\Show;
 use App\Models\Rumah;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'welcome');
+// Route::view('/', 'welcome');
+Route::get('/', function () {
+    return redirect()->route('login');
+});
+
+Route::post('/logout', function () {
+    Auth::logout();
+    return redirect()->route('login');
+})->name('logout');
 
 // Route::view('dashboard', 'dashboard')
 //     ->middleware(['auth', 'verified'])

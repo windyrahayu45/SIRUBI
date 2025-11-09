@@ -37,7 +37,7 @@ class FisikRumah extends Model
 
     public function jenisPondasi()
     {
-        return $this->belongsTo(TblJenisPondasi::class, 'jenis_pondasi_id', 'id_jenis_pondasi');
+        return $this->belongsTo(TblJenisPondasi::class, 'jenis_pondasi', 'id_jenis_pondasi');
     }
 
     public function kondisiSloof()

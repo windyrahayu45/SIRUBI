@@ -40,7 +40,9 @@ class CetakController extends Controller
 
 
         $pdf = Pdf::loadView('pdf.rumah-full', compact('rumah', 'namaPemilik', 'bantuanRiwayat', 'mapUrl'))
-            ->setPaper('a4', 'portrait');
+            ->setPaper('a4', 'portrait')
+             ->setOption('isRemoteEnabled', true)
+    ->setOption('isHtml5ParserEnabled', true);
 
         return $pdf->download('Data_Rumah_' . ($namaPemilik ?? 'Tanpa_Nama') . '.pdf');
     }
