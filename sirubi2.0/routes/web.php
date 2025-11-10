@@ -6,6 +6,7 @@ use App\Livewire\Dashboard;
 use App\Livewire\Data;
 use App\Livewire\Rumah\Add;
 use App\Livewire\Rumah\Edit;
+use App\Livewire\Rumah\Filter;
 use App\Livewire\Rumah\Show;
 use App\Models\Rumah;
 use Illuminate\Support\Facades\Auth;
@@ -53,9 +54,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // halaman edit rumah
     Route::get('/rumah/{id}/edit', Edit::class)->name('rumah.edit');
 
-   Route::get('/rumah-add', Add::class)->name('rumah.add');
+    Route::get('/rumah-add', Add::class)->name('rumah.add');
+
+     Route::get('/rumah-filter', Filter::class)->name('rumah.filter');
 
     Route::get('/rumah/{id}/pdf', [CetakController::class, 'cetak'])->name('rumah.pdf');
+
+    Route::get('/api/kelurahan-by-kecamatan', [CetakController::class, 'getKelurahan'])
+    ->name('api.kelurahan-by-kecamatan');
+
 
 
 

@@ -40,85 +40,85 @@ class Data extends Component
 
     
    public function exportExcel()
-{
-    try {
-        ini_set('memory_limit', '4096M');
-        ini_set('max_execution_time', '1800');
+    {
+        try {
+            ini_set('memory_limit', '4096M');
+            ini_set('max_execution_time', '1800');
 
-        $timestamp = now()->format('Ymd_His');
-        $folder = "exports_$timestamp";
-        $disk = 'public'; // gunakan disk Laravel agar lebih aman
+            $timestamp = now()->format('Ymd_His');
+            $folder = "exports_$timestamp";
+            $disk = 'public'; // gunakan disk Laravel agar lebih aman
 
-        // Buat folder public/storage/exports_20251109_1900/
-        $exportPath = storage_path("app/public/$folder");
-        if (!file_exists($exportPath)) mkdir($exportPath, 0777, true);
+            // Buat folder public/storage/exports_20251109_1900/
+            $exportPath = storage_path("app/public/$folder");
+            if (!file_exists($exportPath)) mkdir($exportPath, 0777, true);
 
-        $files = [];
-        $maxRows = 1000;
+            $files = [];
+            $maxRows = 1000;
 
-        // 🏠 1️⃣ Ekspor Rumah & KK (chunked)
-        $total = DB::table('rumah')->count();
-        $chunkCount = ceil($total / $maxRows);
+            // 🏠 1️⃣ Ekspor Rumah & KK (chunked)
+            $total = DB::table('rumah')->count();
+            $chunkCount = ceil($total / $maxRows);
 
-        for ($i = 0; $i < $chunkCount; $i++) {
-            $offset = $i * $maxRows;
-            $filename = "data_rumah_" . ($i + 1) . ".xlsx";
+            for ($i = 0; $i < $chunkCount; $i++) {
+                $offset = $i * $maxRows;
+                $filename = "data_rumah_" . ($i + 1) . ".xlsx";
 
-            // Simpan file ke disk public
+                // Simpan file ke disk public
+                Excel::store(
+                    new RumahExport($offset, $maxRows),
+                    "$folder/$filename",
+                    $disk
+                );
+
+                // Ambil path absolut setelah tersimpan
+                $files[] = storage_path("app/public/$folder/$filename");
+            }
+
+            // 💰 2️⃣ Ekspor Bantuan
+            $bantuanFile = "data_bantuan.xlsx";
             Excel::store(
-                new RumahExport($offset, $maxRows),
-                "$folder/$filename",
+                new BantuanSheet(),
+                "$folder/$bantuanFile",
                 $disk
             );
+            $files[] = storage_path("app/public/$folder/$bantuanFile");
 
-            // Ambil path absolut setelah tersimpan
-            $files[] = storage_path("app/public/$folder/$filename");
-        }
+            // 🗜️ 3️⃣ Buat ZIP
+            $zipFile = storage_path("app/public/export_data_$timestamp.zip");
+            $zip = new \ZipArchive();
 
-        // 💰 2️⃣ Ekspor Bantuan
-        $bantuanFile = "data_bantuan.xlsx";
-        Excel::store(
-            new BantuanSheet(),
-            "$folder/$bantuanFile",
-            $disk
-        );
-        $files[] = storage_path("app/public/$folder/$bantuanFile");
-
-        // 🗜️ 3️⃣ Buat ZIP
-        $zipFile = storage_path("app/public/export_data_$timestamp.zip");
-        $zip = new \ZipArchive();
-
-        if ($zip->open($zipFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
-            foreach ($files as $f) {
-                if (file_exists($f)) {
-                    $zip->addFile($f, basename($f));
-                } else {
-                    Log::warning("⚠️ File tidak ditemukan: $f");
+            if ($zip->open($zipFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
+                foreach ($files as $f) {
+                    if (file_exists($f)) {
+                        $zip->addFile($f, basename($f));
+                    } else {
+                        Log::warning("⚠️ File tidak ditemukan: $f");
+                    }
                 }
+                $zip->close();
+            } else {
+                throw new \Exception("Gagal membuat ZIP file di: $zipFile");
             }
-            $zip->close();
-        } else {
-            throw new \Exception("Gagal membuat ZIP file di: $zipFile");
+
+            // 🧹 4️⃣ Bersihkan file sementara
+            foreach ($files as $f) {
+                if (file_exists($f)) @unlink($f);
+            }
+            if (is_dir($exportPath)) @rmdir($exportPath);
+
+            // 🚀 5️⃣ Download ZIP
+            return response()->download($zipFile)->deleteFileAfterSend(true);
+
+        } catch (\Throwable $e) {
+            dd($e->getMessage(), $e->getFile(), $e->getLine());
         }
-
-        // 🧹 4️⃣ Bersihkan file sementara
-        foreach ($files as $f) {
-            if (file_exists($f)) @unlink($f);
-        }
-        if (is_dir($exportPath)) @rmdir($exportPath);
-
-        // 🚀 5️⃣ Download ZIP
-        return response()->download($zipFile)->deleteFileAfterSend(true);
-
-    } catch (\Throwable $e) {
-        dd($e->getMessage(), $e->getFile(), $e->getLine());
     }
-}
 
 
 
-public function exportGeoJson()
-{
+    public function exportGeoJson()
+    {
     try {
         $features = [];
 
@@ -180,77 +180,297 @@ public function exportGeoJson()
     }
 
     // 🔹 DataTables AJAX source
+    // public function getData()
+    // {
+    //     $query = Rumah::with([
+    //                      // ambil relasi anggota keluarga
+    //         'kepemilikan',          // untuk status rumah
+    //         'sosialEkonomi',        // untuk status backlog
+    //         'fisik',
+    //         'sanitasi',
+    //         'penilaian',
+    //         'dokumen',
+    //         'bantuan',
+    //         'kepalaKeluarga.anggota',
+    //         'kelurahan.kecamatan',  // nested: kelurahan -> kecamatan
+    //     ])
+    //     ->orderBy('id_rumah', 'desc'); // 🔹 urutkan dari terbaru ke terlama
+
+    //     return DataTables::eloquent($query)
+    //         ->addIndexColumn()
+
+    //         // 🔹 Tombol expand untuk detail rumah
+    //         ->addColumn('expand', function ($r) {
+    //             return '<button class="btn btn-light btn-sm toggle-detail" data-id="' . $r->id_rumah . '">
+    //                         <i class="fas fa-plus"></i>
+    //                     </button>';
+    //         })
+
+    //         // 🔹 Nama Pemilik diambil dari anggota keluarga pertama
+    //         ->addColumn('nama_pemilik', function ($r) {
+    //             // Ambil kepala keluarga pertama (jika ada banyak)
+    //             $kepala = $r->kepalaKeluarga?->sortBy('id')->first();
+
+    //             // Dari kepala keluarga pertama, ambil anggota pertama (berdasarkan id)
+    //             $anggotaPertama = $kepala?->anggota?->sortBy('id')->first();
+
+    //             // Jika ada nama anggota, tampilkan
+    //             return $anggotaPertama ? e($anggotaPertama->nama) : '-';
+    //         })
+
+    //         // 🔹 Alamat rumah
+    //         ->addColumn('alamat', fn($r) => e($r->alamat ?? '-'))
+
+    //         // 🔹 Kecamatan & Kelurahan
+    //         ->addColumn('kecamatan', fn($r) => e($r->kelurahan->kecamatan->nama_kecamatan ?? '-'))
+    //         ->addColumn('kelurahan', fn($r) => e($r->kelurahan->nama_kelurahan ?? '-'))
+
+    //         // 🔹 Status Rumah dari relasi kepemilikan
+    //        ->addColumn('status_rumah', function ($r) {
+    //             $status = $r->penilaian->status_rumah ?? '-';
+
+    //             if (strtoupper($status) === 'RTLH') {
+    //                 return '<span class="badge badge-light-danger fw-bold px-3 py-2">' . e($status) . '</span>';
+    //             } elseif ($status && $status !== '-') {
+    //                 return '<span class="badge badge-light-success fw-bold px-3 py-2">' . e($status) . '</span>';
+    //             }
+
+    //             return '<span class="badge badge-light-secondary fw-bold px-3 py-2">-</span>';
+    //         })
+
+    //         // 🔹 Status Backlog dari relasi sosialEkonomi
+    //         ->addColumn('status_backlog', function ($r) {
+    //             if ($r->sosialEkonomi && $r->sosialEkonomi->jumlah_kk_id > 1) {
+    //                 return '<span class="badge badge-light-warning fw-bold px-3 py-2">BACKLOG</span>';
+    //             }
+    //             return '<span class="badge badge-light-primary fw-bold px-3 py-2">TIDAK BACKLOG</span>';
+    //         })
+
+    //         // 🔹 Dropdown aksi
+    //         // ->addColumn('action', function ($r) {pdata
+    //         //     return view('livewire.partials.action-dropdown', ['r' => $r])->render();
+    //         // })
+    //        ->addColumn('action', function ($r) {
+    //             $buttons = '
+    //                 <a href="#" 
+    //                 class="btn btn-sm btn-light btn-active-light-primary" 
+    //                 data-kt-menu-trigger="click" 
+    //                 data-kt-menu-placement="bottom-end">
+    //                     Actions
+    //                     <span class="svg-icon svg-icon-5 m-0">
+    //                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    //                             <path d="M11.4343 12.7344L7.25 8.55C6.83579 8.13579 
+    //                             6.16421 8.13579 5.75 8.55C5.33579 8.96421 
+    //                             5.33579 9.63579 5.75 10.05L11.2929 15.5929
+    //                             C11.6834 15.9834 12.3166 15.9834 12.7071 15.5929
+    //                             L18.25 10.05C18.6642 9.63579 18.6642 8.96421 
+    //                             18.25 8.55C17.8358 8.13579 17.1642 8.13579 
+    //                             16.75 8.55L12.5657 12.7344C12.2533 13.0468 
+    //                             11.7467 13.0468 11.4343 12.7344Z" fill="currentColor"/>
+    //                         </svg>
+    //                     </span>
+    //                 </a>
+
+    //                 <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded 
+    //                             menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 
+    //                             w-150px py-4" data-kt-menu="true">
+
+    //                     <div class="menu-item px-3">
+    //                         <a href="#" class="menu-link px-3 " 
+    //                         wire:click.prevent="goToDetail(' . $r->id_rumah . ')">
+    //                         View
+    //                         </a>
+    //                     </div>
+
+    //                     <div class="menu-item px-3">
+    //                         <a href="#" class="menu-link px-3 " 
+    //                        wire:click.prevent="goToEdit(' . $r->id_rumah . ')">
+    //                         Edit
+    //                         </a>
+    //                     </div>
+
+    //                     <div class="menu-item px-3">
+    //                         <a href="#" class="menu-link px-3 " 
+    //                         onclick="confirmDelete(' . $r->id_rumah . ')">
+    //                         Hapus
+    //                         </a>
+    //                     </div>
+    //                 </div>
+    //             ';
+
+    //              return '<div wire:ignore.self>' . $buttons . '</div>';
+    //         })
+    //         // 🔹 Izinkan HTML untuk kolom tertentu
+    //         ->rawColumns(['expand', 'status_backlog', 'action','status_rumah'])
+    //         ->toJson();
+    // }
+
     public function getData()
     {
+         $request = request();
+
         $query = Rumah::with([
-                         // ambil relasi anggota keluarga
-            'kepemilikan',          // untuk status rumah
-            'sosialEkonomi',        // untuk status backlog
+            'kepemilikan',
+            'sosialEkonomi',
             'fisik',
             'sanitasi',
             'penilaian',
             'dokumen',
             'bantuan',
             'kepalaKeluarga.anggota',
-            'kelurahan.kecamatan',  // nested: kelurahan -> kecamatan
-        ])
-        ->orderBy('id_rumah', 'desc'); // 🔹 urutkan dari terbaru ke terlama
+            'kelurahan.kecamatan',
+        ])->orderBy('id_rumah', 'desc');
 
+        // ================================
+        // 🧩 1️⃣ FILTER LOKASI LANGSUNG DI RUMAH
+        // ================================
+        if ($request->filled('kecamatan_id')) {
+            $query->whereHas('kelurahan.kecamatan', fn($q) =>
+                $q->whereIn('id_kecamatan', (array)$request->get('kecamatan_id'))
+            );
+        }
+
+        if ($request->filled('kelurahan_id')) {
+            $query->whereIn('kelurahan_id', (array)$request->get('kelurahan_id'));
+        }
+
+        // ================================
+        // 🧩 2️⃣ FILTER KEPEMILIKAN
+        // ================================
+        $kepemilikanFields = [
+            'status_kepemilikan_tanah_id', 'bukti_kepemilikan_tanah_id',
+            'status_kepemilikan_rumah_id', 'status_imb_id',
+            'aset_rumah_ditempat_lain_id', 'aset_tanah_ditempat_lain_id',
+            'jenis_kawasan_lokasi_rumah_id'
+        ];
+
+        foreach ($kepemilikanFields as $field) {
+            if ($request->filled($field)) {
+                $query->whereHas('kepemilikan', fn($q) =>
+                    $q->whereIn($field, (array)$request->get($field))
+                );
+            }
+        }
+
+        // ================================
+        // 🧩 3️⃣ FILTER FISIK RUMAH
+        // ================================
+        $fisikFields = [
+            'pondasi_id', 'jenis_pondasi', 'kondisi_pondasi_id',
+            'kondisi_sloof_id', 'kondisi_kolom_tiang_id', 'kondisi_balok_id',
+            'kondisi_struktur_atap_id', 'material_atap_terluas_id',
+            'kondisi_penutup_atap_id', 'material_dinding_terluas_id',
+            'kondisi_dinding_id', 'material_lantai_terluas_id',
+            'kondisi_lantai_id', 'akses_ke_jalan_id', 'bangunan_menghadap_jalan_id',
+            'bangunan_menghadap_sungai_id', 'bangunan_berada_limbah_id',
+            'bangunan_berada_sungai_id', 'ruang_keluarga_dan_ruang_tidur_id',
+            'jenis_fisik_bangunan_id', 'fungsi_rumah_id', 'tipe_rumah_id'
+        ];
+
+        foreach ($fisikFields as $field) {
+            if ($request->filled($field)) {
+                $query->whereHas('fisik', fn($q) =>
+                    $q->whereIn($field, (array)$request->get($field))
+                );
+            }
+        }
+
+        // ================================
+        // 🧩 4️⃣ FILTER SANITASI
+        // ================================
+        $sanitasiFields = [
+            'jendela_lubang_cahaya_id', 'kondisi_jendela_lubang_cahaya_id',
+            'ventilasi_id', 'kondisi_ventilasi_id', 'kamar_mandi_id',
+            'kondisi_kamar_mandi_id', 'jamban_id', 'kondisi_jamban_id',
+            'sistem_pembuangan_air_kotor_id', 'kondisi_sistem_pembuangan_air_kotor_id',
+            'frekuensi_penyedotan_id', 'sumber_air_minum_id',
+            'kondisi_sumber_air_minum_id', 'sumber_listrik_id'
+        ];
+
+        foreach ($sanitasiFields as $field) {
+            if ($request->filled($field)) {
+                $query->whereHas('sanitasi', fn($q) =>
+                    $q->whereIn($field, (array)$request->get($field))
+                );
+            }
+        }
+
+        // ================================
+        // 🧩 5️⃣ FILTER SOSIAL EKONOMI
+        // ================================
+        if ($request->filled('jumlah_kk_id')) {
+            $query->whereHas('sosialEkonomi', fn($q) =>
+                $q->whereIn('jumlah_kk_id', (array)$request->get('jumlah_kk_id'))
+            );
+        }
+
+        if ($request->filled('status_dtks_id')) {
+            $query->whereHas('sosialEkonomi', fn($q) =>
+                $q->whereIn('status_dtks_id', (array)$request->get('status_dtks_id'))
+            );
+        }
+
+        // ================================
+        // 🧩 6️⃣ FILTER BANTUAN
+        // ================================
+        if ($request->filled('pernah_mendapatkan_bantuan_id')) {
+            $query->whereHas('bantuan', fn($q) =>
+                $q->whereIn('pernah_mendapatkan_bantuan_id', (array)$request->get('pernah_mendapatkan_bantuan_id'))
+            );
+        }
+
+        // ================================
+        // 🧩 7️⃣ FILTER PRIORITAS
+        // ================================
+        if ($request->filled('prioritas')) {
+            $p = $request->get('prioritas');
+            $query->whereHas('penilaian', function ($q) use ($p) {
+                if ($p == '1') $q->where('prioritas_a', '2');
+                if ($p == '2') $q->where('prioritas_b', '2');
+                if ($p == '3') $q->where('prioritas_c', '2');
+            });
+        }
+
+        // ================================
+        // 🧩 4️⃣ LIMIT DATA (OPSIONAL)
+        // ================================
+        // if ($request->filled('limit_data')) {
+        //     $query->limit((int) $request->get('limit_data'));
+        // }
+
+        // ================================
+        // 📊 5️⃣ RETURN DATATABLES
+        // ================================
         return DataTables::eloquent($query)
             ->addIndexColumn()
-
-            // 🔹 Tombol expand untuk detail rumah
-            ->addColumn('expand', function ($r) {
-                return '<button class="btn btn-light btn-sm toggle-detail" data-id="' . $r->id_rumah . '">
-                            <i class="fas fa-plus"></i>
-                        </button>';
-            })
-
-            // 🔹 Nama Pemilik diambil dari anggota keluarga pertama
+            ->addColumn('expand', fn($r) =>
+                '<button class="btn btn-light btn-sm toggle-detail" data-id="'.$r->id_rumah.'">
+                    <i class="fas fa-plus"></i>
+                </button>'
+            )
             ->addColumn('nama_pemilik', function ($r) {
-                // Ambil kepala keluarga pertama (jika ada banyak)
                 $kepala = $r->kepalaKeluarga?->sortBy('id')->first();
-
-                // Dari kepala keluarga pertama, ambil anggota pertama (berdasarkan id)
-                $anggotaPertama = $kepala?->anggota?->sortBy('id')->first();
-
-                // Jika ada nama anggota, tampilkan
-                return $anggotaPertama ? e($anggotaPertama->nama) : '-';
+                $anggota = $kepala?->anggota?->sortBy('id')->first();
+                return $anggota ? e($anggota->nama) : '-';
             })
-
-            // 🔹 Alamat rumah
             ->addColumn('alamat', fn($r) => e($r->alamat ?? '-'))
-
-            // 🔹 Kecamatan & Kelurahan
             ->addColumn('kecamatan', fn($r) => e($r->kelurahan->kecamatan->nama_kecamatan ?? '-'))
             ->addColumn('kelurahan', fn($r) => e($r->kelurahan->nama_kelurahan ?? '-'))
-
-            // 🔹 Status Rumah dari relasi kepemilikan
-           ->addColumn('status_rumah', function ($r) {
+            ->addColumn('status_rumah', function ($r) {
                 $status = $r->penilaian->status_rumah ?? '-';
-
                 if (strtoupper($status) === 'RTLH') {
                     return '<span class="badge badge-light-danger fw-bold px-3 py-2">' . e($status) . '</span>';
                 } elseif ($status && $status !== '-') {
                     return '<span class="badge badge-light-success fw-bold px-3 py-2">' . e($status) . '</span>';
                 }
-
                 return '<span class="badge badge-light-secondary fw-bold px-3 py-2">-</span>';
             })
-
-            // 🔹 Status Backlog dari relasi sosialEkonomi
-            ->addColumn('status_backlog', function ($r) {
-                if ($r->sosialEkonomi && $r->sosialEkonomi->jumlah_kk_id > 1) {
-                    return '<span class="badge badge-light-warning fw-bold px-3 py-2">BACKLOG</span>';
-                }
-                return '<span class="badge badge-light-primary fw-bold px-3 py-2">TIDAK BACKLOG</span>';
-            })
-
-            // 🔹 Dropdown aksi
-            // ->addColumn('action', function ($r) {pdata
-            //     return view('livewire.partials.action-dropdown', ['r' => $r])->render();
-            // })
-           ->addColumn('action', function ($r) {
+            ->addColumn('status_backlog', fn($r) =>
+                $r->sosialEkonomi && $r->sosialEkonomi->jumlah_kk_id > 1
+                    ? '<span class="badge badge-light-warning fw-bold px-3 py-2">BACKLOG</span>'
+                    : '<span class="badge badge-light-primary fw-bold px-3 py-2">TIDAK BACKLOG</span>'
+            )
+            ->addColumn('action', function ($r) {
                 $buttons = '
                     <a href="#" 
                     class="btn btn-sm btn-light btn-active-light-primary" 
@@ -300,10 +520,10 @@ public function exportGeoJson()
 
                  return '<div wire:ignore.self>' . $buttons . '</div>';
             })
-            // 🔹 Izinkan HTML untuk kolom tertentu
-            ->rawColumns(['expand', 'status_backlog', 'action','status_rumah'])
+            ->rawColumns(['expand', 'status_rumah', 'status_backlog', 'action'])
             ->toJson();
     }
+
 
     // 🔹 Ambil detail rumah (expand)
     public function loadDetailRumah($id)

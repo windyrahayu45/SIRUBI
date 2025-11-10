@@ -758,14 +758,14 @@
                     </table>
                 </div>
 
-{{-- <div style="margin-top: 20px;">
+<div style="margin-top: 20px;">
     <h3 style="font-size: 16px;">Lokasi Rumah</h3>
     @if(!empty($mapUrl))
         <img src="{{ $mapUrl }}" alt="Peta Lokasi" style="width: 100%; border-radius: 8px; border: 1px solid #ccc;">
     @else
         <p style="color: #777;">Lokasi belum tersedia.</p>
     @endif
-</div> --}}
+</div>
 
 
               @php

@@ -311,6 +311,8 @@ class Add extends Component
         $this->dBangunanBeradaSungai = DBangunanBeradaSungai::all();
     }
 
+    
+
     public function removePhoto($field)
     {
         if (property_exists($this, $field)) {

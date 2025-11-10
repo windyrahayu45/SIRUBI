@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\IKelurahan;
 use App\Models\Rumah;
 use App\Models\TblBantuan;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class CetakController extends Controller
 {
@@ -35,15 +37,31 @@ class CetakController extends Controller
         $lat = $rumah->latitude;
         $lon = $rumah->longitude;
 
+        $apiKey = '38acbfc8ed97436c802882f2e49c13a7';
+
         // Ambil snapshot dari layanan static map (contoh OSM via Maps Static API)
-        $mapUrl = "https://staticmap.openstreetmap.de/staticmap.php?center={$lat},{$lon}&zoom=16&size=600x350&markers={$lat},{$lon},lightblue1";
+        $mapUrl = "https://maps.geoapify.com/v1/staticmap?style=osm-carto&width=600&height=350&center=lonlat:{$lon},{$lat}&zoom=16&marker=lonlat:{$lon},{$lat};color:%23ff0000;size:medium&apiKey={$apiKey}";
+
+        Log::info($mapUrl);
 
 
         $pdf = Pdf::loadView('pdf.rumah-full', compact('rumah', 'namaPemilik', 'bantuanRiwayat', 'mapUrl'))
             ->setPaper('a4', 'portrait')
              ->setOption('isRemoteEnabled', true)
-    ->setOption('isHtml5ParserEnabled', true);
+            ->setOption('isHtml5ParserEnabled', true);
 
         return $pdf->download('Data_Rumah_' . ($namaPemilik ?? 'Tanpa_Nama') . '.pdf');
     }
+
+    public function getKelurahan(Request $request)
+    {
+        $kecamatanIds = $request->get('kecamatan_id', []);
+
+        $kelurahan =  IKelurahan::whereIn('kecamatan_id', $kecamatanIds)
+            ->orderBy('nama_kelurahan')
+            ->get();
+
+        return response()->json($kelurahan);
+    }
+
 }
