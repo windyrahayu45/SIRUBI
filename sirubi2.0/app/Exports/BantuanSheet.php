@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\Rumah;
+use App\Models\KepalaKeluarga;
 use App\Models\TblBantuan;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -18,41 +19,91 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 
 class BantuanSheet implements FromQuery, WithMapping, WithHeadings, WithTitle, WithChunkReading, ShouldAutoSize, WithEvents
 {
-    public function query()
+    protected $query;
+
+    public function __construct($query = null)
     {
-        return Rumah::with([
-            'kelurahan.kecamatan',
-            'bantuan.pernahMendapatkanBantuan',
-            'kepalaKeluarga',
-        ])->orderBy('id_rumah', 'asc');
+        $this->query = $query;
     }
 
+    /**
+     * Query utama
+     * Jika $this->query ada → gunakan hasil filter
+     * Jika tidak → ambil semua rumah yang pernah mendapat bantuan
+     */
+    public function query()
+    {
+        if ($this->query) {
+            // Ambil ID rumah hasil filter
+            $filteredIds = $this->query->pluck('id_rumah')->toArray();
+
+            return Rumah::with([
+                    'kelurahan.kecamatan',
+                    'bantuan.pernahMendapatkanBantuan',
+                    'kepalaKeluarga.anggota',
+                ])
+                ->whereIn('id_rumah', $filteredIds)
+                ->whereHas('bantuan', fn($q) =>
+                    $q->where('pernah_mendapatkan_bantuan_id', 1)
+                )
+                ->orderBy('id_rumah', 'asc');
+        }
+
+        // 🟢 Default: tanpa filter, ambil semua rumah yang punya bantuan
+        return Rumah::with([
+                'kelurahan.kecamatan',
+                'bantuan.pernahMendapatkanBantuan',
+                'kepalaKeluarga.anggota',
+            ])
+            ->whereHas('bantuan', fn($q) =>
+                $q->where('pernah_mendapatkan_bantuan_id', 1)
+            )
+            ->orderBy('id_rumah', 'asc');
+    }
+
+    /**
+     * Mapping setiap rumah
+     */
     public function map($rumah): array
     {
         $rows = [];
 
-        // 🔹 Bantuan utama (dari tabel bantuan_rumah)
-        if (!empty($rumah->bantuan)) {
+        // 🔹 Ambil semua KK (sinkron dengan KepalaKeluargaSheet)
+        $kkList = $rumah->kepalaKeluarga->pluck('no_kk')->filter()->toArray();
+
+         $noKK = $kkList[0] ?? '-';
+
+        // Jika no_kk mengandung kata "DUMMY" (case-insensitive), ubah jadi "-"
+        if (is_string($noKK) && stripos($noKK, 'DUMMY') !== false) {
+            $noKK = '-';
+        }
+
+        // 🔹 Data bantuan utama rumah
+        if ($rumah->bantuan) {
+
+            
+
             $rows[] = [
                 'Tipe Data' => 'Bantuan Utama Rumah',
                 'ID Rumah' => $rumah->id_rumah ?? '-',
                 'Alamat' => $rumah->alamat ?? '-',
                 'Kecamatan' => $rumah->kelurahan->kecamatan->nama_kecamatan ?? '-',
                 'Kelurahan' => $rumah->kelurahan->nama_kelurahan ?? '-',
-                'No KK Penerima' => $rumah->bantuan->no_kk_penerima ?? '-',
+                'No KK Penerima' => $rumah->bantuan->no_kk_penerima ?? ($noKK ?? '-'),
                 'Nama Program Bantuan' => $rumah->bantuan->nama_program_bantuan ?? '-',
                 'Nama Bantuan' => $rumah->bantuan->nama_bantuan ?? '-',
                 'Tahun Bantuan' => $rumah->bantuan->tahun_bantuan ?? '-',
-                'Nominal Bantuan (Rp)' => $rumah->bantuan->nominal_bantuan ?? '-',
-                'Pernah Mendapatkan Bantuan' => $rumah->bantuan->pernahMendapatkanBantuan->pernah_mendapatkan_bantuan ?? '-',
+                'Nominal Bantuan (Rp)' => $rumah->bantuan->nominal_bantuan
+                    ? number_format($rumah->bantuan->nominal_bantuan, 0, ',', '.')
+                    : '-',
+                'Pernah Mendapatkan Bantuan' =>
+                    $rumah->bantuan->pernahMendapatkanBantuan->pernah_mendapatkan_bantuan ?? '-',
             ];
         }
 
-        // 🔹 Riwayat berdasarkan KK
-        $noKkList = $rumah->kepalaKeluarga->pluck('no_kk')->filter()->toArray();
-
-        if (!empty($noKkList)) {
-            $bantuanRiwayat = TblBantuan::whereIn('kk', $noKkList)
+        // 🔹 Tambahkan riwayat lain dari TblBantuan berdasarkan semua KK di rumah tersebut
+        if (!empty($kkList)) {
+            $bantuanRiwayat = TblBantuan::whereIn('kk', $kkList)
                 ->orderBy('tahun', 'desc')
                 ->get();
 
@@ -63,7 +114,7 @@ class BantuanSheet implements FromQuery, WithMapping, WithHeadings, WithTitle, W
                     'Alamat' => $rumah->alamat ?? '-',
                     'Kecamatan' => $rumah->kelurahan->kecamatan->nama_kecamatan ?? '-',
                     'Kelurahan' => $rumah->kelurahan->nama_kelurahan ?? '-',
-                    'No KK Penerima' => $r->kk ?? '-',
+                    'No KK Penerima' => $r->kk ?? ($noKK[0] ?? '-'),
                     'Nama Program Bantuan' => $r->nama_program ?? '-',
                     'Nama Bantuan' => $r->nama ?? '-',
                     'Tahun Bantuan' => $r->tahun ?? '-',
@@ -75,7 +126,7 @@ class BantuanSheet implements FromQuery, WithMapping, WithHeadings, WithTitle, W
             }
         }
 
-        // Jika rumah tidak punya bantuan dan tidak ada riwayat KK
+        // 🔹 Jika rumah tidak punya bantuan sama sekali (fallback)
         if (empty($rows)) {
             $rows[] = [
                 'Tipe Data' => 'Kosong',
@@ -83,7 +134,7 @@ class BantuanSheet implements FromQuery, WithMapping, WithHeadings, WithTitle, W
                 'Alamat' => $rumah->alamat ?? '-',
                 'Kecamatan' => $rumah->kelurahan->kecamatan->nama_kecamatan ?? '-',
                 'Kelurahan' => $rumah->kelurahan->nama_kelurahan ?? '-',
-                'No KK Penerima' => '-',
+                'No KK Penerima' => $kkList[0] ?? '-',
                 'Nama Program Bantuan' => '-',
                 'Nama Bantuan' => '-',
                 'Tahun Bantuan' => '-',
@@ -92,7 +143,6 @@ class BantuanSheet implements FromQuery, WithMapping, WithHeadings, WithTitle, W
             ];
         }
 
-        // Excel menerima 1 baris per map() → ambil baris pertama
         return $rows[0];
     }
 
@@ -115,7 +165,7 @@ class BantuanSheet implements FromQuery, WithMapping, WithHeadings, WithTitle, W
 
     public function title(): string
     {
-        return 'Riwayat Bantuan Lengkap';
+        return 'Data Rumah & Riwayat Bantuan';
     }
 
     public function chunkSize(): int
@@ -129,10 +179,8 @@ class BantuanSheet implements FromQuery, WithMapping, WithHeadings, WithTitle, W
             AfterSheet::class => function (AfterSheet $event) {
                 $s = $event->sheet->getDelegate();
 
-                // Tambahkan ruang untuk header & logo
                 $s->insertNewRowBefore(1, 4);
 
-                // === 🖼️ Logo Dinas ===
                 $logoPath = public_path('assets/media/logos/logo.png');
                 if (file_exists($logoPath)) {
                     $drawing = new Drawing();
@@ -143,20 +191,17 @@ class BantuanSheet implements FromQuery, WithMapping, WithHeadings, WithTitle, W
                     $drawing->setWorksheet($s);
                 }
 
-                // === Judul utama ===
                 $s->mergeCells('C1:L1');
                 $s->setCellValue('C1', 'DINAS PERUMAHAN DAN KAWASAN PERMUKIMAN');
                 $s->getStyle('C1')->getFont()->setBold(true)->setSize(20);
                 $s->getStyle('C1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-                // === Subjudul ===
                 $s->mergeCells('C2:L2');
                 $s->setCellValue('C2', 'KOTA BUKITTINGGI');
                 $s->getStyle('C2')->getFont()->setBold(true)->setSize(18);
                 $s->getStyle('C2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-                // === Header kategori ===
-                $s->setCellValue('A4', 'Data Bantuan Rumah dan Riwayat KK');
+                $s->setCellValue('A4', 'Data Rumah yang Pernah Menerima Bantuan dan Riwayat KK');
                 $s->mergeCells('A4:K4');
                 $s->getStyle('A4:K4')->applyFromArray([
                     'font' => ['bold' => true, 'size' => 12],
@@ -170,7 +215,6 @@ class BantuanSheet implements FromQuery, WithMapping, WithHeadings, WithTitle, W
                     ],
                 ]);
 
-                // === Heading tabel (baris ke-5) ===
                 $s->getStyle('A5:K5')->applyFromArray([
                     'font' => ['bold' => true, 'size' => 10],
                     'alignment' => [
@@ -186,7 +230,6 @@ class BantuanSheet implements FromQuery, WithMapping, WithHeadings, WithTitle, W
                     ]
                 ]);
 
-                // === Ukuran baris header ===
                 $s->getRowDimension(1)->setRowHeight(40);
                 $s->getRowDimension(2)->setRowHeight(30);
                 $s->getRowDimension(4)->setRowHeight(25);

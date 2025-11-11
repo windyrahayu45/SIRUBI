@@ -19,16 +19,157 @@ class RumahSheet implements FromQuery, WithMapping, WithHeadings, WithTitle, Wit
 {
     protected $offset;
     protected $limit;
+     protected $query;
 
-    public function __construct($offset = 0, $limit = 1000)
+    public function __construct($offset = 0, $limit = 1000, $query = null)
     {
         $this->offset = $offset;
         $this->limit  = $limit;
+        $this->query = $query;
     }
 
-    public function query()
+    // public function query()
+    // {
+    //     return Rumah::query()
+    //         ->select([
+    //             'id_rumah', 'alamat', 'kelurahan_id', 'tahun_pembangunan_rumah'
+    //         ])
+    //         ->with([
+                
+    //             'kelurahan:id_kelurahan,nama_kelurahan,kecamatan_id',
+    //             'kelurahan.kecamatan:id_kecamatan,nama_kecamatan',
+    //             'sosialEkonomi:id,rumah_id,jenis_kelamin_id,usia,pendidikan_terakhir_id,pekerjaan_utama_id,besar_penghasilan_perbulan_id,besar_pengeluaran_perbulan_id,status_dtks_id',
+    //             'sosialEkonomi.jenisKelamin:id_jenis_kelamin,jenis_kelamin',
+    //             'sosialEkonomi.pendidikanTerakhir:id_pendidikan_terakhir,pendidikan_terakhir',
+    //             'sosialEkonomi.pekerjaanUtama:id_pekerjaan_utama,pekerjaan_utama',
+    //             'sosialEkonomi.besarPenghasilan:id_besar_penghasilan,besar_penghasilan',
+    //             'sosialEkonomi.besarPengeluaran:id_besar_pengeluaran,besar_pengeluaran',
+    //             'sosialEkonomi.statusDtks:id_status_dtks,status_dtks',
+    //             'kepemilikan:id,rumah_id,status_kepemilikan_tanah_id,bukti_kepemilikan_tanah_id,status_kepemilikan_rumah_id,status_imb_id,nomor_imb,aset_rumah_ditempat_lain_id,aset_tanah_ditempat_lain_id,jenis_kawasan_lokasi_rumah_id,nik_kepemilikan_rumah',
+    //             'kepemilikan.statusKepemilikanTanah:id_status_kepemilikan_tanah,status_kepemilikan_tanah',
+    //             'kepemilikan.buktiKepemilikanTanah:id_bukti_kepemilikan_tanah,bukti_kepemilikan_tanah',
+    //             'kepemilikan.statusKepemilikanRumah:id_status_kepemilikan_rumah,status_kepemilikan_rumah',
+    //             'kepemilikan.statusImb:id_status_imb,status_imb',
+    //             'kepemilikan.asetRumahDitempatLain:id_aset_rumah_tempat_lain,aset_rumah_tempat_lain',
+    //             'kepemilikan.asetTanahDitempatLain:id_aset_tanah_tempat_lain,aset_tanah_tempat_lain',
+    //             'kepemilikan.jenisKawasanLokasiRumah:id_jenis_kawasan_lokasi,jenis_kawasan_lokasi',
+    //             'fisik:id,rumah_id,pondasi_id,jenis_pondasi,kondisi_pondasi_id,kondisi_sloof_id,kondisi_kolom_tiang_id,kondisi_balok_id,kondisi_struktur_atap_id,material_atap_terluas_id,kondisi_penutup_atap_id,material_dinding_terluas_id,kondisi_dinding_id,material_lantai_terluas_id,kondisi_lantai_id,akses_ke_jalan_id,bangunan_menghadap_jalan_id,bangunan_menghadap_sungai_id,bangunan_berada_sungai_id,bangunan_berada_limbah_id,luas_rumah,tinggi_rata_rumah,jumlah_penghuni_laki,jumlah_penghuni_perempuan,jumlah_abk,jumlah_kamar_tidur,luas_rata_kamar_tidur,ruang_keluarga_dan_ruang_tidur_id,jenis_fisik_bangunan_id,fungsi_rumah_id,tipe_rumah_id,jumlah_lantai_bangunan',
+    //             'fisik.pondasi:id_pondasi,pondasi',
+    //             'fisik.jenisPondasi:id_jenis_pondasi,nama_jenis_pondasi',
+    //             'fisik.kondisiPondasi:id_kondisi_pondasi,kondisi_pondasi',
+    //             'fisik.kondisiSloof:id_kondisi_sloof,kondisi_sloof',
+    //             'fisik.kondisiKolomTiang:id_kondisi_kolom_tiang,kondisi_kolom_tiang',
+    //             'fisik.kondisiBalok:id_kondisi_balok,kondisi_balok',
+    //             'fisik.kondisiStrukturAtap:id_kondisi_struktur_atap,kondisi_struktur_atap',
+    //             'fisik.materialAtapTerluas:id_material_atap_terluas,material_atap_terluas',
+    //             'fisik.kondisiPenutupAtap:id_kondisi_penutup_atap,kondisi_penutup_atap',
+    //             'fisik.materialDindingTerluas:id_material_dinding_terluas,material_dinding_terluas',
+    //             'fisik.kondisiDinding:id_kondisi_dinding,kondisi_dinding',
+    //             'fisik.materialLantaiTerluas:id_material_lantai_terluas,material_lantai_terluas',
+    //             'fisik.kondisiLantai:id_kondisi_lantai,kondisi_lantai',
+    //             'fisik.aksesKeJalan:id_akses_ke_jalan,akses_ke_jalan',
+    //             'fisik.bangunanMenghadapJalan:id_bangunan_menghadap_jalan,bangunan_menghadap_jalan',
+    //             'fisik.bangunanMenghadapSungai:id_bangunan_menghadap_sungai,bangunan_menghadap_sungai',
+    //             'fisik.bangunanBeradaSungai:id_bangunan_berada_sungai,bangunan_berada_sungai',
+    //             'fisik.bangunanBeradaLimbah:id_bangunan_berada_limbah,bangunan_berada_limbah',
+    //             'fisik.ruangKeluargaDanTidur:id_ruang_keluarga_dan_tidur,ruang_keluarga_dan_tidur',
+    //             'fisik.jenisFisikBangunan:id_jenis_fisik_bangunan,jenis_fisik_bangunan',
+    //             'fisik.fungsiRumah:id_fungsi_rumah,fungsi_rumah',
+    //             'fisik.tipeRumah:id_tipe_rumah,tipe_rumah',
+    //             'sanitasi:id,rumah_id,jendela_lubang_cahaya_id,kondisi_jendela_lubang_cahaya_id,ventilasi_id,kondisi_ventilasi_id,kamar_mandi_id,kondisi_kamar_mandi_id,jamban_id,kondisi_jamban_id,sistem_pembuangan_air_kotor_id,kondisi_sistem_pembuangan_air_kotor_id,sumber_air_minum_id,kondisi_sumber_air_minum_id,sumber_listrik_id,frekuensi_penyedotan_id,keterangan_ventilasi',
+    //             'sanitasi.jendelaLubangCahaya:id_jendela_lubang_cahaya,jendela_lubang_cahaya',
+    //             'sanitasi.kondisiJendelaLubangCahaya:id_kondisi_jendela_lubang_cahaya,kondisi_jendela_lubang_cahaya',
+    //             'sanitasi.ventilasi:id_ventilasi,ventilasi',
+    //             'sanitasi.kondisiVentilasi:id_kondisi_ventilasi,kondisi_ventilasi',
+    //             'sanitasi.kamarMandi:id_kamar_mandi,kamar_mandi',
+    //             'sanitasi.kondisiKamarMandi:id_kondisi_kamar_mandi,kondisi_kamar_mandi',
+    //             'sanitasi.jamban:id_jamban,jamban',
+    //             'sanitasi.kondisiJamban:id_kondisi_jamban,kondisi_jamban',
+    //             'sanitasi.sistemPembuanganAirKotor:id_sistem_pembuangan_air_kotor,sistem_pembuangan_air_kotor',
+    //             'sanitasi.kondisiSistemPembuanganAirKotor:id_kondisi_sistem_pembuangan_air_kotor,kondisi_sistem_pembuangan_air_kotor',
+    //             'sanitasi.sumberAirMinum:id_sumber_air_minum,sumber_air_minum',
+    //             'sanitasi.kondisiSumberAirMinum:id_kondisi_sumber_air_minum,kondisi_sumber_air_minum',
+    //             'sanitasi.sumberListrik:id_sumber_listrik,sumber_listrik',
+    //             'sanitasi.frekuensiPenyedotan:id_frekuensi_penyedotan,frekuensi_penyedotan',
+    //             'penilaian:id,rumah_id,nilai_a,nilai_b,nilai_c,nilai,status_rumah,status_luas',
+    //         ])
+    //         ->offset($this->offset)
+    //         ->limit($this->limit);
+    // }
+
+      public function query()
     {
-        return Rumah::query()
+        // 🔹 jika dikirim query hasil filter → pakai itu
+        if ($this->query) {
+            return $this->query
+                ->select([
+                    'id_rumah', 'alamat', 'kelurahan_id', 'tahun_pembangunan_rumah'
+                ])
+                ->with([
+                    'kelurahan:id_kelurahan,nama_kelurahan,kecamatan_id',
+                    'kelurahan.kecamatan:id_kecamatan,nama_kecamatan',
+                    'sosialEkonomi:id,rumah_id,jenis_kelamin_id,usia,pendidikan_terakhir_id,pekerjaan_utama_id,besar_penghasilan_perbulan_id,besar_pengeluaran_perbulan_id,status_dtks_id,jumlah_kk_id',
+                    'sosialEkonomi.jenisKelamin:id_jenis_kelamin,jenis_kelamin',
+                    'sosialEkonomi.pendidikanTerakhir:id_pendidikan_terakhir,pendidikan_terakhir',
+                    'sosialEkonomi.pekerjaanUtama:id_pekerjaan_utama,pekerjaan_utama',
+                    'sosialEkonomi.besarPenghasilan:id_besar_penghasilan,besar_penghasilan',
+                    'sosialEkonomi.besarPengeluaran:id_besar_pengeluaran,besar_pengeluaran',
+                    'sosialEkonomi.statusDtks:id_status_dtks,status_dtks',
+                    'sosialEkonomi.jumlahKK:id_jumlah_kk,jumlah_kk',
+                    'kepemilikan:id,rumah_id,status_kepemilikan_tanah_id,bukti_kepemilikan_tanah_id,status_kepemilikan_rumah_id,status_imb_id,nomor_imb,aset_rumah_ditempat_lain_id,aset_tanah_ditempat_lain_id,jenis_kawasan_lokasi_rumah_id,nik_kepemilikan_rumah',
+                    'kepemilikan.statusKepemilikanTanah:id_status_kepemilikan_tanah,status_kepemilikan_tanah',
+                    'kepemilikan.buktiKepemilikanTanah:id_bukti_kepemilikan_tanah,bukti_kepemilikan_tanah',
+                    'kepemilikan.statusKepemilikanRumah:id_status_kepemilikan_rumah,status_kepemilikan_rumah',
+                    'kepemilikan.statusImb:id_status_imb,status_imb',
+                    'kepemilikan.asetRumahDitempatLain:id_aset_rumah_tempat_lain,aset_rumah_tempat_lain',
+                    'kepemilikan.asetTanahDitempatLain:id_aset_tanah_tempat_lain,aset_tanah_tempat_lain',
+                    'kepemilikan.jenisKawasanLokasiRumah:id_jenis_kawasan_lokasi,jenis_kawasan_lokasi',
+                    'fisik:id,rumah_id,pondasi_id,jenis_pondasi,kondisi_pondasi_id,kondisi_sloof_id,kondisi_kolom_tiang_id,kondisi_balok_id,kondisi_struktur_atap_id,material_atap_terluas_id,kondisi_penutup_atap_id,material_dinding_terluas_id,kondisi_dinding_id,material_lantai_terluas_id,kondisi_lantai_id,akses_ke_jalan_id,bangunan_menghadap_jalan_id,bangunan_menghadap_sungai_id,bangunan_berada_sungai_id,bangunan_berada_limbah_id,luas_rumah,tinggi_rata_rumah,jumlah_penghuni_laki,jumlah_penghuni_perempuan,jumlah_abk,jumlah_kamar_tidur,luas_rata_kamar_tidur,ruang_keluarga_dan_ruang_tidur_id,jenis_fisik_bangunan_id,fungsi_rumah_id,tipe_rumah_id,jumlah_lantai_bangunan',
+                    'fisik.pondasi:id_pondasi,pondasi',
+                    'fisik.jenisPondasi:id_jenis_pondasi,nama_jenis_pondasi',
+                    'fisik.kondisiPondasi:id_kondisi_pondasi,kondisi_pondasi',
+                    'fisik.kondisiSloof:id_kondisi_sloof,kondisi_sloof',
+                    'fisik.kondisiKolomTiang:id_kondisi_kolom_tiang,kondisi_kolom_tiang',
+                    'fisik.kondisiBalok:id_kondisi_balok,kondisi_balok',
+                    'fisik.kondisiStrukturAtap:id_kondisi_struktur_atap,kondisi_struktur_atap',
+                    'fisik.materialAtapTerluas:id_material_atap_terluas,material_atap_terluas',
+                    'fisik.kondisiPenutupAtap:id_kondisi_penutup_atap,kondisi_penutup_atap',
+                    'fisik.materialDindingTerluas:id_material_dinding_terluas,material_dinding_terluas',
+                    'fisik.kondisiDinding:id_kondisi_dinding,kondisi_dinding',
+                    'fisik.materialLantaiTerluas:id_material_lantai_terluas,material_lantai_terluas',
+                    'fisik.kondisiLantai:id_kondisi_lantai,kondisi_lantai',
+                    'fisik.aksesKeJalan:id_akses_ke_jalan,akses_ke_jalan',
+                    'fisik.bangunanMenghadapJalan:id_bangunan_menghadap_jalan,bangunan_menghadap_jalan',
+                    'fisik.bangunanMenghadapSungai:id_bangunan_menghadap_sungai,bangunan_menghadap_sungai',
+                    'fisik.bangunanBeradaSungai:id_bangunan_berada_sungai,bangunan_berada_sungai',
+                    'fisik.bangunanBeradaLimbah:id_bangunan_berada_limbah,bangunan_berada_limbah',
+                    'fisik.ruangKeluargaDanTidur:id_ruang_keluarga_dan_tidur,ruang_keluarga_dan_tidur',
+                    'fisik.jenisFisikBangunan:id_jenis_fisik_bangunan,jenis_fisik_bangunan',
+                    'fisik.fungsiRumah:id_fungsi_rumah,fungsi_rumah',
+                    'fisik.tipeRumah:id_tipe_rumah,tipe_rumah',
+                    'sanitasi:id,rumah_id,jendela_lubang_cahaya_id,kondisi_jendela_lubang_cahaya_id,ventilasi_id,kondisi_ventilasi_id,kamar_mandi_id,kondisi_kamar_mandi_id,jamban_id,kondisi_jamban_id,sistem_pembuangan_air_kotor_id,kondisi_sistem_pembuangan_air_kotor_id,sumber_air_minum_id,kondisi_sumber_air_minum_id,sumber_listrik_id,frekuensi_penyedotan_id,keterangan_ventilasi',
+                    'sanitasi.jendelaLubangCahaya:id_jendela_lubang_cahaya,jendela_lubang_cahaya',
+                    'sanitasi.kondisiJendelaLubangCahaya:id_kondisi_jendela_lubang_cahaya,kondisi_jendela_lubang_cahaya',
+                    'sanitasi.ventilasi:id_ventilasi,ventilasi',
+                    'sanitasi.kondisiVentilasi:id_kondisi_ventilasi,kondisi_ventilasi',
+                    'sanitasi.kamarMandi:id_kamar_mandi,kamar_mandi',
+                    'sanitasi.kondisiKamarMandi:id_kondisi_kamar_mandi,kondisi_kamar_mandi',
+                    'sanitasi.jamban:id_jamban,jamban',
+                    'sanitasi.kondisiJamban:id_kondisi_jamban,kondisi_jamban',
+                    'sanitasi.sistemPembuanganAirKotor:id_sistem_pembuangan_air_kotor,sistem_pembuangan_air_kotor',
+                    'sanitasi.kondisiSistemPembuanganAirKotor:id_kondisi_sistem_pembuangan_air_kotor,kondisi_sistem_pembuangan_air_kotor',
+                    'sanitasi.sumberAirMinum:id_sumber_air_minum,sumber_air_minum',
+                    'sanitasi.kondisiSumberAirMinum:id_kondisi_sumber_air_minum,kondisi_sumber_air_minum',
+                    'sanitasi.sumberListrik:id_sumber_listrik,sumber_listrik',
+                    'sanitasi.frekuensiPenyedotan:id_frekuensi_penyedotan,frekuensi_penyedotan',
+                    'penilaian:id,rumah_id,nilai_a,nilai_b,nilai_c,nilai,status_rumah,status_luas',
+                ])
+                ->offset($this->offset)
+                ->limit($this->limit);
+        }
+
+        // 🔹 kalau tidak ada query filter → pakai default (semua data)
+                return Rumah::query()
             ->select([
                 'id_rumah', 'alamat', 'kelurahan_id', 'tahun_pembangunan_rumah'
             ])
@@ -36,13 +177,14 @@ class RumahSheet implements FromQuery, WithMapping, WithHeadings, WithTitle, Wit
                 
                 'kelurahan:id_kelurahan,nama_kelurahan,kecamatan_id',
                 'kelurahan.kecamatan:id_kecamatan,nama_kecamatan',
-                'sosialEkonomi:id,rumah_id,jenis_kelamin_id,usia,pendidikan_terakhir_id,pekerjaan_utama_id,besar_penghasilan_perbulan_id,besar_pengeluaran_perbulan_id,status_dtks_id',
+                'sosialEkonomi:id,rumah_id,jenis_kelamin_id,usia,pendidikan_terakhir_id,pekerjaan_utama_id,besar_penghasilan_perbulan_id,besar_pengeluaran_perbulan_id,status_dtks_id,jumlah_kk_id',
                 'sosialEkonomi.jenisKelamin:id_jenis_kelamin,jenis_kelamin',
                 'sosialEkonomi.pendidikanTerakhir:id_pendidikan_terakhir,pendidikan_terakhir',
                 'sosialEkonomi.pekerjaanUtama:id_pekerjaan_utama,pekerjaan_utama',
                 'sosialEkonomi.besarPenghasilan:id_besar_penghasilan,besar_penghasilan',
                 'sosialEkonomi.besarPengeluaran:id_besar_pengeluaran,besar_pengeluaran',
                 'sosialEkonomi.statusDtks:id_status_dtks,status_dtks',
+                'sosialEkonomi.jumlahKK:id_jumlah_kk,jumlah_kk',
                 'kepemilikan:id,rumah_id,status_kepemilikan_tanah_id,bukti_kepemilikan_tanah_id,status_kepemilikan_rumah_id,status_imb_id,nomor_imb,aset_rumah_ditempat_lain_id,aset_tanah_ditempat_lain_id,jenis_kawasan_lokasi_rumah_id,nik_kepemilikan_rumah',
                 'kepemilikan.statusKepemilikanTanah:id_status_kepemilikan_tanah,status_kepemilikan_tanah',
                 'kepemilikan.buktiKepemilikanTanah:id_bukti_kepemilikan_tanah,bukti_kepemilikan_tanah',
@@ -93,6 +235,7 @@ class RumahSheet implements FromQuery, WithMapping, WithHeadings, WithTitle, Wit
             ])
             ->offset($this->offset)
             ->limit($this->limit);
+
     }
 
     public function map($r): array
@@ -104,7 +247,8 @@ class RumahSheet implements FromQuery, WithMapping, WithHeadings, WithTitle, Wit
             $r->alamat,
             $r->kelurahan->kecamatan->nama_kecamatan ?? '-',
             $r->kelurahan->nama_kelurahan ?? '-',
-            $r->status_dtks,
+            $r->sosialEkonomi->statusDtks->status_dtks,
+            $r->sosialEkonomi->jumlahKK->jumlah_kk ?? '-',
             $r->sosialEkonomi->jenisKelamin->jenis_kelamin ?? '-',
             $r->sosialEkonomi->usia ?? '-',
             $r->sosialEkonomi->pendidikanTerakhir->pendidikan_terakhir ?? '-',
@@ -201,7 +345,7 @@ class RumahSheet implements FromQuery, WithMapping, WithHeadings, WithTitle, Wit
         // tetap sama seperti punyamu di atas
          return [
             // Identitas + Sosial + Kepemilikan
-            'ID Rumah', 'Alamat', 'Kecamatan', 'Kelurahan', 'Status DTKS',
+            'ID Rumah', 'Alamat', 'Kecamatan', 'Kelurahan', 'Status DTKS','Jumlah KK',
             'Jenis Kelamin', 'Usia', 'Pendidikan Terakhir', 'Pekerjaan Utama',
             'Besar Penghasilan/Bulan', 'Besar Pengeluaran/Bulan',
             'Status Kepemilikan Tanah', 'Bukti Kepemilikan Tanah', 'Status Kepemilikan Rumah',
@@ -280,20 +424,20 @@ class RumahSheet implements FromQuery, WithMapping, WithHeadings, WithTitle, Wit
                 // === Header kategori utama ===
                // === Header kategori utama ===
                 $s->setCellValue('A4', 'Identitas Rumah');
-                $s->setCellValue('V4', 'Aspek Keselamatan'); // ← dulu U4, geser kanan 1 karena tambah kolom tahun
-                $s->setCellValue('AD4', 'Aspek Kesehatan');  // ← dulu AC4
-                $s->setCellValue('AT4', 'Aspek Persyaratan Luas dan Kebutuhan Ruang'); // ← dulu AS4
-                $s->setCellValue('BF4', 'Aspek Komponen Bahan Bangunan'); // ← dulu BE4
-                $s->setCellValue('BQ4', 'Penilaian Akhir'); // ← dulu BP4
+                $s->setCellValue('W4', 'Aspek Keselamatan'); // ← dulu U4, geser kanan 1 karena tambah kolom tahun
+                $s->setCellValue('AE4', 'Aspek Kesehatan');  // ← dulu AC4
+                $s->setCellValue('AU4', 'Aspek Persyaratan Luas dan Kebutuhan Ruang'); // ← dulu AS4
+                $s->setCellValue('BG4', 'Aspek Komponen Bahan Bangunan'); // ← dulu BE4
+                $s->setCellValue('BR4', 'Penilaian Akhir'); // ← dulu BP4
                 // $s->setCellValue('BW4', 'Dokumen Pendukung'); // jika aktifkan foto
 
                 // === Merge kategori ===
-                $s->mergeCells('A4:U4');   // Identitas Rumah → tambah 1 kolom (tahun)
-                $s->mergeCells('V4:AC4');  // Aspek Keselamatan
-                $s->mergeCells('AD4:AS4'); // Aspek Kesehatan
-                $s->mergeCells('AT4:BE4'); // Aspek Luas & Ruang
-                $s->mergeCells('BF4:BP4'); // Komponen Bahan
-                $s->mergeCells('BQ4:BV4'); // Penilaian Akhir
+                $s->mergeCells('A4:V4');   // Identitas Rumah → tambah 1 kolom (tahun)
+                $s->mergeCells('W4:AD4');  // Aspek Keselamatan
+                $s->mergeCells('AE4:AT4'); // Aspek Kesehatan
+                $s->mergeCells('AU4:BF4'); // Aspek Luas & Ruang
+                $s->mergeCells('BG4:BR4'); // Komponen Bahan
+                $s->mergeCells('BS4:BV4'); // Penilaian Akhir
                 // $s->mergeCells('BW4:CB4'); // Dokumen Pendukung jika diaktifkan
 
                 // === Style kategori (baris 4) ===

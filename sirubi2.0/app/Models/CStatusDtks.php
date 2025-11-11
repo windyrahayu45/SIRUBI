@@ -11,8 +11,8 @@ class CStatusDtks extends Model
     protected $fillable = ['id_status_dtks', 'status_dtks'];
     public $timestamps = false;
 
-    public function kepemilikanRumah()
+    public function sosialEkonomi()
     {
-        return $this->hasMany(KepemilikanRumah::class, 'status_dtks_id', 'id_status_dtks');
+        return $this->hasMany(SosialEkonomiRumah::class, 'status_dtks_id', 'id_status_dtks');
     }
 }

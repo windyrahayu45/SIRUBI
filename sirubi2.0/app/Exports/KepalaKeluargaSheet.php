@@ -19,16 +19,32 @@ class KepalaKeluargaSheet implements FromQuery, WithMapping, WithHeadings, WithT
 {
     protected $offset;
     protected $limit;
+    protected $query;
     protected static $rowNumber = 1; // counter global antar chunk
 
-    public function __construct($offset = 0, $limit = 1000)
+    public function __construct($offset = 0, $limit = 1000, $query = null)
     {
         $this->offset = $offset;
         $this->limit  = $limit;
+        $this->query = $query;
+        
     }
 
     public function query()
     {
+        // Jika dikirim query hasil filter (biasanya dari Rumah)
+        if ($this->query) {
+            // Ambil hanya ID rumah yang lolos filter
+            $filteredIds = $this->query->pluck('id_rumah')->toArray();
+
+            return KepalaKeluarga::with(['anggota', 'rumah'])
+                ->whereIn('rumah_id', $filteredIds)
+                ->orderBy('id', 'asc')
+                ->offset($this->offset)
+                ->limit($this->limit);
+        }
+
+        // Default: semua data KK
         return KepalaKeluarga::with(['anggota', 'rumah'])
             ->orderBy('id', 'asc')
             ->offset($this->offset)

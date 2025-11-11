@@ -226,7 +226,7 @@ function initTable() {
         ajax: { url: "{{ route('livewire.datatables.rumah') }}", type: "GET" },
         columns: [
             { data: 'expand', orderable: false, searchable: false },
-            { data: 'DT_RowIndex', orderable: false, searchable: false },
+             { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
             { data: 'nama_pemilik' },
             { data: 'alamat' },
             { data: 'kecamatan' },

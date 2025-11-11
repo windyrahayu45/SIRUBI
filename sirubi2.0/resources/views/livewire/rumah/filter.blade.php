@@ -855,17 +855,12 @@
 
                     </div>
 
-                    <div class="card-footer">
-
-                    </div>
-
-              
                    
                     <!--end::Body-->
                 </div>
                  </form>
 
-                <div class="card">
+                <div class="card mt-10"  id="tableContainer">
                     <!--begin::Card header-->
                     <div class="card-header border-0 pt-6">
                         <div class="card-title">
@@ -888,8 +883,84 @@
                             </div>
                             <!--end::Search-->
                         </div>
+                        <div class="card-toolbar" data-select2-id="select2-data-132-9owp">
+
+                             <button type="button" class="btn btn-light-primary me-3" data-bs-toggle="modal" data-bs-target="#kt_modal_export_users">
+                                <!--begin::Svg Icon | path: icons/duotune/arrows/arr078.svg-->
+                                <span class="svg-icon svg-icon-2">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <rect opacity="0.3" x="12.75" y="4.25" width="12" height="2" rx="1" transform="rotate(90 12.75 4.25)" fill="currentColor"></rect>
+                                        <path d="M12.0573 6.11875L13.5203 7.87435C13.9121 8.34457 14.6232 8.37683 15.056 7.94401C15.4457 7.5543 15.4641 6.92836 15.0979 6.51643L12.4974 3.59084C12.0996 3.14332 11.4004 3.14332 11.0026 3.59084L8.40206 6.51643C8.0359 6.92836 8.0543 7.5543 8.44401 7.94401C8.87683 8.37683 9.58785 8.34458 9.9797 7.87435L11.4427 6.11875C11.6026 5.92684 11.8974 5.92684 12.0573 6.11875Z" fill="currentColor"></path>
+                                        <path opacity="0.3" d="M18.75 8.25H17.75C17.1977 8.25 16.75 8.69772 16.75 9.25C16.75 9.80228 17.1977 10.25 17.75 10.25C18.3023 10.25 18.75 10.6977 18.75 11.25V18.25C18.75 18.8023 18.3023 19.25 17.75 19.25H5.75C5.19772 19.25 4.75 18.8023 4.75 18.25V11.25C4.75 10.6977 5.19771 10.25 5.75 10.25C6.30229 10.25 6.75 9.80228 6.75 9.25C6.75 8.69772 6.30229 8.25 5.75 8.25H4.75C3.64543 8.25 2.75 9.14543 2.75 10.25V19.25C2.75 20.3546 3.64543 21.25 4.75 21.25H18.75C19.8546 21.25 20.75 20.3546 20.75 19.25V10.25C20.75 9.14543 19.8546 8.25 18.75 8.25Z" fill="currentColor"></path>
+                                    </svg>
+                                </span>
+                                <!--end::Svg Icon-->Export</button>
+
+                        </div>
+                        <div class="modal fade" id="kt_modal_export_users" tabindex="-1" aria-hidden="true" style="display: none;"  wire:ignore.self>
+                                <!--begin::Modal dialog-->
+                                <div class="modal-dialog modal-dialog-centered mw-650px" data-select2-id="select2-data-131-um5u">
+                                    <!--begin::Modal content-->
+                                    <div class="modal-content">
+                                        <!--begin::Modal header-->
+                                        <div class="modal-header">
+                                            <!--begin::Modal title-->
+                                            <h2 class="fw-bold">Export Data</h2>
+                                            <!--end::Modal title-->
+                                            <!--begin::Close-->
+                                            <div class="btn btn-icon btn-sm btn-active-icon-primary" data-kt-users-modal-action="close" data-bs-dismiss="modal">
+                                                <!--begin::Svg Icon | path: icons/duotune/arrows/arr061.svg-->
+                                                <span class="svg-icon svg-icon-1">
+                                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="currentColor"></rect>
+                                                        <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="currentColor"></rect>
+                                                    </svg>
+                                                </span>
+                                                <!--end::Svg Icon-->
+                                            </div>
+                                            <!--end::Close-->
+                                        </div>
+                                        <!--end::Modal header-->
+                                        <!--begin::Modal body-->
+                                        <div class="modal-body scroll-y mx-5 mx-xl-15 my-7">
+                                            <!--begin::Form-->
+                                            <form id="kt_modal_export_users_form" class="form fv-plugins-bootstrap5 fv-plugins-framework">
+                                                <div class="fv-row mb-10" wire:ignore>
+                                                    <label class="required fs-6 fw-semibold form-label mb-2">Pilih Format Export</label>
+                                                    <select name="format"
+                                                            data-control="select2"
+                                                            data-placeholder="Select a format"
+                                                            data-hide-search="true"
+                                                            class="form-select form-select-solid fw-bold"
+                                                            id="format"
+                                                            style="border-color: rgb(54 54 96);">
+                                                        <option></option>
+                                                        <option value="excel">Excel (.xls)</option>
+                                                        <option value="geojson">Geojson (.geojson)</option>
+                                                    </select>
+                                                </div>
+
+                                                <div class="text-center">
+                                                    <button type="button" class="btn btn-light me-3" data-bs-dismiss="modal">Batal</button>
+                                                    <button type="button" id="btnExport" class="btn btn-primary">
+                                                        <span class="indicator-label">Export</span>
+                                                        <span class="indicator-progress" style="display:none;">
+                                                            Mohon Tunggu... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                                        </span>
+                                                    </button>
+                                                </div>
+                                            </form>
+
+                                            <!--end::Form-->
+                                        </div>
+                                        <!--end::Modal body-->
+                                    </div>
+                                    <!--end::Modal content-->
+                                </div>
+                                <!--end::Modal dialog-->
+                            </div>
                     </div>
-                    <div class="card-body pt-0" id="tableContainer" >
+                    <div class="card-body pt-0" >
                         <!--begin::Table-->
                         <div wire:ignore>
                         <table id="rumahTable" class="table align-middle table-row-dashed fs-6 gy-5 w-100">
@@ -925,62 +996,71 @@
     <script src="{{ asset('assets/js/widgets.bundle.js') }}"></script>
 	<script src="{{ ('assets/js/custom/widgets.js')}} "></script>
 
+
 <script>
-//document.addEventListener('livewire:navigated', initSelect2);
+document.addEventListener('livewire:navigated', () => {
+    console.log('✅ Export JS Loaded');
 
+    const btnExport = document.getElementById('btnExport');
 
-// function initSelect2() {
-//     console.log("✅ Init Select2 triggered");
+    btnExport.addEventListener('click', function (e) {
+        e.preventDefault(); // ⛔️ cegah reload form
 
-//     $('[data-control="select2"]').each(function() {
-//         const el = $(this);
+        // ambil format dari select2
+        const format = $('#format').val();
+        if (!format) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Pilih format export!',
+                text: 'Silakan pilih format file yang ingin diekspor.',
+            });
+            return;
+        }
 
-//            // 🔒 Skip kalau sudah diinisialisasi sebelumnya
-//         if (el.data('select2-initialized')) return;
+        // ambil semua filter aktif (select2 lain di halaman)
+        const filters = {};
+        $('[data-control="select2"]').each(function () {
+            const name = $(this).attr('name');
+            const val = $(this).val();
+            if (name && val && val.length > 0) {
+                filters[name] = Array.isArray(val) ? val : [val];
+            }
+        });
 
-//         el.data('select2-initialized', true); // tandai sudah init
+        console.log('📤 Mengirim filter ke Livewire:', filters);
 
-//         // Pastikan tidak diinisialisasi dua kali
-//         // if (el.data('select2')) {
-//         //     el.select2('destroy');
-//         // }
-//         // console.log(el.data('placeholder'))
-//         el.select2({
-          
-//             width: '100%',
-//             placeholder: el.data('placeholder') ?? '',
-          
-//         });
+        // tampilkan spinner loading di tombol export
+        const label = btnExport.querySelector('.indicator-label');
+        const spinner = btnExport.querySelector('.indicator-progress');
+        label.style.display = 'none';
+        spinner.style.display = 'inline-flex';
 
-//         // Saat value diubah, kirim ke Livewire
-//         el.on('change', function () {
-//             const value = $(this).val();
-//             const name = el.data('name');
-//            // alert(value)
-//              const componentId = el.closest('[wire\\:id]').attr('wire:id');
+        // kirim event ke komponen Livewire Filter
+      Livewire.dispatch('handleExportFromFilter', [{
+        format: format,
+        filters: filters
+    }]);
 
-//     if (componentId) {
-//         const component = Livewire.find(componentId);
-//         if (component) {
-//            // console.log('✅ Dispatch ke komponen:', component.name);
-//            component.call('select2Changed', { name, value });
-//            //Livewire.dispatch('select2Changed', { name, value });
-//         }
-//     } else {
-//         console.warn('⚠️ Tidak menemukan komponen Livewire untuk select2');
-//     }
-//         });
-//     });
-// }
+        // tutup modal otomatis
+        // const modalEl = document.getElementById('kt_modal_export_users');
+        // const modal = bootstrap.Modal.getInstance(modalEl);
+        // modal.hide();
 
-
-
+        // kembalikan tombol ke normal setelah beberapa detik
+        setTimeout(() => {
+            label.style.display = 'inline-flex';
+            spinner.style.display = 'none';
+        }, 30000);
+    });
+});
 </script>
+
+
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     window.addEventListener('swal:error', function (event) {
-        console.log(event)
+        //console.log(event)
         Swal.fire({
             icon: 'warning',
             title: event.detail[0].title,
@@ -1011,10 +1091,12 @@ document.addEventListener('DOMContentLoaded', function () {
         data[name] = value;
     });
 
-    console.log('📦 Kirim semua value ke Livewire:', data);
+    //console.log('📦 Kirim semua value ke Livewire:', data);
 
     // kirim balik ke Livewire sekali saja
     Livewire.dispatch('applySelect2Filters', [data]);
+
+    
 
 
 
@@ -1023,6 +1105,41 @@ document.addEventListener('DOMContentLoaded', function () {
 
 });
 </script>
+<script>
+document.addEventListener('livewire:navigated', () => {
+    console.log('✅ GeoJSON listener aktif');
+
+    // Saat event dari Livewire dipancarkan
+    Livewire.on('geojson-ready', ({ url }) => {
+        if (!url) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                text: 'File  tidak ditemukan.',
+            });
+            return;
+        }
+
+        console.log('📦 File siap diunduh:', url);
+
+        // Buat link download otomatis
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = url.split('/').pop();
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Export Berhasil!',
+            text: 'File  sedang diunduh.',
+            timer: 2500,
+        });
+    });
+});
+</script>
+
 
 <script>
 document.addEventListener('livewire:navigated', function () {
@@ -1057,14 +1174,14 @@ document.addEventListener('livewire:navigated', function () {
                             }
                         });
 
-                        console.log("📤 Payload ke server:", d);
+                        //console.log("📤 Payload ke server:", d);
                         return d;
                     }
                 
             },
             columns: [
                 { data: 'expand', orderable: false, searchable: false },
-                { data: 'DT_RowIndex', name: 'DT_RowIndex' },
+                { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                 { data: 'nama_pemilik' },
                 { data: 'alamat' },
                 { data: 'kecamatan' },
@@ -1094,7 +1211,7 @@ document.addEventListener('livewire:navigated', function () {
 
     // 🔹 Jalankan reload hanya saat tombol Submit ditekan (event Livewire)
     Livewire.on('refreshDataTable', (filters) => {
-        console.log("✅ Event refreshDataTable diterima", filters[0]);
+       // console.log("✅ Event refreshDataTable diterima", filters[0]);
          window.__rumahFilters = JSON.parse(JSON.stringify(filters[0] || {}));
         
         rumahTable.ajax.reload();
@@ -1149,7 +1266,7 @@ document.addEventListener('livewire:navigated', function () {
         }).then((result) => {
             if (result.isConfirmed) {
                 // 🔥 Dispatch event ke Livewire TANPA render ulang tabel
-                console.log('🔥 Dispatch deleteRumah untuk ID:', id);
+                //console.log('🔥 Dispatch deleteRumah untuk ID:', id);
            Livewire.dispatch('deleteRumah', [{ id: id }]);
 
         }
@@ -1181,17 +1298,18 @@ document.addEventListener('livewire:navigated', function () {
 </script>
 
 <script>
+
 document.addEventListener('livewire:navigated', () => {
     // 🔹 Pastikan stepper hanya diinisialisasi sekali
     if (window.stepperBound) return;
     window.stepperBound = true;
 
-   
+ 
 
     $(document).on('change', '#kecamatan_id', function() {
         const selected = $(this).val();
 
-        console.log('📍 Kecamatan dipilih:', selected);
+       // console.log('📍 Kecamatan dipilih:', selected);
 
         // reset kelurahan dulu
         const kelurahanSelect = $('#kelurahan_id');
@@ -1224,7 +1342,7 @@ document.addEventListener('livewire:navigated', () => {
         const $kelurahan = $('#kelurahan_id');
         if ($kelurahan.length && $kelurahan.data('select2')) {
             $kelurahan.val('').trigger('change');
-            console.log('🔁 Kelurahan di-reset (select2 + Livewire)');
+           // console.log('🔁 Kelurahan di-reset (select2 + Livewire)');
         }
     });
 
@@ -1238,14 +1356,9 @@ document.addEventListener('livewire:navigated', () => {
        // alert(data[0].length)
         // Loop sebanyak data.length
        data.forEach((row) => {
-            // kelurahanSelect.append(
-            //     $('<option>', {
-            //         value: row.id_kelurahan,
-            //         text: row.nama_kelurahan
-            //     })
-            // );
+            
             for (let i = 0; i < data[0].length; i++) {
-                console.log(row[i])
+                //console.log(row[i])
                 kelurahanSelect.append(
                 $('<option>', {
                     value: row[i].id_kelurahan,

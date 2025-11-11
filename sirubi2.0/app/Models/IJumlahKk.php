@@ -13,8 +13,8 @@ class IJumlahKk extends Model
 
     protected $fillable = ['id_jumlah_kk', 'jumlah_kk'];
 
-    public function kepemilikanRumah()
+    public function sosialEkonomi()
     {
-        return $this->hasMany(KepemilikanRumah::class, 'jumlah_kk_id', 'id_jumlah_kk');
+        return $this->hasMany(SosialEkonomiRumah::class, 'jumlah_kk_id', 'id_jumlah_kk');
     }
 }
