@@ -247,7 +247,7 @@ class RumahSheet implements FromQuery, WithMapping, WithHeadings, WithTitle, Wit
             $r->alamat,
             $r->kelurahan->kecamatan->nama_kecamatan ?? '-',
             $r->kelurahan->nama_kelurahan ?? '-',
-            $r->sosialEkonomi->statusDtks->status_dtks,
+            $r->sosialEkonomi->statusDtks->status_dtks ?? '-',
             $r->sosialEkonomi->jumlahKK->jumlah_kk ?? '-',
             $r->sosialEkonomi->jenisKelamin->jenis_kelamin ?? '-',
             $r->sosialEkonomi->usia ?? '-',

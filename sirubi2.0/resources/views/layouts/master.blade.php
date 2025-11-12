@@ -39,7 +39,7 @@ License: For each use you must have a valid license purchased only from above li
 		<link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet" type="text/css" />
 		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-
+		@stack('styles')
 		<!--end::Global Stylesheets Bundle-->
 	</head>
 	<!--end::Head-->
