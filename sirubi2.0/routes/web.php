@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CetakController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\RekapExportController;
 use App\Livewire\Dashboard;
 use App\Livewire\Data;
 use App\Livewire\Peta;
@@ -66,6 +67,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/api/kelurahan-by-kecamatan', [CetakController::class, 'getKelurahan'])
     ->name('api.kelurahan-by-kecamatan');
+
+    Route::get('/rekap/export/all-excel/{kecamatan}', 
+    [RekapExportController::class, 'exportAllExcel']
+    )->name('rekap.export.all.excel');
+
+    Route::get('/rekap/export/all-pdf/{kecamatan}', 
+        [RekapExportController::class, 'exportAllPdf']
+    )->name('rekap.export.all.pdf');
+
 
 
 
