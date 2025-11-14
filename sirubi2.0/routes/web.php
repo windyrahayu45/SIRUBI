@@ -3,14 +3,19 @@
 use App\Http\Controllers\CetakController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RekapExportController;
+use App\Livewire\Bantuan;
 use App\Livewire\Dashboard;
 use App\Livewire\Data;
+use App\Livewire\Dokumentasi;
 use App\Livewire\Peta;
+use App\Livewire\Polygon;
+use App\Livewire\Polygon\Add as PolygonAdd;
 use App\Livewire\Rekap;
 use App\Livewire\Rumah\Add;
 use App\Livewire\Rumah\Edit;
 use App\Livewire\Rumah\Filter;
 use App\Livewire\Rumah\Show;
+use App\Livewire\Users;
 use App\Models\Rumah;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -43,7 +48,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/data', Data::class)->name('data');
     Route::get('/peta', Peta::class)->name('peta');
     Route::get('/rekap', Rekap::class)->name('rekap');
+    Route::get('/bantuan', Bantuan::class)->name('bantuan');
+    Route::get('/polygon', Polygon::class)->name('polygon');
+    Route::get('/dokumentasi', Dokumentasi::class)->name('dokumentasi');
+    Route::get('/users', Users::class)->name('users');
     Route::get('/datatable/rumah', [Data::class, 'getData'])->name('livewire.datatables.rumah');
+    Route::get('/datatable/bantuan', [Bantuan::class, 'getData'])->name('livewire.datatables.bantuan');
+    Route::get('/datatable/polygon', [Polygon::class, 'getData'])->name('livewire.datatables.polygon');
+    Route::get('/datatable/dokumentasi', [Dokumentasi::class, 'getData'])->name('livewire.datatables.dokumentasi');
+    Route::get('/datatable/user', [Users::class, 'getData'])->name('livewire.datatables.user');
 
     Route::get('/datatable/rumah/detail/{id}', function ($id) {
         $rumah = Rumah::with([
@@ -60,6 +73,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/rumah/{id}/edit', Edit::class)->name('rumah.edit');
 
     Route::get('/rumah-add', Add::class)->name('rumah.add');
+    Route::get('/polygon-add', PolygonAdd::class)->name('polygon.add');
+    Route::get('/polygon/edit/{id}', \App\Livewire\Polygon\Add::class)->name('polygon.edit');
 
      Route::get('/rumah-filter', Filter::class)->name('rumah.filter');
 

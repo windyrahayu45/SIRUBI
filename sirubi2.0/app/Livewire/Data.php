@@ -21,7 +21,7 @@ class Data extends Component
    
 
 
-   public function exportData()
+    public function exportData()
     {
         if (empty($this->exportFormat)) {
             $this->dispatch('swal:error', [
