@@ -13,7 +13,7 @@ class ImportKkCommand extends Command
     public function handle()
     {
         $oldDb = DB::connection('mysql_old');
-        $this->info('🚀 Mulai import data KK (multi KK per rumah)...');
+        $this->info(' Mulai import data KK (multi KK per rumah)...');
 
         $chunkSize = 2500;
         $offset = 0;
@@ -83,9 +83,9 @@ class ImportKkCommand extends Command
             }
 
             $offset += $chunkSize;
-            $this->info("✅ Batch ke-" . ($offset / $chunkSize) . " selesai. KK: {$totalKK}, Anggota: {$totalAnggota}");
+            $this->info(" Batch ke-" . ($offset / $chunkSize) . " selesai. KK: {$totalKK}, Anggota: {$totalAnggota}");
         } while (true);
 
-        $this->info("🎉 Import selesai. Total KK: {$totalKK}, Total Anggota: {$totalAnggota}");
+        $this->info(" Import selesai. Total KK: {$totalKK}, Total Anggota: {$totalAnggota}");
     }
 }

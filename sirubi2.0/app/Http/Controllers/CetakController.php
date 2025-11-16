@@ -39,7 +39,7 @@ class CetakController extends Controller
 
         $apiKey = '38acbfc8ed97436c802882f2e49c13a7';
 
-        // Ambil snapshot dari layanan static map (contoh OSM via Maps Static API)
+       
         $mapUrl = "https://maps.geoapify.com/v1/staticmap?style=osm-carto&width=600&height=350&center=lonlat:{$lon},{$lat}&zoom=16&marker=lonlat:{$lon},{$lat};color:%23ff0000;size:medium&apiKey={$apiKey}";
 
         Log::info($mapUrl);

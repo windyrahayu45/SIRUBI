@@ -33,14 +33,14 @@ class ImportDokumenRumahCommand extends Command
 
             foreach ($data as $row) {
 
-                // 🔍 cari id_rumah baru (mapping dari id_rumah_lama)
+                
                 $rumahBaru = DB::table('rumah')
                     ->where('id_rumah_lama', $row->id_rumah)
                     ->value('id_rumah');
 
-                if (!$rumahBaru) continue; // skip kalau belum ada mapping rumah-nya
+                if (!$rumahBaru) continue; 
 
-                // 📁 deteksi path foto lama
+                
                 $basePath = $this->detectOldPath($row);
 
                 DB::table('dokumen_rumah')
@@ -73,9 +73,7 @@ class ImportDokumenRumahCommand extends Command
     {
         $base = "uploads/";
 
-        // karena struktur folder lama adalah:
-        // uploads/{id_kecamatan}/{id_kelurahan}/{id_rumah_lama}/
-        // kita buat kemungkinan path-nya seperti berikut:
+       
         $paths = [
             "{$base}{$row->kecamatan_id}/{$row->kelurahan_id}/{$row->id_rumah}/",
             "{$base}{$row->kelurahan_id}/{$row->id_rumah}/",

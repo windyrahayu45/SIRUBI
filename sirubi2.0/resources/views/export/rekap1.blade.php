@@ -19,7 +19,7 @@
     ];
 @endphp
 
-<h2 class="pdf-title">DATA REKAPITULASI #2 – DATA UMUM RUMAH</h2>
+<h2 class="pdf-title">DATA REKAPITULASI #1 – DATA UMUM RUMAH</h2>
 <table class="pdf-table">
     <thead>
         <tr>

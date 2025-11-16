@@ -353,7 +353,7 @@
                                                 <thead class="bg-gray-900 text-gray-200 border-bottom border-gray-700">
 
                                                     <tr>
-                                                        <th colspan="15" class="fs-6 fw-bold text-uppercase border-gray-700 bg-gray-800">
+                                                        <th colspan="82" class="fs-6 fw-bold text-uppercase border-gray-700 bg-gray-800">
                                                             DATA REKAPITULASI #2<br><small>Identitas Penghuni Rumah</small>
                                                         </th>
                                                     </tr>

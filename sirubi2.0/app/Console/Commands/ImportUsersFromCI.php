@@ -15,7 +15,7 @@ class ImportUsersFromCI extends Command
     {
         $oldDb = DB::connection('mysql_old');
 
-        $this->info("🔄 Mulai import users dari database CI...");
+        $this->info(" Mulai import users dari database CI...");
 
         $chunk = 500;
         $offset = 0;
@@ -58,10 +58,10 @@ class ImportUsersFromCI extends Command
             }
 
             $offset += $chunk;
-            $this->info("✔ Batch " . ($offset / $chunk) . " selesai... total user: {$total}");
+            $this->info(" Batch " . ($offset / $chunk) . " selesai... total user: {$total}");
 
         } while (true);
 
-        $this->info("🎉 Import selesai. Total user berhasil diimport: {$total}");
+        $this->info(" Import selesai. Total user berhasil diimport: {$total}");
     }
 }

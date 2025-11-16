@@ -11,14 +11,7 @@ class AKondisiSloof extends Model
     protected $fillable = ['kondisi_sloof'];
     public $timestamps = false;
 
-    // ======================
-    // 🔗 RELASI ANTAR TABEL
-    // ======================
-
-    /**
-     * Relasi ke tabel fisik_rumah
-     * Foreign key di fisik_rumah: kondisi_sloof_id
-     */
+   
     public function fisikRumah()
     {
         return $this->hasMany(FisikRumah::class, 'kondisi_sloof_id', 'id_kondisi_sloof');

@@ -93,6 +93,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
         [RekapExportController::class, 'exportAllPdf']
     )->name('rekap.export.all.pdf');
 
+    Route::get('/download-export/{filename}', function ($filename) {
+        $path = storage_path("app/public/$filename");
+
+        if (!file_exists($path)) {
+            abort(404, 'File not found');
+        }
+
+        return response()->download($path)->deleteFileAfterSend(true);
+    })->name('export.download');
+
+    Route::get('/download-geojson/{filename}', function ($filename) {
+        $path = storage_path("app/public/$filename");
+
+        if (!file_exists($path)) {
+            abort(404, 'File not found');
+        }
+
+        return response()->download($path)->deleteFileAfterSend(true);
+    })->name('geojson.download');
+
+
 
 
 

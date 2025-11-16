@@ -34,21 +34,19 @@ class RekapExportController extends Controller
     }
 
 
-    /**
-     * EXPORT PDF SEMUA TABEL (HALAMAN PER ACCORDION)
-     */
+   
     public function exportAllPdf($kecamatan)
     {
         $kec = IKecamatan::findOrFail($kecamatan);
 
-        // Ambil semua data per rekap
+      
     $rekap1     = Rekap1Builder::build($kecamatan);
     $rekap2Full = Rekap2PdfBuilder::build($kecamatan);
     $rekap3Full = Rekap3PdfBuilder::build($kecamatan);
 
     $html  = view('export.rekap1', compact('rekap1','kec'))->render();
 
-    // HALAMAN BARU
+    
     $html .= '<div class="page-break"></div>';
 
     $html .= view('export.rekap2', [
@@ -60,15 +58,14 @@ class RekapExportController extends Controller
         'kec'       => $kec
     ])->render();
 
-    // HALAMAN BARU
-    // $html .= '<div class="page-break"></div>';
+   
 
     $html .= view('export.rekap3', [
-        'rekap3'    => $rekap3Full['data'],   // ⬅ BENAR!
-        'header2'   => $rekap3Full['header2'], // ⬅ BENAR!
-        'header3'   => $rekap3Full['header3'], // ⬅ BENAR!
-        'rekap3Sum' => $rekap3Full['rekap3Sum'], // ⬅ BENAR!
-        'masters'   => $rekap3Full['masters'], // ⬅ BENAR!
+        'rekap3'    => $rekap3Full['data'],   
+        'header2'   => $rekap3Full['header2'], 
+        'header3'   => $rekap3Full['header3'], 
+        'rekap3Sum' => $rekap3Full['rekap3Sum'], 
+        'masters'   => $rekap3Full['masters'], 
         'kec'       => $kec
     ])->render();
 
@@ -95,7 +92,7 @@ class RekapExportController extends Controller
     ])->render();
 
     $rekap6Full = Rekap6PdfBuilder::build($kecamatan);
-$html .= '<div class="page-break"></div>';
+    $html .= '<div class="page-break"></div>';
     $html .= view('export.rekap6', [
         'data'      => $rekap6Full['data'],
         'chunks'    => $rekap6Full['chunks'],
@@ -104,15 +101,7 @@ $html .= '<div class="page-break"></div>';
         'kec'       => $kec
     ])->render();
 
-        // // Gabungkan semua view jadi HTML besar
-        // $html = view('export.rekap1', compact('rekap1', 'kec'))->render();
-        // $html .= view('export.rekap2', compact('rekap2', 'kec'))->render();
-        // $html .= view('export.rekap3', compact('rekap3', 'kec'))->render();
-        // $html .= view('export.rekap4', compact('rekap4', 'kec'))->render();
-        // $html .= view('export.rekap5', compact('rekap5', 'kec'))->render();
-        // $html .= view('export.rekap6', compact('rekap6', 'kec'))->render();
-
-        // Buat PDF
+       
         $pdf = Pdf::loadHTML($html)
                 ->setPaper('A4', 'landscape')
                 ->setOption('isHtml5ParserEnabled', true)

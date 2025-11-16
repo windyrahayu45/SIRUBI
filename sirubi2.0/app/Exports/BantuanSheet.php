@@ -94,8 +94,7 @@ class BantuanSheet implements FromQuery, WithMapping, WithHeadings, WithTitle, W
                 'Nama Bantuan' => $rumah->bantuan->nama_bantuan ?? '-',
                 'Tahun Bantuan' => $rumah->bantuan->tahun_bantuan ?? '-',
                 'Nominal Bantuan (Rp)' => $rumah->bantuan->nominal_bantuan
-                    ? number_format($rumah->bantuan->nominal_bantuan, 0, ',', '.')
-                    : '-',
+                    ?? '-',
                 'Pernah Mendapatkan Bantuan' =>
                     $rumah->bantuan->pernahMendapatkanBantuan->pernah_mendapatkan_bantuan ?? '-',
             ];
@@ -119,8 +118,7 @@ class BantuanSheet implements FromQuery, WithMapping, WithHeadings, WithTitle, W
                     'Nama Bantuan' => $r->nama ?? '-',
                     'Tahun Bantuan' => $r->tahun ?? '-',
                     'Nominal Bantuan (Rp)' => $r->nominal
-                        ? number_format($r->nominal, 0, ',', '.')
-                        : '-',
+                        ?? '-',
                     'Pernah Mendapatkan Bantuan' => '-',
                 ];
             }

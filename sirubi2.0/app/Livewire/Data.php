@@ -3,7 +3,9 @@
 namespace App\Livewire;
 
 use App\Exports\BantuanSheet;
+use App\Exports\KepalaKeluargaSheet;
 use App\Exports\RumahExport;
+use App\Exports\RumahSheet;
 use App\Models\Rumah;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -41,82 +43,202 @@ class Data extends Component
     }
 
     
+    // public function exportExcel()
+    // {
+    //     try {
+    //         ini_set('memory_limit', '4096M');
+    //         ini_set('max_execution_time', '1800');
+
+    //         $timestamp = now()->format('Ymd_His');
+    //         $folder = "exports_$timestamp";
+    //         $disk = 'public'; // gunakan disk Laravel agar lebih aman
+
+    //         // Buat folder public/storage/exports_20251109_1900/
+    //         $exportPath = storage_path("app/public/$folder");
+    //         if (!file_exists($exportPath)) mkdir($exportPath, 0777, true);
+
+    //         $files = [];
+    //         $maxRows = 1000;
+
+    //         // 🏠 1️⃣ Ekspor Rumah & KK (chunked)
+    //         $total = DB::table('rumah')->count();
+    //         $chunkCount = ceil($total / $maxRows);
+
+    //         for ($i = 0; $i < $chunkCount; $i++) {
+    //             $offset = $i * $maxRows;
+    //             $filename = "data_rumah_" . ($i + 1) . ".xlsx";
+
+    //             // Simpan file ke disk public
+    //             Excel::store(
+    //                 new RumahExport($offset, $maxRows),
+    //                 "$folder/$filename",
+    //                 $disk
+    //             );
+
+    //             // Ambil path absolut setelah tersimpan
+    //             $files[] = storage_path("app/public/$folder/$filename");
+    //         }
+
+    //         // 💰 2️⃣ Ekspor Bantuan
+    //         $bantuanFile = "data_bantuan.xlsx";
+    //         Excel::store(
+    //             new BantuanSheet(),
+    //             "$folder/$bantuanFile",
+    //             $disk
+    //         );
+    //         $files[] = storage_path("app/public/$folder/$bantuanFile");
+
+    //         // 🗜️ 3️⃣ Buat ZIP
+    //         $zipFile = storage_path("app/public/export_data_$timestamp.zip");
+    //         $zip = new \ZipArchive();
+
+    //         if ($zip->open($zipFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
+    //             foreach ($files as $f) {
+    //                 if (file_exists($f)) {
+    //                     $zip->addFile($f, basename($f));
+    //                 } else {
+    //                     Log::warning("⚠️ File tidak ditemukan: $f");
+    //                 }
+    //             }
+    //             $zip->close();
+    //         } else {
+    //             throw new \Exception("Gagal membuat ZIP file di: $zipFile");
+    //         }
+
+    //         // 🧹 4️⃣ Bersihkan file sementara
+    //         foreach ($files as $f) {
+    //             if (file_exists($f)) @unlink($f);
+    //         }
+    //         if (is_dir($exportPath)) @rmdir($exportPath);
+
+    //         // 🚀 5️⃣ Download ZIP
+    //         return response()->download($zipFile)->deleteFileAfterSend(true);
+
+    //     } catch (\Throwable $e) {
+    //         dd($e->getMessage(), $e->getFile(), $e->getLine());
+    //     }
+    // }
+
     public function exportExcel()
-    {
-        try {
-            ini_set('memory_limit', '4096M');
-            ini_set('max_execution_time', '1800');
+{
+    try {
+        ini_set('memory_limit', '4096M');
+        ini_set('max_execution_time', '1800');
 
-            $timestamp = now()->format('Ymd_His');
-            $folder = "exports_$timestamp";
-            $disk = 'public'; // gunakan disk Laravel agar lebih aman
+        $timestamp = now()->format('Ymd_His');
+        $folder = "exports_$timestamp";
+        $disk = 'public';
 
-            // Buat folder public/storage/exports_20251109_1900/
-            $exportPath = storage_path("app/public/$folder");
-            if (!file_exists($exportPath)) mkdir($exportPath, 0777, true);
+        // Buat folder temporary
+        $exportPath = storage_path("app/public/$folder");
+        if (!file_exists($exportPath)) mkdir($exportPath, 0777, true);
 
-            $files = [];
-            $maxRows = 1000;
+        $files = [];
+        $maxRows = 1000;
+        $filesPerZip = 3; // 3 file Excel per ZIP (masing-masing 2 sheet)
 
-            // 🏠 1️⃣ Ekspor Rumah & KK (chunked)
-            $total = DB::table('rumah')->count();
-            $chunkCount = ceil($total / $maxRows);
+        // 🏠 Ekspor Rumah dengan 2 Sheet
+        $total = DB::table('rumah')->count();
+        $chunkCount = ceil($total / $maxRows);
 
-            for ($i = 0; $i < $chunkCount; $i++) {
-                $offset = $i * $maxRows;
-                $filename = "data_rumah_" . ($i + 1) . ".xlsx";
+        $zipCounter = 1;
+        $currentZipFiles = [];
 
-                // Simpan file ke disk public
-                Excel::store(
-                    new RumahExport($offset, $maxRows),
-                    "$folder/$filename",
-                    $disk
-                );
+        for ($i = 0; $i < $chunkCount; $i++) {
+            $offset = $i * $maxRows;
+            $filename = "data_rumah_" . ($i + 1) . ".xlsx";
 
-                // Ambil path absolut setelah tersimpan
-                $files[] = storage_path("app/public/$folder/$filename");
-            }
-
-            // 💰 2️⃣ Ekspor Bantuan
-            $bantuanFile = "data_bantuan.xlsx";
+            // Export dengan 2 sheet
             Excel::store(
-                new BantuanSheet(),
-                "$folder/$bantuanFile",
+                [
+                    new RumahSheet($offset, $maxRows), // Sheet 1: Detail
+                    new KepalaKeluargaSheet($offset, $maxRows) // Sheet 2: Summary
+                ],
+                "$folder/$filename",
                 $disk
             );
-            $files[] = storage_path("app/public/$folder/$bantuanFile");
 
-            // 🗜️ 3️⃣ Buat ZIP
-            $zipFile = storage_path("app/public/export_data_$timestamp.zip");
-            $zip = new \ZipArchive();
+            $filePath = storage_path("app/public/$folder/$filename");
+            $currentZipFiles[] = $filePath;
+            $files[] = $filePath;
 
-            if ($zip->open($zipFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
-                foreach ($files as $f) {
-                    if (file_exists($f)) {
-                        $zip->addFile($f, basename($f));
-                    } else {
-                        Log::warning("⚠️ File tidak ditemukan: $f");
-                    }
+            // Buat ZIP setiap filesPerZip file atau di akhir
+            if (count($currentZipFiles) >= $filesPerZip || $i === $chunkCount - 1) {
+                $zipFilename = "export_batch_{$zipCounter}_{$timestamp}.zip";
+                $zipPath = storage_path("app/public/$folder/$zipFilename");
+                
+                $this->createZipFile($currentZipFiles, $zipPath);
+                
+                // Reset untuk batch berikutnya
+                $currentZipFiles = [];
+                $zipCounter++;
+                
+                // Beri jeda untuk mengurangi load
+                if ($i % 5 === 0) {
+                    sleep(1);
+                    gc_collect_cycles();
                 }
-                $zip->close();
-            } else {
-                throw new \Exception("Gagal membuat ZIP file di: $zipFile");
             }
-
-            // 🧹 4️⃣ Bersihkan file sementara
-            foreach ($files as $f) {
-                if (file_exists($f)) @unlink($f);
-            }
-            if (is_dir($exportPath)) @rmdir($exportPath);
-
-            // 🚀 5️⃣ Download ZIP
-            return response()->download($zipFile)->deleteFileAfterSend(true);
-
-        } catch (\Throwable $e) {
-            dd($e->getMessage(), $e->getFile(), $e->getLine());
         }
-    }
 
+        // 💰 Ekspor Bantuan (tetap 1 sheet)
+        $bantuanFile = "data_bantuan.xlsx";
+        Excel::store(
+            new BantuanSheet(),
+            "$folder/$bantuanFile",
+            $disk
+        );
+        $bantuanPath = storage_path("app/public/$folder/$bantuanFile");
+        $files[] = $bantuanPath;
+
+        // 🗜️ Buat ZIP Final yang berisi semua batch + bantuan
+        $finalZipFile = storage_path("app/public/export_data_complete_{$timestamp}.zip");
+        $this->createZipFile($files, $finalZipFile);
+
+        // 🧹 Bersihkan file temporary individual (tapi biarkan ZIP files)
+        foreach ($files as $f) {
+            if (file_exists($f) && !str_contains($f, '_batch_')) {
+                @unlink($f);
+            }
+        }
+
+        // 🚀 Download ZIP Final
+        return response()->download($finalZipFile)
+            ->deleteFileAfterSend(true)
+            ->setStatusCode(200, 'Export berhasil');
+
+    } catch (\Throwable $e) {
+        Log::error('Export Error: ' . $e->getMessage(), [
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        return response()->json([
+            'error' => 'Export gagal: ' . $e->getMessage()
+        ], 500);
+    }
+}
+
+/**
+ * Helper untuk membuat file ZIP
+ */
+private function createZipFile(array $files, string $zipPath): bool
+{
+    $zip = new \ZipArchive();
+    
+    if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
+        foreach ($files as $file) {
+            if (file_exists($file)) {
+                $zip->addFile($file, basename($file));
+            }
+        }
+        $zip->close();
+        return true;
+    }
+    
+    return false;
+}
 
 
     public function exportGeoJson()

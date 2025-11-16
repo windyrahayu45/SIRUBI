@@ -321,8 +321,11 @@ class Filter extends Component
             }
             if (is_dir($exportPath)) @rmdir($exportPath);
 
+            
+
             // ✅ Kirim URL download ke JS
-            $url = asset('storage/export_data_' . $timestamp . '.zip');
+           // $url = asset('storage/export_data_' . $timestamp . '.zip');
+            $url = route('export.download', ['filename' => "export_data_$timestamp.zip"]);
             Log::info('✅ Excel ZIP generated', ['url' => $url]);
 
             //$this->dispatch('excel-ready', url: $url);
@@ -438,61 +441,6 @@ class Filter extends Component
 
 
 
-    // public function exportGeoJson()
-    // {
-    //     try {
-    //         $query = $this->buildFilteredQuery();
-
-    //         Log:info('ge0', $this->filteredData);
-    //        Log::info('🧠 Query SQL:', [
-    //             'sql' => $query->toSql(),
-    //             'bindings' => $query->getBindings(),
-    //         ]);
-    //         $features = [];
-
-    //         $query->whereNotNull('latitude')->whereNotNull('longitude')
-    //             ->chunk(500, function ($chunk) use (&$features) {
-    //                 foreach ($chunk as $r) {
-    //                     $kepala = $r->kepalaKeluarga?->first();
-    //                     $anggota = $kepala?->anggota?->first();
-    //                     $nama = $anggota?->nama ?? '-';
-
-    //                     $features[] = [
-    //                         'type' => 'Feature',
-    //                         'geometry' => [
-    //                             'type' => 'Point',
-    //                             'coordinates' => [(float)$r->longitude, (float)$r->latitude],
-    //                         ],
-    //                         'properties' => [
-    //                             'id_rumah' => $r->id_rumah,
-    //                             'nama' => $nama,
-    //                             'alamat' => $r->alamat,
-    //                             'kelurahan' => $r->kelurahan->nama_kelurahan ?? '-',
-    //                             'kecamatan' => $r->kelurahan->kecamatan->nama_kecamatan ?? '-',
-    //                             'status_rumah' => $r->penilaian->status_rumah ?? '-',
-    //                         ],
-    //                     ];
-    //                 }
-    //             });
-
-    //         $geojson = [
-    //             'type' => 'FeatureCollection',
-    //             'features' => $features,
-    //         ];
-
-    //         $filename = 'rumah_filtered_'.now()->format('Ymd_His').'.geojson';
-    //         $path = Storage::disk('public')->path($filename);
-    //         Storage::disk('public')->put($filename, json_encode($geojson, JSON_PRETTY_PRINT));
-
-    //         return response()->download($path)->deleteFileAfterSend(true);
-    //     } catch (\Throwable $e) {
-    //         Log::error('Export GeoJSON gagal: '.$e->getMessage());
-    //         $this->dispatch('swal:error', [
-    //             'title' => 'Export Gagal!',
-    //             'text' => $e->getMessage(),
-    //         ]);
-    //     }
-    // }
 
 
     public function exportGeoJson()
@@ -547,10 +495,14 @@ class Filter extends Component
             Storage::disk('public')->put($filename, json_encode($geojson, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
             // Dapatkan URL publik ke file
-            $url = Storage::url($filename);
+            // $url = Storage::url($filename);
 
-            Log::info('✅ GeoJSON generated', ['url' => $url]);
+            // Log::info('✅ GeoJSON generated', ['url' => $url]);
 
+            // URL download via route (auto delete setelah download)
+        $url = route('geojson.download', ['filename' => $filename]);
+
+        Log::info('✅ GeoJSON generated', ['url' => $url]);
             // Emit event ke browser agar JS trigger download
             $this->dispatch('geojson-ready', url: $url);
         } catch (\Throwable $e) {

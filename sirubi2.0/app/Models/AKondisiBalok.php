@@ -24,8 +24,5 @@ class AKondisiBalok extends Model
         return $this->hasMany(FisikRumah::class, 'kondisi_balok_id', 'id_kondisi_balok');
     }
 
-    /**
-     * Jika kamu punya tabel referensi atau detail lain (misal master kondisi), bisa ditambah di sini
-     * Contoh: public function masterKategori() { ... }
-     */
+    
 }

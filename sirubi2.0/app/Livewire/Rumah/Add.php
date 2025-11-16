@@ -328,7 +328,7 @@ class Add extends Component
 
         if ($name && property_exists($this, $name)) {
             $this->$name = $value;
-            logger("✅ Livewire menerima {$name} = {$value}");
+            logger("Livewire menerima {$name} = {$value}");
         }
 
         // 🔹 Jika kecamatan berubah, filter kelurahan
@@ -357,7 +357,6 @@ class Add extends Component
     {
         
 
-       // $this->filteredKelurahan = IKelurahan::where('kecamatan_id', $this->kecamatan_id)->get();
        
 
          // 🔹 Filter daftar kelurahan berdasarkan kecamatan
@@ -994,15 +993,7 @@ class Add extends Component
                 'uploaded_at'  => now(),
             ]);
 
-            // foreach (array_keys($wajibFoto) as $field) {
-            //     $path = $this->$field->storeAs(
-            //         "rumah/{$rumah->id_rumah}",
-            //         "{$field}.jpg"
-            //     );
-            //    // $dokumen->$field = str_replace('public/', 'storage/', $path);
-
-            //     $dokumen->$field = "rumah/{$rumah->id_rumah}/{$field}.jpg";
-            // }
+           
 
             foreach (array_keys($wajibFoto) as $field) {
             if (!empty($this->$field)) {

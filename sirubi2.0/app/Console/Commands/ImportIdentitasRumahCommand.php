@@ -13,7 +13,7 @@ class ImportIdentitasRumahCommand extends Command
     public function handle()
     {
         $oldDb = DB::connection('mysql_old'); // koneksi database lama (CI)
-        $this->info('🚀 Memulai import data dari tbl_identitas_rumah...');
+        $this->info(' Memulai import data dari tbl_identitas_rumah...');
 
         $chunkSize = 1000;
         $offset = 0;
@@ -167,10 +167,10 @@ class ImportIdentitasRumahCommand extends Command
             }
 
             $offset += $chunkSize;
-            $this->info("✅ Batch ke-" . ($offset / $chunkSize) . " selesai (" . $totalImported . " data total).");
+            $this->info(" Batch ke-" . ($offset / $chunkSize) . " selesai (" . $totalImported . " data total).");
 
         } while (true);
 
-        $this->info("🎉 Import selesai. Total {$totalImported} data rumah berhasil dimasukkan.");
+        $this->info(" Import selesai. Total {$totalImported} data rumah berhasil dimasukkan.");
     }
 }

@@ -91,39 +91,10 @@ class Rekap extends Component
     public $masterBeradaLimbah;
     public $masterBeradaSungai;
 
-    // public $rekap4Columns = [];
-    // public $rekap4Labels = [];
-
-    // public $rekap5Columns = [];
-    // public $rekap5Labels = [];
+    
     public $format;
 
-    // public function exportData()
-    // {
-    //     $this->validate([
-    //         'format' => 'required'
-    //     ]);
-
-    //     if ($this->format === 'excel') {
-    //         return redirect()->route('rekap.export.all.excel', [
-    //             'kecamatan' => $this->kecamatanId
-    //         ]);
-    //     }
-
-    //     if ($this->format === 'pdf') {
-    //         return redirect()->route('rekap.export.all.pdf', [
-    //             'kecamatan' => $this->kecamatanId
-    //         ]);
-    //     }
-
-    //      if (empty($this->format)) {
-    //         $this->dispatch('swal:error', [
-    //             'title' => 'Format belum dipilih!',
-    //             'text'  => 'Silakan pilih format export terlebih dahulu.',
-    //         ]);
-    //         return;
-    //     }
-    // }
+  
 
     public function exportData()
 {
@@ -467,39 +438,7 @@ class Rekap extends Component
     }
 
    
-// public function loadRekap2Sum()
-// {
-//     $sum = [];
 
-//     if ($this->rekap2->isEmpty()) {
-//         $this->rekap2Sum = [];
-//         return;
-//     }
-
-//     // Ambil semua kolom dari row pertama
-//     $columns = array_keys((array) $this->rekap2->first());
-
-//     foreach ($columns as $col) {
-
-//         // Lewati kolom non-numeric
-//         if (in_array($col, [
-//             'nama_kelurahan',
-//             'nama_kecamatan',
-//             'kelurahan_id',
-//             'kecamatan_id'
-//         ])) {
-//             continue;
-//         }
-
-//         // Hitung manual dengan filter hanya nilai angka
-//         $sum[$col] = $this->rekap2
-//             ->pluck($col)
-//             ->filter(fn($v) => is_numeric($v))
-//             ->sum();
-//     }
-
-//     $this->rekap2Sum = $sum;
-// }
 
 public function calculateSum($collection, $skip = [])
 {

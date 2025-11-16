@@ -367,7 +367,7 @@
                                     
                                     <tr>
                                         <td colspan="3" style="border:1px solid #000; text-align:center; padding-top:6px;">
-                                            <a href="/rumah/detail/${r.id_rumah}" target="_blank">
+                                            <a href="/rumah/${r.id_rumah}" target="_blank">
                                                 <button class="btn btn-sm btn-primary">Detail</button>
                                             </a>
                                         </td>

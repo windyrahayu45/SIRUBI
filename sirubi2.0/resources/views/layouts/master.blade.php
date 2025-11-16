@@ -217,6 +217,22 @@ document.addEventListener('click', function (e) {
 		<!--end::Javascript-->
 		@livewireScripts
           @stack('js')
+		  <script>
+document.addEventListener('livewire:error', event => {
+
+    const error = event.detail;
+    console.error("Livewire Error:", error);
+
+    Swal.fire({
+        icon: 'error',
+        title: 'Terjadi Kesalahan',
+        text: 'Silakan coba lagi.',
+    });
+
+});
+</script>
+
+
 		
 	</body>
 	
