@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class BantuanRumah extends Model
 {
     protected $table = 'bantuan_rumah';
+
     protected $fillable = [
         'rumah_id', 'pernah_mendapatkan_bantuan_id', 'no_kk_penerima',
         'tahun_bantuan', 'nama_bantuan', 'nama_program_bantuan', 'nominal_bantuan'

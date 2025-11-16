@@ -15,6 +15,7 @@ use App\Livewire\Rumah\Add;
 use App\Livewire\Rumah\Edit;
 use App\Livewire\Rumah\Filter;
 use App\Livewire\Rumah\Show;
+use App\Livewire\Setting;
 use App\Livewire\Users;
 use App\Models\Rumah;
 use Illuminate\Support\Facades\Auth;
@@ -52,6 +53,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/polygon', Polygon::class)->name('polygon');
     Route::get('/dokumentasi', Dokumentasi::class)->name('dokumentasi');
     Route::get('/users', Users::class)->name('users');
+    Route::get('/setting', Setting::class)->name('setting');
     Route::get('/datatable/rumah', [Data::class, 'getData'])->name('livewire.datatables.rumah');
     Route::get('/datatable/bantuan', [Bantuan::class, 'getData'])->name('livewire.datatables.bantuan');
     Route::get('/datatable/polygon', [Polygon::class, 'getData'])->name('livewire.datatables.polygon');
