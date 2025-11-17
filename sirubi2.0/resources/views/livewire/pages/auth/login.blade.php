@@ -25,6 +25,7 @@ new #[Layout('layouts.guest')] class extends Component
 }; ?>
 
 <div>
+    
     <form id="login_form" class="form w-100" novalidate>
         <!--begin::Heading-->
         <div class="text-center mb-11">
@@ -64,12 +65,13 @@ new #[Layout('layouts.guest')] class extends Component
         </div>
 
         <!--begin::Submit button-->
-        <div class="d-grid mb-10">
-            <button type="button" class="btn btn-primary" id="btnLogin" wire:loading.attr="disabled">
+       <div class="d-grid mb-10">
+            <button type="button" class="btn btn-custom-red" id="btnLogin" wire:loading.attr="disabled">
                 <span wire:loading.remove>Sign In</span>
                 <span wire:loading>Mohon Tunggu...</span>
             </button>
         </div>
+
         <!--end::Submit button-->
     </form>
 </div>

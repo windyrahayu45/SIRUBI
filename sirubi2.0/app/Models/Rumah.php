@@ -8,6 +8,8 @@ class Rumah extends Model
 {
     protected $table = 'rumah';
     protected $primaryKey = 'id_rumah';
+    public $incrementing = false;
+    protected $keyType = 'string'; // atau integer, sesuaikan
 
     protected $fillable = [
         'id_rumah_lama',
@@ -24,6 +26,11 @@ class Rumah extends Model
     // ======================
     // 🔗 RELASI ANTAR TABEL
     // ======================
+
+    public function getKeyName()
+{
+    return 'id_rumah';
+}
 
     public function sosialEkonomi()
     {

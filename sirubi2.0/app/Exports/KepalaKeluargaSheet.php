@@ -15,66 +15,62 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 
-class KepalaKeluargaSheet implements FromQuery, WithMapping, WithHeadings, WithTitle, WithChunkReading, ShouldAutoSize, WithEvents
+class KepalaKeluargaSheet implements
+    FromQuery,
+    WithMapping,
+    WithHeadings,
+    WithTitle,
+    WithChunkReading,
+    ShouldAutoSize,
+    WithEvents
 {
-    protected $offset;
-    protected $limit;
+    protected $filteredIds = [];
     protected $query;
-    protected static $rowNumber = 1; // counter global antar chunk
+    protected static $rowNumber = 1;
 
-    public function __construct($offset = 0, $limit = 1000, $query = null)
+    public function __construct($query = null)
     {
-        $this->offset = $offset;
-        $this->limit  = $limit;
         $this->query = $query;
-        
+
+        // Jika ada query rumah → ambil ID pada tahap awal (AMAN)
+        if ($query) {
+            $this->filteredIds = $query->pluck('id_rumah')->toArray();
+        }
     }
 
     public function query()
     {
-        // Jika dikirim query hasil filter (biasanya dari Rumah)
-        if ($this->query) {
-            // Ambil hanya ID rumah yang lolos filter
-            $filteredIds = $this->query->pluck('id_rumah')->toArray();
-
+        // Jika sheet ini mengikuti filter RumahSheet
+        if (!empty($this->filteredIds)) {
             return KepalaKeluarga::with(['anggota', 'rumah'])
-                ->whereIn('rumah_id', $filteredIds)
-                ->orderBy('id', 'asc')
-                ->offset($this->offset)
-                ->limit($this->limit);
+                ->whereIn('rumah_id', $this->filteredIds)
+                ->orderBy('id', 'asc');
         }
 
-        // Default: semua data KK
+        // Default: semua KK
         return KepalaKeluarga::with(['anggota', 'rumah'])
-            ->orderBy('id', 'asc')
-            ->offset($this->offset)
-            ->limit($this->limit);
+            ->orderBy('id', 'asc');
     }
 
-   public function map($kk): array
+    public function map($kk): array
     {
         $first = $kk->anggota->first();
 
-        // 🏠 Ambil id_rumah dari relasi atau kolom langsung
         $idRumah = $kk->rumah->id_rumah ?? $kk->rumah_id ?? '-';
 
-        // 📋 Ambil no_kk
         $noKK = $kk->no_kk ?? '-';
-
-        // Jika no_kk mengandung kata "DUMMY" (case-insensitive), ubah jadi "-"
         if (is_string($noKK) && stripos($noKK, 'DUMMY') !== false) {
             $noKK = '-';
         }
 
         return [
-            self::$rowNumber++, // Kolom No
+            self::$rowNumber++,
             $idRumah,
             $noKK,
             $first->nik ?? '-',
             $first->nama ?? '-',
         ];
     }
-
 
     public function headings(): array
     {
@@ -185,7 +181,7 @@ class KepalaKeluargaSheet implements FromQuery, WithMapping, WithHeadings, WithT
                     }
                 }
 
-                // === Style & ukuran kolom ===
+                // === Lebar kolom ===
                 $s->getColumnDimension('A')->setWidth(5);
                 $s->getColumnDimension('B')->setWidth(10);
                 $s->getColumnDimension('C')->setWidth(22);

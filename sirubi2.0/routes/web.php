@@ -7,6 +7,7 @@ use App\Livewire\Bantuan;
 use App\Livewire\Dashboard;
 use App\Livewire\Data;
 use App\Livewire\Dokumentasi;
+use App\Livewire\Home;
 use App\Livewire\Peta;
 use App\Livewire\Polygon;
 use App\Livewire\Polygon\Add as PolygonAdd;
@@ -21,10 +22,10 @@ use App\Models\Rumah;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-// Route::view('/', 'welcome');
-Route::get('/', function () {
-    return redirect()->route('login');
-});
+Route::get('/', Home::class)->name('home');
+// Route::get('/', function () {
+//     return redirect()->route('login');
+// });
 
 Route::post('/logout', function () {
     Auth::logout();
@@ -37,6 +38,18 @@ Route::post('/logout', function () {
 Route::get('/test', function() {
     return 'Route OK';
 });
+
+Route::get('/download-export/{timestamp}', function ($timestamp) {
+    $filename = "export_data_{$timestamp}.zip";
+    $filepath = storage_path("app/public/{$filename}");
+    
+    if (file_exists($filepath)) {
+        return response()->download($filepath)
+            ->deleteFileAfterSend(true);
+    }
+    
+    abort(404, 'File export tidak ditemukan');
+})->name('download.export');
 
 
 Route::get('/add-test', Add::class)->name('add.test');
@@ -93,15 +106,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         [RekapExportController::class, 'exportAllPdf']
     )->name('rekap.export.all.pdf');
 
-    Route::get('/download-export/{filename}', function ($filename) {
-        $path = storage_path("app/public/$filename");
-
-        if (!file_exists($path)) {
-            abort(404, 'File not found');
-        }
-
-        return response()->download($path)->deleteFileAfterSend(true);
-    })->name('export.download');
+ 
 
     Route::get('/download-geojson/{filename}', function ($filename) {
         $path = storage_path("app/public/$filename");

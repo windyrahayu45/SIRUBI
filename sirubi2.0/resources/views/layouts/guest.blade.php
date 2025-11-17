@@ -12,7 +12,29 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700">
     <link href="{{ asset('assets/plugins/global/plugins.bundle.css') }}" rel="stylesheet" type="text/css">
     <link href="{{ asset('assets/css/style.bundle.css') }}" rel="stylesheet" type="text/css">
+    <style>
 
+        .btn-custom-red {
+            background-color: rgb(169, 88, 88) !important;
+            border-color: rgb(169, 88, 88) !important;
+            color: #fff !important;
+            transition: 0.25s ease;
+        }
+
+        .btn-custom-red:hover,
+        .btn-custom-red:focus,
+        .btn-custom-red:active {
+            background-color: rgb(142, 60, 60) !important; /* lebih gelap */
+            border-color: rgb(142, 60, 60) !important;
+            color: #fff !important;
+        }
+
+        .btn-custom-red:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+    </style>
     @livewireStyles
 </head>
 

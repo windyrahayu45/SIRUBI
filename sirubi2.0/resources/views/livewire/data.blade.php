@@ -188,6 +188,40 @@
                         </table>
                         </div>
                         <!--end::Table-->
+
+                        @if($exporting)
+                        <div class="export-progress">
+                            <div class="progress mb-3">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                    role="progressbar" 
+                                    style="width: {{ $exportProgress }}%"
+                                    aria-valuenow="{{ $exportProgress }}" 
+                                    aria-valuemin="0" 
+                                    aria-valuemax="100">
+                                    {{ $exportProgress }}%
+                                </div>
+                            </div>
+                            <div class="export-message">
+                                <i class="fas fa-sync fa-spin me-2"></i>
+                                {{ $exportMessage }}
+                            </div>
+                        </div>
+                    @endif
+
+                    @if($exportCompleted)
+                        <div class="alert alert-success">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    {{ $exportMessage }}
+                                </div>
+                                <button wire:click="downloadExport" class="btn btn-success btn-sm">
+                                    <i class="fas fa-download me-1"></i>
+                                    Download File
+                                </button>
+                            </div>
+                        </div>
+                    @endif
                     </div>
                     <!--end::Card body-->
                 </div>
@@ -405,5 +439,28 @@ function initSelect2() {
         });
     });
 }
+
+
+Livewire.on('start-export-polling', () => {
+    $('#kt_modal_export_users').hide();
+        const interval = setInterval(() => {
+            if (!@this.exporting && @this.exportCompleted) {
+                clearInterval(interval);
+                return;
+            }
+            @this.checkExportProgress();
+        }, 3000); // Check setiap 3 detik
+    });
+
+    // Event ketika export selesai
+    Livewire.on('export-completed', () => {
+        // Bisa tambahkan notifikasi atau sound effect di sini
+        if (Notification.permission === 'granted') {
+            new Notification('Export Selesai', {
+                body: 'File export sudah siap untuk didownload.',
+                icon: '/favicon.ico'
+            });
+        }
+    });
 </script>
 @endpush

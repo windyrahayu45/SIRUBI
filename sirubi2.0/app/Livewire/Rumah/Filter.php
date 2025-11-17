@@ -279,7 +279,15 @@ class Filter extends Component
             $files = [];
             $maxRows = 1000;
 
-            $total = $this->buildFilteredQuery()->count();
+            $filteredQuery = $this->buildFilteredQuery();
+        
+            Log::info('📌 Export Excel - Filtered Query:', [
+                'sql' => $filteredQuery->toSql(),
+                'bindings' => $filteredQuery->getBindings(),
+            ]);
+            
+
+            $total = $filteredQuery->count();
             $chunkCount = ceil($total / $maxRows);
 
             for ($i = 0; $i < $chunkCount; $i++) {
@@ -305,6 +313,7 @@ class Filter extends Component
             $files[] = storage_path("app/public/$folder/$bantuanFile");
 
             // 🗜️ Buat ZIP
+             $zipFilename = "export_data_$timestamp.zip";
             $zipFile = storage_path("app/public/export_data_$timestamp.zip");
             $zip = new \ZipArchive();
 
@@ -325,11 +334,23 @@ class Filter extends Component
 
             // ✅ Kirim URL download ke JS
            // $url = asset('storage/export_data_' . $timestamp . '.zip');
-            $url = route('export.download', ['filename' => "export_data_$timestamp.zip"]);
-            Log::info('✅ Excel ZIP generated', ['url' => $url]);
+            // $url = route('export.download', ['filename' => "export_data_$timestamp.zip"]);
+            // Log::info('✅ Excel ZIP generated', ['url' => $url]);
 
+            // $url = asset("storage/$zipFilename");
+           
+            
+            $url = route('download.export', ['timestamp' => $timestamp]);
+             Log::info('✅ Excel ZIP generated', [
+                'url' => $url,
+                'file_path' => $zipFile
+            ]);
             //$this->dispatch('excel-ready', url: $url);
             $this->dispatch('geojson-ready', url: $url);
+            // HAPUS ZIP FILE SETELAH URL DIKIRIM
+            // register_shutdown_function(function () use ($zipFile) {
+            //     if (file_exists($zipFile)) @unlink($zipFile);
+            // });
         } catch (\Throwable $e) {
             Log::error('Export Excel gagal: ' . $e->getMessage());
             $this->dispatch('swal:error', [
