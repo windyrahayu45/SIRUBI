@@ -146,14 +146,33 @@
                                                 <!--begin::Actions-->
                                                 <div class="text-center">
                                                     <button type="reset" class="btn btn-light me-3" data-kt-users-modal-action="cancel" data-bs-dismiss="modal">Batal</button>
-                                                    <button type="submit" class="btn btn-primary" data-kt-users-modal-action="submit">
-                                                        <span class="indicator-label" wire:loading.remove>Export</span>
-                                                        <span class="indicator-progress" wire:loading>Mohon Tunggu...
+                                                    <button type="submit" class="btn btn-primary" data-kt-users-modal-action="submit" wire:ignore>
+                                                        <span class="indicator-label" wire:loading.remove  wire:target="exportData">Export</span>
+                                                        <span class="indicator-progress"  wire:loading.delay
+          wire:target="exportData">Mohon Tunggu...
                                                         <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
                                                     </button>
                                                 </div>
                                                 <!--end::Actions-->
                                             </form>
+
+                                            @if($isProcessing)
+                                                <div class="alert alert-info mt-3">
+                                                    ⏳ Sedang memproses export... Tunggu sebentar...
+                                                </div>
+
+                                                <script>
+                                                    setInterval(function(){
+                                                        Livewire.dispatchEvent('check-file-ready');
+                                                    }, 3000);
+                                                </script>
+                                            @endif
+
+                                            @if($downloadUrl)
+                                                <a href="{{ $downloadUrl }}" class="btn btn-success mt-3">
+                                                    Download Hasil Export
+                                                </a>
+                                            @endif
                                             <!--end::Form-->
                                         </div>
                                         <!--end::Modal body-->
@@ -176,6 +195,7 @@
                                 <tr class="text-start text-gray-400 fw-bold fs-7 text-uppercase gs-0">
                                     <th width="10"></th>
                                     <th width="10">#</th>
+                                      <th class="min-w-150px">Foto Rumah</th>
                                     <th class="min-w-150px">Nama Pemilik</th>
                                     <th class="min-w-150px">Alamat</th>
                                     <th class="min-w-125px">Kecamatan</th>
@@ -261,6 +281,7 @@ function initTable() {
         columns: [
             { data: 'expand', orderable: false, searchable: false },
              { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+              { data: 'foto' },
             { data: 'nama_pemilik' },
             { data: 'alamat' },
             { data: 'kecamatan' },
@@ -418,49 +439,51 @@ function initSelect2() {
     $('[data-control="select2"]').each(function() {
         const el = $(this);
        
-        // Saat value diubah, kirim ke Livewire
         el.on('change', function () {
             const value = $(this).val();
-            const name = el.data('name');
-           // alert(value)
-             const componentId = el.closest('[wire\\:id]').attr('wire:id');
+            const componentId = el.closest('[wire\\:id]').attr('wire:id');
 
-    if (componentId) {
-        const component = Livewire.find(componentId);
-        if (component) {
-            console.log('✅ Dispatch ke komponen:', component.name);
-            component.$set('exportFormat', value);
-            console.log('📦 exportFormat di-set:', value);
-
-        }
-    } else {
-        console.warn('⚠️ Tidak menemukan komponen Livewire untuk select2');
-    }
+            if (componentId) {
+                const component = Livewire.find(componentId);
+                if (component) {
+                    console.log('✅ Dispatch ke komponen:', component.name);
+                    component.set('exportFormat', value); // <-- FIX
+                    console.log('📦 exportFormat di-set:', value);
+                }
+            } else {
+                console.warn('⚠️ Tidak menemukan komponen Livewire untuk select2');
+            }
         });
     });
 }
 
 
-Livewire.on('start-export-polling', () => {
-    $('#kt_modal_export_users').hide();
-        const interval = setInterval(() => {
-            if (!@this.exporting && @this.exportCompleted) {
-                clearInterval(interval);
-                return;
-            }
-            @this.checkExportProgress();
-        }, 3000); // Check setiap 3 detik
-    });
+// AMBIL ID KOMPONEN LIVEWIRE SECARA BENAR
+const rootEl = document.querySelector('[wire\\:id]');
+const componentId = rootEl.getAttribute('wire:id');
 
-    // Event ketika export selesai
-    Livewire.on('export-completed', () => {
-        // Bisa tambahkan notifikasi atau sound effect di sini
-        if (Notification.permission === 'granted') {
-            new Notification('Export Selesai', {
-                body: 'File export sudah siap untuk didownload.',
-                icon: '/favicon.ico'
-            });
-        }
-    });
+Livewire.on('start-export-polling', () => {
+
+    const comp = Livewire.find(componentId);
+
+    const interval = setInterval(() => {
+
+        comp.call('refreshState').then(() => {   // <-- FIX
+            comp.call('checkFile');              // <-- FIX
+
+            if (!comp.isProcessing && comp.downloadUrl) {
+                clearInterval(interval);
+                window.location.href = comp.downloadUrl;
+            }
+        });
+
+    }, 3000);
+});
+
+Livewire.on('export-finished', () => {
+    console.log("Export selesai — polling berhenti.");
+});
+
+
 </script>
 @endpush

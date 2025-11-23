@@ -21,4 +21,5 @@ Route::middleware('jwt')->group(function () {
     Route::get('data/init', [MasterController::class, 'init']);
     Route::post('data/tambahRumah', [MasterController::class, 'store']);
     Route::delete('data/deleteRumah', [MasterController::class, 'deleteRumah']);
+    Route::get('data/search', [MasterController::class, 'search']);
 });

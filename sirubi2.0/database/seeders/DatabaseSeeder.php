@@ -21,6 +21,10 @@ class DatabaseSeeder extends Seeder
         //     'name' => 'Test User',
         //     'email' => 'test@example.com',
         // ]);
+        $this->call([
+            QuestionTypeSeeder::class,
+            QuestionModuleSeeder::class,
+        ]);
         $this->call(IKecamatanTableSeeder::class);
         $this->call(IKelurahanTableSeeder::class);
         $this->call(AKondisiBalokTableSeeder::class);
@@ -81,4 +85,6 @@ class DatabaseSeeder extends Seeder
         $this->call(TblPolygonTableSeeder::class);
         $this->call(TblPolygonKelurahanTableSeeder::class);
     }
+
+   
 }

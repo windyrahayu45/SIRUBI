@@ -3,6 +3,7 @@
 namespace App\Livewire\Rumah;
 
 use App\Models\Rumah;
+use App\Models\RumahHistory;
 use App\Models\TblBantuan;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Livewire\Component;
@@ -11,6 +12,7 @@ class Show extends Component
 {
     public $rumah, $namaPemilik = '';
     public $bantuanRiwayat = [];
+    //public $historyByDate = [];
 
     
        protected $listeners = ['deleteRumah'];
@@ -28,7 +30,23 @@ class Show extends Component
             'kepalaKeluarga.anggota',
             'kelurahan.kecamatan'
         ])->findOrFail($id);
+        
+        // $history = RumahHistory::with('user')
+        // ->where('rumah_id', $id)
+        // ->orderBy('changed_at', 'desc')
+        // ->get();
 
+        // // GROUP LEVEL 1 = tanggal
+        // $this->historyByDate = $history->groupBy(function($item){
+        //     return $item->changed_at->format('Y-m-d');
+        // })->map(function($items){
+            
+        //     // GROUP LEVEL 2 = user
+        //     return $items->groupBy('changed_by');
+
+        // });
+
+       // dd($this->historyByDate);
 
          // 🔹 Ambil semua no_kk dari kepala keluarga rumah ini
         $noKkList = $this->rumah->kepalaKeluarga->pluck('no_kk')->filter()->toArray();
@@ -46,6 +64,20 @@ class Show extends Component
         // Jika ada nama anggota, tampilkan
         $this->namaPemilik = $anggotaPertama ? e($anggotaPertama->nama) : '-';
     }
+
+    public function getHistoryByDateProperty()
+{
+    return RumahHistory::with('user')
+        ->where('rumah_id', $this->rumah->id_rumah)
+        ->orderBy('changed_at', 'desc')
+        ->get()
+        ->groupBy(function ($item) {
+            return $item->changed_at->format('Y-m-d');
+        })
+        ->map(function ($group) {
+            return $group->groupBy('changed_by');
+        });
+}
 
     public function cetakPdf()
     {

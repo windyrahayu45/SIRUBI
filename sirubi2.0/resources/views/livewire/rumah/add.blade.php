@@ -79,11 +79,19 @@
                                                      <div id="step-header-8" class="stepper-item me-5 me-md-15 {{ $currentStep === 7 ? 'current' : ($currentStep > 7 ? 'completed' : '') }}" data-kt-stepper-element="nav">
                                                         <h3 class="stepper-title"> Aspek Komponen Bahan Bangunan</h3>
                                                     </div>
+                                                    
                                                     <!--end::Step 4-->
                                                     <!--begin::Step 5-->
                                                     <div class="stepper-item {{ $currentStep === 8 ? 'current' : ($currentStep > 8 ? 'completed' : '') }}" data-kt-stepper-element="nav">
                                                         <h3 class="stepper-title">Foto/Dokumentasi</h3>
                                                     </div>
+
+                                                    @if($is_question)
+                                                    
+                                                     <div id="step-header-9" class="stepper-item me-5 me-md-15 {{ $currentStep === 9 ? 'current' : ($currentStep > 9 ? 'completed' : '') }}" data-kt-stepper-element="nav">
+                                                        <h3 class="stepper-title"> Pertanyaan Lainnya</h3>
+                                                    </div>
+                                                    @endif
                                                     <!--end::Step 5-->
                                                 </div>
                                                 <!--end::Nav-->
@@ -1433,6 +1441,132 @@
                                                         </div>
                                                     </div>
 
+                                                    @if($is_question)
+                                                    <div data-kt-stepper-element="content" class="{{ $currentStep === 9 ? 'current' : ($currentStep > 9 ? 'completed' : '') }}">
+                                                        <!--begin::Wrapper-->
+                                                        <div class="w-100">
+                                                            <!--begin::Heading-->
+                                                            <div class="pb-12 text-center">
+                                                                <!--begin::Title-->
+                                                                <h2 class="fw-bold d-flex align-items-center text-dark">
+                                                                    Pertanyaan Tambahan
+                                                                    <i class="fas fa-question-circle ms-2 fs-6"
+                                                                    data-bs-toggle="tooltip"
+                                                                    title="Isi pertanyaan tambahan sesuai kondisi rumah atau informasi lainnya yang diperlukan. Pertanyaan ini bersifat dinamis tergantung konfigurasi admin.">
+                                                                    </i>
+                                                                </h2>
+
+                                                                <div class="text-muted fw-semibold fs-4">
+                                                                    Silakan lengkapi seluruh pertanyaan tambahan yang muncul pada bagian ini.
+                                                                    Jawaban Anda akan membantu proses verifikasi dan analisis data secara lebih akurat.
+                                                                    Untuk informasi lebih lanjut mengenai cara pengisian,
+                                                                    <a href="#" class="link-primary fw-bold">lihat Panduan Pengisian</a>.
+                                                                </div>
+
+                                                                <!--end::Description-->
+                                                            </div>
+                                                            <!--end::Heading-->
+                                                            <!--begin::Actions-->
+                                                            <div class="mb-10">
+                                                                @foreach($question as $q)
+                                                                    <div class="mb-8">
+
+                                                                        <!-- LABEL -->
+                                                                        <label class="fs-5 fw-semibold mb-2">
+                                                                            {{ $q->label }}
+                                                                            @if($q->is_required)
+                                                                                <span class="text-danger">*</span>
+                                                                            @endif
+                                                                        </label>
+
+                                                                        <!-- TIPE TEXT -->
+                                                                        @if($q->type === 'text')
+                                                                            <input type="text"
+                                                                                class="form-control form-control-solid"
+                                                                                wire:model="questionAnswers.{{ $q->id }}">
+
+                                                                        <!-- TIPE TEXTAREA -->
+                                                                        @elseif($q->type === 'textarea')
+                                                                            <textarea class="form-control form-control-solid"
+                                                                                    rows="3"
+                                                                                    wire:model="questionAnswers.{{ $q->id }}"></textarea>
+
+                                                                        <!-- TIPE NUMBER -->
+                                                                        @elseif($q->type === 'number')
+                                                                            <input type="number"
+                                                                                class="form-control form-control-solid"
+                                                                                wire:model="questionAnswers.{{ $q->id }}">
+
+                                                                        <!-- TIPE DATE -->
+                                                                        @elseif($q->type === 'date')
+                                                                            <input type="date"
+                                                                                class="form-control form-control-solid"
+                                                                                wire:model="questionAnswers.{{ $q->id }}">
+
+                                                                        <!-- TIPE SELECT -->
+                                                                        @elseif($q->type === 'select' && $q->options->isNotEmpty())
+                                                                            <select class="form-select form-select-solid"
+                                                                                    wire:model="questionAnswers.{{ $q->id }}">
+                                                                                <option value="">-- Pilih --</option>
+
+                                                                                @foreach($q->options as $option)
+                                                                                    <option value="{{ $option->id }}">{{ $option->label }}</option>
+                                                                                @endforeach
+                                                                            </select>
+
+                                                                        <!-- TIPE RADIO -->
+                                                                        @elseif($q->type === 'radio' && $q->options->isNotEmpty())
+                                                                            <div class="d-flex flex-column gap-2">
+                                                                                @foreach($q->options as $option)
+                                                                                    <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                        <input class="form-check-input"
+                                                                                            type="radio"
+                                                                                            value="{{ $option->id }}"
+                                                                                            wire:model="questionAnswers.{{ $q->id }}">
+                                                                                        <span class="form-check-label">{{ $option->label }}</span>
+                                                                                    </label>
+                                                                                @endforeach
+                                                                            </div>
+
+                                                                        <!-- TIPE CHECKBOX -->
+                                                                        @elseif($q->type === 'checkbox' && $q->options->isNotEmpty())
+                                                                            <div class="d-flex flex-column gap-2">
+                                                                                @foreach($q->options as $option)
+                                                                                    <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                        <input class="form-check-input"
+                                                                                            type="checkbox"
+                                                                                            value="{{ $option->id }}"
+                                                                                            wire:model="questionAnswers.{{ $q->id }}">
+                                                                                        <span class="form-check-label">{{ $option->label }}</span>
+                                                                                    </label>
+                                                                                @endforeach
+                                                                            </div>
+
+                                                                        <!-- FILE UPLOAD (jika kamu aktifkan) -->
+                                                                        @elseif($q->type === 'file')
+                                                                            <input type="file" class="form-control"
+                                                                                wire:model="questionAnswers.{{ $q->id }}">
+
+                                                                        @else
+                                                                            <div class="text-muted">Tipe input tidak dikenali.</div>
+                                                                        @endif
+
+                                                                        <!-- ERROR -->
+                                                                        @error('questionAnswers.' . $q->id)
+                                                                            <div class="text-danger small mt-1">{{ $message }}</div>
+                                                                        @enderror
+
+                                                                    </div>
+                                                                @endforeach
+                                                            </div>
+
+                                                            
+            
+                                                            <!--end::Illustration-->
+                                                        </div>
+                                                    </div>
+                                                    @endif
+
                                                     <!--end::Step 5-->
                                                     <!--begin::Actions-->
                                                     <div class="d-flex flex-stack pt-10">
@@ -1470,7 +1604,7 @@
                                                                 </span>
                                                             </button>
 
-                                                            <button type="button" class="btn btn-lg btn-primary" data-kt-stepper-action="next" wire:click="setStep({{ $currentStep + 1 }})"@disabled($currentStep >= 9)>Continue
+                                                            <button type="button" class="btn btn-lg btn-primary" data-kt-stepper-action="next" wire:click="setStep({{ $currentStep + 1 }})"@disabled($currentStep >= $totalStep)>Continue
                                                             <!--begin::Svg Icon | path: icons/duotune/arrows/arr064.svg-->
                                                             <span class="svg-icon svg-icon-3 ms-1 me-0">
                                                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1533,11 +1667,12 @@ document.addEventListener("livewire:navigated", function () {
     }
 
     // 🔄 Update tombol + sinkron step
+     const lastStep = {{ $lastStep }};
     stepper.on("kt.stepper.changed", function () {
         const currentStep = stepper.getCurrentStepIndex();
         console.log("🔹 Step changed:", currentStep);
 
-        if (currentStep === 7) {
+        if (currentStep === lastStep) {
             btnSubmit.classList.remove("d-none");
             btnNext.classList.add("d-none");
         } else {

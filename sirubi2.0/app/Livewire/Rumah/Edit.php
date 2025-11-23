@@ -65,15 +65,19 @@ use App\Models\PenilaianRumah;
 use App\Models\Rumah;
 use App\Models\SanitasiRumah;
 use App\Models\SosialEkonomiRumah;
+use App\Models\SurveyQuestion;
+use App\Models\SurveyQuestionAnswer;
 use App\Models\TblJenisPondasi;
 use Illuminate\Support\Facades\DB;
 use Livewire\WithFileUploads;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use App\Traits\LogsRumahHistory;
 
 class Edit extends Component
 {
 
     use WithFileUploads;
+    use LogsRumahHistory;
     
     public $id_rumah;
     publiC $latitude = null;
@@ -244,6 +248,12 @@ class Edit extends Component
     public $foto_rumah_dua;
     public $foto_rumah_tiga;
     public $foto_imb;
+     public $is_question = false;
+    public $question = [];
+    public $questionAnswers = []; 
+    public $totalStep = 9; 
+    public $lastStep = 7; 
+
 
 
   
@@ -252,6 +262,40 @@ class Edit extends Component
     public function mount($id)
     {
         $this->id_rumah = $id;
+        $this->is_question = SurveyQuestion::where('is_active', '1')->exists();
+        $this->totalStep = $this->is_question ? 10 : 9;
+        $this->question = SurveyQuestion::with('options')
+            ->where('is_active', 1)
+            ->orderBy('id', 'desc')
+            ->get();
+             $this->lastStep = $this->is_question ? 8 : 7;
+
+
+        $existingAnswers = SurveyQuestionAnswer::where('rumah_id', $id)->get();
+
+        foreach ($existingAnswers as $ans) {
+            
+            // TEXT, TEXTAREA, NUMBER, DATE
+            if ($ans->answer_text !== null) {
+                $this->questionAnswers[$ans->question_id] = $ans->answer_text;
+            }
+
+            // SELECT atau RADIO
+            if ($ans->answer_option_id !== null) {
+                $this->questionAnswers[$ans->question_id] = $ans->answer_option_id;
+            }
+
+            // CHECKBOX (multi select)
+            if ($ans->answer_option_ids !== null) {
+                $this->questionAnswers[$ans->question_id] = $ans->answer_option_ids; // array
+            }
+
+            // FILE (kalau ada)
+            if ($ans->file_path !== null) {
+                $this->questionAnswers[$ans->question_id] = $ans->file_path;
+            }
+        }
+
         // Daftar listener Livewire 3 style
         // $this->on('setStep', fn ($step) => $this->setStep($step));
         $this->loadRumah($id);
@@ -760,9 +804,30 @@ class Edit extends Component
                 }
             }
         }
+
+         if ($this->currentStep === 8 && $step > 8) {
+            $requiredPhotos = [
+                // 'foto_kk'          => 'Foto Kartu Keluarga (KK)',
+                // 'foto_ktp'         => 'Foto Kartu Tanda Penduduk (KTP)',
+                'foto_rumah_satu'  => 'Foto Rumah 1',
+                'foto_rumah_dua'   => 'Foto Rumah 2',
+                'foto_rumah_tiga'  => 'Foto Rumah 3',
+                //'foto_imb'         => 'Foto IMB',
+            ];
+
+            foreach ($requiredPhotos as $field => $label) {
+                if (empty($this->$field)) {
+                    $this->dispatch('swal:error', [
+                        'title' => 'Data Belum Lengkap',
+                        'text'  => "Kolom {$label} wajib diisi sebelum melanjutkan ke tahap berikutnya.",
+                    ]);
+                    return;
+                }
+            }
+        }
         
 
-        $this->currentStep = max(1, min($step, 8));
+        $this->currentStep = max(1, min($step, $this->totalStep));
 
         // 🔁 Kirim balik ke frontend agar header update
         $this->dispatch('stepChanged', $this->currentStep);
@@ -848,33 +913,85 @@ class Edit extends Component
 
     public function updateForm()
     {
-        // ✅ Foto wajib hanya 3 rumah
-        $requiredPhotos = [
+              $requiredPhotos = [
+            // 'foto_kk'          => 'Foto Kartu Keluarga (KK)',
+            // 'foto_ktp'         => 'Foto Kartu Tanda Penduduk (KTP)',
             'foto_rumah_satu'  => 'Foto Rumah 1',
             'foto_rumah_dua'   => 'Foto Rumah 2',
             'foto_rumah_tiga'  => 'Foto Rumah 3',
-        ];
+            //'foto_imb'         => 'Foto IMB',
+            ];
 
-        // ✅ Semua foto yang mungkin disimpan
-        $allPhotos = [
-            'foto_kk'          => 'Foto Kartu Keluarga (KK)',
-            'foto_ktp'         => 'Foto Kartu Tanda Penduduk (KTP)',
-            'foto_rumah_satu'  => 'Foto Rumah 1',
-            'foto_rumah_dua'   => 'Foto Rumah 2',
-            'foto_rumah_tiga'  => 'Foto Rumah 3',
-            'foto_imb'         => 'Foto IMB',
-        ];
+            $wajibFoto = [
+                'foto_kk'          => 'Foto Kartu Keluarga (KK)',
+                'foto_ktp'         => 'Foto Kartu Tanda Penduduk (KTP)',
+                'foto_rumah_satu'  => 'Foto Rumah 1',
+                'foto_rumah_dua'   => 'Foto Rumah 2',
+                'foto_rumah_tiga'  => 'Foto Rumah 3',
+                'foto_imb'         => 'Foto IMB',
+            ];
 
-         // 🔍 Validasi hanya foto wajib
-            foreach ($requiredPhotos as $field => $label) {
-                if (empty($this->$field) && empty(optional($this->rumah->dokumen)[$field])) {
-                    // Jika Livewire tidak punya file baru dan di DB juga belum ada
-                    $this->dispatch('swal:error', [
-                        'title' => 'Dokumentasi Belum Lengkap',
-                        'text'  => "{$label} wajib diunggah.",
-                    ]);
-                    return;
+            if ($this->is_question) {
+
+                // Loop seluruh pertanyaan (Collection)
+                foreach ($this->question as $q) {
+
+                    // Ambil jawaban dari Livewire
+                    $answer = $this->questionAnswers[$q->id] ?? null;
+
+                    // Abaikan pertanyaan tidak wajib
+                    if (!$q->is_required) {
+                        continue;
+                    }
+
+                    // TEXT, TEXTAREA, NUMBER, DATE
+                    if (in_array($q->type, ['text', 'textarea', 'number', 'date'])) {
+                        if (empty($answer)) {
+                            return $this->dispatch('swal:error', [
+                                'title' => 'Pertanyaan Belum Terjawab',
+                                'text'  => "Pertanyaan '{$q->label}' wajib diisi.",
+                            ]);
+                        }
+                    }
+
+                    // SELECT & RADIO
+                    if (in_array($q->type, ['select', 'radio'])) {
+                        if (empty($answer)) {
+                            return $this->dispatch('swal:error', [
+                                'title' => 'Pertanyaan Belum Terjawab',
+                                'text'  => "Pertanyaan '{$q->label}' wajib dipilih.",
+                            ]);
+                        }
+                    }
+
+                    // CHECKBOX (array minimal 1)
+                    if ($q->type === 'checkbox') {
+                        if (empty($answer) || count($answer) === 0) {
+                            return $this->dispatch('swal:error', [
+                                'title' => 'Pertanyaan Belum Terjawab',
+                                'text'  => "Pertanyaan '{$q->label}' wajib memilih minimal 1 opsi.",
+                            ]);
+                        }
+                    }
                 }
+            }
+            else{
+                // ✅ Foto wajib hanya 3 rumah
+            
+
+                // ✅ Semua foto yang mungkin disimpan
+            
+                // 🔍 Validasi hanya foto wajib
+                    foreach ($requiredPhotos as $field => $label) {
+                        if (empty($this->$field) && empty(optional($this->rumah->dokumen)[$field])) {
+                            // Jika Livewire tidak punya file baru dan di DB juga belum ada
+                            $this->dispatch('swal:error', [
+                                'title' => 'Dokumentasi Belum Lengkap',
+                                'text'  => "{$label} wajib diunggah.",
+                            ]);
+                            return;
+                        }
+                    }
             }
 
         try {
@@ -891,8 +1008,18 @@ class Edit extends Component
                 'kepalaKeluarga.anggota',
             ])->findOrFail($this->id_rumah);
 
-            // 🏠 Update data dasar rumah
-            $rumah->update([
+            $oldRumah = $rumah->only([
+                'alamat',
+                'latitude',
+                'longitude',
+                'rt',
+                'rw',
+                'kecamatan_id',
+                'kelurahan_id',
+                'tahun_pembangunan_rumah',
+            ]);
+
+            $newRumahData = [
                 'alamat'       => $this->alamat,
                 'latitude'     => $this->latitude,
                 'longitude'    => $this->longitude,
@@ -901,7 +1028,34 @@ class Edit extends Component
                 'kecamatan_id' => $this->kecamatan_id,
                 'kelurahan_id' => $this->kelurahan_id,
                 'tahun_pembangunan_rumah' => $this->tahun_pembangunan_rumah,
-            ]);
+            ];
+
+            // 🏠 Update data dasar rumah
+            $rumah->update($newRumahData);
+            $this->logMultiple(
+                $rumah->id_rumah,
+                'rumah',           // kategori
+                $oldRumah,         // data lama
+                $newRumahData      // data baru
+            );
+
+            $oldKK = KepalaKeluarga::with('anggota')
+            ->where('rumah_id', $rumah->id_rumah)
+            ->get()
+            ->map(function ($kk) {
+                return [
+                    'kode_kk' => $kk->kode_kk,
+                    'no_kk'   => $kk->no_kk,
+                    'anggota' => $kk->anggota->map(function ($a) {
+                        return [
+                            'kode_anggota' => $a->kode_anggota,
+                            'nik'          => $a->nik,
+                            'nama'         => $a->nama,
+                        ];
+                    })->toArray()
+                ];
+            })->toArray();
+
 
             if (!empty($this->kks) && count($this->kks) > 0) {
                 $kkCodes = []; // untuk melacak KK yang tetap ada
@@ -948,7 +1102,158 @@ class Edit extends Component
                     ->delete();
             }
 
+            $newKK = KepalaKeluarga::with('anggota')
+                ->where('rumah_id', $rumah->id_rumah)
+                ->get()
+                ->map(function ($kk) {
+                    return [
+                        'kode_kk' => $kk->kode_kk,
+                        'no_kk'   => $kk->no_kk,
+                        'anggota' => $kk->anggota->map(function ($a) {
+                            return [
+                                'kode_anggota' => $a->kode_anggota,
+                                'nik'          => $a->nik,
+                                'nama'         => $a->nama,
+                            ];
+                        })->toArray()
+                    ];
+                })->toArray();
+
+            $this->logArrayChanges(
+                $rumah->id_rumah,
+                'kk',
+                $oldKK,
+                $newKK
+            );
+
+
+
+            //pertanyaan lain
+            $oldAnswers = SurveyQuestionAnswer::where('rumah_id', $rumah->id_rumah)
+            ->get()
+            ->mapWithKeys(function ($a) {
+                return [
+                    $a->question_id => [
+                        'answer_text'       => $a->answer_text,
+                        'answer_option_id'  => $a->answer_option_id,
+                        'answer_option_ids' => $a->answer_option_ids,
+                        'file_path'         => $a->file_path,
+                    ]
+                ];
+            })
+            ->toArray();
+
+            foreach ($this->question as $q) {
+
+                $answer = $this->questionAnswers[$q->id] ?? null;
+
+                // Abaikan jika pertanyaan tidak wajib dan tidak diisi
+                if (!$q->is_required && empty($answer)) {
+                    // Jika sebelumnya ada jawaban → hapus
+                    SurveyQuestionAnswer::where('rumah_id', $rumah->id_rumah)
+                        ->where('question_id', $q->id)
+                        ->delete();
+                    continue;
+                }
+
+                // --- TEXT / TEXTAREA / NUMBER / DATE ---
+                if (in_array($q->type, ['text','textarea','number','date'])) {
+
+                    SurveyQuestionAnswer::updateOrCreate(
+                        [
+                            'rumah_id'    => $rumah->id_rumah,
+                            'question_id' => $q->id,
+                        ],
+                        [
+                            'answer_text'       => $answer,
+                            'answer_option_id'  => null,
+                            'answer_option_ids' => null,
+                            'file_path'         => null,
+                        ]
+                    );
+                }
+
+                // --- SELECT & RADIO ---
+                elseif (in_array($q->type, ['select','radio'])) {
+
+                    SurveyQuestionAnswer::updateOrCreate(
+                        [
+                            'rumah_id'    => $rumah->id_rumah,
+                            'question_id' => $q->id,
+                        ],
+                        [
+                            'answer_option_id'  => $answer,
+                            'answer_text'       => null,
+                            'answer_option_ids' => null,
+                            'file_path'         => null,
+                        ]
+                    );
+                }
+
+                // --- CHECKBOX (multi select) ---
+                elseif ($q->type === 'checkbox') {
+
+                    SurveyQuestionAnswer::updateOrCreate(
+                        [
+                            'rumah_id'    => $rumah->id_rumah,
+                            'question_id' => $q->id,
+                        ],
+                        [
+                            'answer_option_ids' => is_array($answer) ? $answer : [],
+                            'answer_text'       => null,
+                            'answer_option_id'  => null,
+                            'file_path'         => null,
+                        ]
+                    );
+                }
+
+
+                // --- FILE ---
+                elseif ($q->type === 'file' && $answer) {
+
+                    $filePath = $answer->store('survey_answers', 'public');
+
+                    SurveyQuestionAnswer::updateOrCreate(
+                        [
+                            'rumah_id'    => $rumah->id_rumah,
+                            'question_id' => $q->id,
+                        ],
+                        [
+                            'file_path'         => $filePath,
+                            'answer_text'       => null,
+                            'answer_option_id'  => null,
+                            'answer_option_ids' => null,
+                        ]
+                    );
+                }
+            }
+
+            $newAnswers = SurveyQuestionAnswer::where('rumah_id', $rumah->id_rumah)
+                ->get()
+                ->mapWithKeys(function ($a) {
+                    return [
+                        $a->question_id => [
+                            'answer_text'       => $a->answer_text,
+                            'answer_option_id'  => $a->answer_option_id,
+                            'answer_option_ids' => $a->answer_option_ids,
+                            'file_path'         => $a->file_path,
+                        ]
+                    ];
+                })
+                ->toArray();
+
+            $this->logArrayChanges(
+                $rumah->id_rumah,
+                'survey_answers',
+                $oldAnswers,
+                $newAnswers
+            );
+
+
             // 👨‍👩‍👧 Sosial ekonomi
+            $oldSosial = $rumah->sosialEkonomi
+                ? $rumah->sosialEkonomi->toArray()
+                : [];
             $rumah->sosialEkonomi()->updateOrCreate(
                 ['rumah_id' => $rumah->id_rumah],
                 [
@@ -963,8 +1268,19 @@ class Edit extends Component
                     'status_dtks_id'                => $this->status_dtks_id,
                 ]
             );
+            $newSosial = $rumah->sosialEkonomi()->first()->toArray();
+            $this->logArrayChanges(
+                $rumah->id_rumah,
+                'sosial_ekonomi',
+                $oldSosial,
+                $newSosial
+            );
+
 
             // 🧱 Fisik rumah
+            $oldFisik = $rumah->fisik
+            ? $rumah->fisik->toArray()
+            : [];
             $rumah->fisik()->updateOrCreate(
                 ['rumah_id' => $rumah->id_rumah],
                 [
@@ -1000,8 +1316,19 @@ class Edit extends Component
                     'jumlah_lantai_bangunan'          => $this->jumlah_lantai_bangunan,
                 ]
             );
+            $newFisik = $rumah->fisik()->first()->toArray();
+            $this->logArrayChanges(
+                $rumah->id_rumah,
+                'fisik_rumah',
+                $oldFisik,
+                $newFisik
+            );
+
 
             // 💧 Sanitasi
+            $oldSanitasi = $rumah->sanitasi
+            ? $rumah->sanitasi->toArray()
+            : [];
             $rumah->sanitasi()->updateOrCreate(
                 ['rumah_id' => $rumah->id_rumah],
                 [
@@ -1022,8 +1349,19 @@ class Edit extends Component
                     'sumber_listrik_id'                     => $this->sumber_listrik_id,
                 ]
             );
+            $newSanitasi = $rumah->sanitasi()->first()->toArray();
+            $this->logArrayChanges(
+                $rumah->id_rumah,
+                'sanitasi_rumah',
+                $oldSanitasi,
+                $newSanitasi
+            );
+
 
             // 🎁 Bantuan rumah
+            $oldBantuan = $rumah->bantuan
+            ? $rumah->bantuan->toArray()
+            : [];
             $rumah->bantuan()->updateOrCreate(
                 ['rumah_id' => $rumah->id_rumah],
                 [
@@ -1035,8 +1373,20 @@ class Edit extends Component
                     'nominal_bantuan'               => $this->nominal_bantuan,
                 ]
             );
+            $newBantuan = $rumah->bantuan()->first()->toArray();
+            $this->logArrayChanges(
+                $rumah->id_rumah,
+                'bantuan_rumah',
+                $oldBantuan,
+                $newBantuan
+            );
+
 
             // 🏡 Kepemilikan rumah
+            $oldKepemilikan = $rumah->kepemilikan
+            ? $rumah->kepemilikan->toArray()
+            : [];
+
             $rumah->kepemilikan()->updateOrCreate(
                 ['rumah_id' => $rumah->id_rumah],
                 [
@@ -1051,31 +1401,59 @@ class Edit extends Component
                     'jenis_kawasan_lokasi_rumah_id' => $this->jenis_kawasan_lokasi_rumah_id,
                 ]
             );
+            $newKepemilikan = $rumah->kepemilikan()->first()->toArray();
+            $this->logArrayChanges(
+                $rumah->id_rumah,
+                'kepemilikan_rumah',
+                $oldKepemilikan,
+                $newKepemilikan
+            );
+
 
             // 🔢 Hitung & simpan ulang penilaian (sama seperti submitForm)
             $this->hitungDanSimpanPenilaian($rumah->id_rumah);
 
             // 📸 Update foto hanya jika ada baru
+            $oldDokumen = $rumah->dokumen ? $rumah->dokumen->toArray() : [];
+
             $dokumen = $rumah->dokumen ?? new DokumenRumah(['rumah_id' => $rumah->id_rumah]);
 
+            $changed = []; // untuk menampung perubahan foto
+
             foreach (array_keys($requiredPhotos) as $field) {
+
+                // Jika upload baru
                 if ($this->$field instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile) {
-                    // Jika ada file baru diunggah
+
                     $path = $this->$field->storeAs(
                         "rumah/{$rumah->id_rumah}",
                         "{$field}.jpg"
                     );
 
+                    // Simpan path baru
                     $dokumen->$field = "rumah/{$rumah->id_rumah}/{$field}.jpg";
-                } else {
-                    // Jika tidak ada upload baru, biarkan path lama tetap
-                    // (tidak diubah)
+
+                    // Catat perubahan history
+                    $changed[$field] = [
+                        'old' => $oldDokumen[$field] ?? null,
+                        'new' => $dokumen->$field
+                    ];
                 }
             }
-
             $dokumen->uploaded_by = auth()->user()->id;
             $dokumen->uploaded_at = now();
             $dokumen->save();
+
+            // 🔵 Simpan history jika ada perubahan
+            if (!empty($changed)) {
+                $this->logArrayChanges(
+                    $rumah->id_rumah,
+                    'dokumen_rumah',
+                    $oldDokumen,
+                    array_merge($oldDokumen, array_map(fn($c) => $c['new'], $changed))
+                );
+            }
+
 
             DB::commit();
 
@@ -1095,6 +1473,11 @@ class Edit extends Component
     private function hitungDanSimpanPenilaian($rumahId)
     {
         // Rumus penilaian persis dari submitForm()
+        $oldPenilaian = PenilaianRumah::where('rumah_id', $rumahId)
+                ->first();
+
+        $oldPenilaianArray = $oldPenilaian ? $oldPenilaian->toArray() : [];
+
         $jendela = $this->jendela_lubang_cahaya_id;
         $kj = $this->kondisi_jendela_lubang_cahaya_id;
         $ventilasi = $this->ventilasi_id;
@@ -1162,6 +1545,17 @@ class Edit extends Component
                 'status_luas'  => $status_luas,
                 'status_rumah' => $status_rumah,
             ]
+        );
+
+        $newPenilaian = PenilaianRumah::where('rumah_id', $rumahId)
+        ->first()
+        ->toArray();
+
+        $this->logArrayChanges(
+        $rumahId,
+        'penilaian_rumah',
+        $oldPenilaianArray,
+        $newPenilaian
         );
     }
 

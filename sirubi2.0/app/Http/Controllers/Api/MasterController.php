@@ -179,11 +179,23 @@ class MasterController extends Controller
             'besar_pengeluaran_id'      => 'required|integer',
 
             // status kepemilikan
+            'nik_kepemilikan_rumah' => 'required',
+            'nomor_imb' => 'nullable',
             'status_kepemilikan_tanah_id'   => 'required|integer',
             'bukti_kepemilikan_tanah_id'    => 'required|integer',
             'status_kepemilikan_rumah_id'   => 'required|integer',
             'status_imb_id'                 => 'required|integer',
             'jenis_kawasan_lokasi_rumah_id' => 'required|integer',
+            'aset_rumah_ditempat_lain_id' => 'required|integer',
+            'aset_tanah_ditempat_lain_id'=> 'required|integer',
+            'pernah_mendapatkan_bantuan_id' => 'required|integer',
+            'tahun_bantuan' => 'nullable',
+            'nama_bantuan'=> 'nullable',
+            'nama_program_bantuan' => 'nullable',
+            'nominal_bantuan' => 'nullable',
+            'keterangan_ventilasi' => 'nullable',
+            'jumlah_abk' => 'nullable',
+            'no_kk_penerima' => 'nullable',
 
             // fisik & sanitasi minimal
             'pondasi_id'                    => 'required|integer',
@@ -319,6 +331,7 @@ class MasterController extends Controller
             ]);
 
             //  Simpan Kepala Keluarga & Anggota (kode KK A-F, anggota aa,ab,...)
+            $kkPertama = null;
             if (!empty($kks)) {
                 foreach ($kks as $kkIndex => $kk) {
                     $kodeKK = chr(65 + $kkIndex); // A, B, C, ...
@@ -328,6 +341,10 @@ class MasterController extends Controller
                         'no_kk'    => $kk['no_kk'] ?? null,
                         'kode_kk'  => $kodeKK,
                     ]);
+
+                    if ($kkIndex === 0) {
+                        $kkPertama = $kk['no_kk'] ?? null;
+                    }
 
                     if (!empty($kk['anggota']) && is_array($kk['anggota'])) {
                         foreach ($kk['anggota'] as $anggotaIndex => $anggota) {
@@ -614,6 +631,70 @@ class MasterController extends Controller
             ], 500);
         }
     }
+
+    public function search(Request $request)
+    {
+        // 🔐 Wajib token JWT
+        $user = $request->auth->id_user ?? null;
+
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthorized'
+            ], 401);
+        }
+
+        $keyword = $request->input('q');
+
+        if (!$keyword) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Parameter q wajib diisi.'
+            ], 422);
+        }
+
+        $rumah = Rumah::with([
+                'kepemilikan',
+                'kepalaKeluarga.anggota',
+                'sosialEkonomi'
+            ])
+            ->where(function ($q) use ($keyword) {
+
+                // 1️⃣ NIK kepemilikan rumah
+                $q->whereHas('kepemilikan', function ($qq) use ($keyword) {
+                    $qq->where('nik_kepemilikan_rumah', 'like', "%{$keyword}%");
+                });
+
+                // 2️⃣ Nomor KK rumah (multi KK)
+                $q->orWhereHas('kepalaKeluarga', function ($qq) use ($keyword) {
+                    $qq->where('no_kk', 'like', "%{$keyword}%");
+                });
+
+                // 3️⃣ Nomor KK utama dari sosial ekonomi
+                $q->orWhereHas('sosialEkonomi', function ($qq) use ($keyword) {
+                    $qq->where('no_kk', 'like', "%{$keyword}%");
+                });
+
+                // 4️⃣ NIK anggota keluarga
+                $q->orWhereHas('kepalaKeluarga.anggota', function ($qq) use ($keyword) {
+                    $qq->where('nik', 'like', "%{$keyword}%");
+                });
+
+                // 5️⃣ No KK (anggota keluarga ikut KK kepala keluarga)
+                $q->orWhereHas('kepalaKeluarga.anggota', function ($qq) use ($keyword) {
+                    $qq->where('no_kk', 'like', "%{$keyword}%");
+                });
+            })
+            ->get();
+
+        return response()->json([
+            'status'  => true,
+            'keyword' => $keyword,
+            'total'   => $rumah->count(),
+            'data'    => $rumah
+        ]);
+    }
+
 
     public function deleteRumah(Request $request)
     {

@@ -11,6 +11,7 @@ use App\Livewire\Home;
 use App\Livewire\Peta;
 use App\Livewire\Polygon;
 use App\Livewire\Polygon\Add as PolygonAdd;
+use App\Livewire\Question\Daftar;
 use App\Livewire\Rekap;
 use App\Livewire\Rumah\Add;
 use App\Livewire\Rumah\Edit;
@@ -66,11 +67,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/polygon', Polygon::class)->name('polygon');
     Route::get('/dokumentasi', Dokumentasi::class)->name('dokumentasi');
     Route::get('/users', Users::class)->name('users');
+    Route::get('/pertanyaan', Daftar::class)->name('pertanyaan');
     Route::get('/setting', Setting::class)->name('setting');
     Route::get('/datatable/rumah', [Data::class, 'getData'])->name('livewire.datatables.rumah');
     Route::get('/datatable/bantuan', [Bantuan::class, 'getData'])->name('livewire.datatables.bantuan');
     Route::get('/datatable/polygon', [Polygon::class, 'getData'])->name('livewire.datatables.polygon');
     Route::get('/datatable/dokumentasi', [Dokumentasi::class, 'getData'])->name('livewire.datatables.dokumentasi');
+    Route::get('/datatable/question', [Daftar::class, 'getData'])->name('livewire.datatables.question');
     Route::get('/datatable/user', [Users::class, 'getData'])->name('livewire.datatables.user');
 
     Route::get('/datatable/rumah/detail/{id}', function ($id) {

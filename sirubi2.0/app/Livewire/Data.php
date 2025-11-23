@@ -6,6 +6,7 @@ use App\Exports\BantuanSheet;
 use App\Exports\KepalaKeluargaSheet;
 use App\Exports\RumahExport;
 use App\Exports\RumahSheet;
+use App\Jobs\ExportRumahJob;
 use App\Jobs\ProcessCompleteExportJob;
 use App\Models\Rumah;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +19,7 @@ use ZipArchive;
 
 class Data extends Component
 {
-   protected $listeners = ['refreshTable' => '$refresh', 'loadDetailRumah','deleteRumah','checkExportProgress'];
+   protected $listeners = ['refreshTable' => '$refresh', 'loadDetailRumah','deleteRumah','checkExportProgress','check-file-ready' => 'checkFile'];
     
    public $exportFormat = '';
 
@@ -26,9 +27,15 @@ class Data extends Component
     public $exportProgress = 0;
     public $exportMessage = '';
     public $exportCompleted = false;
-    public $downloadUrl = '';
+   
     public $timestamp = '';
     public $queueId = '';
+    public $isProcessing = false;
+    public $downloadUrl = null;
+    public $jobFile = null;
+    public $isExporting = false;
+
+   
     
     // public $progressSteps = [
     //     'dispatching' => 5,
@@ -180,6 +187,7 @@ class Data extends Component
 
     public function exportData()
     {
+          $this->isExporting = true;
         if (empty($this->exportFormat)) {
             $this->dispatch('swal:error', [
                 'title' => 'Format belum dipilih!',
@@ -189,12 +197,15 @@ class Data extends Component
         }
 
         if ($this->exportFormat === 'excel') {
+             $this->isExporting = false;
             return $this->exportExcel();
         }
 
         if ($this->exportFormat === 'geojson') {
             return $this->exportGeoJson();
         }
+
+         
     }
 
     
@@ -461,7 +472,104 @@ class Data extends Component
     //     return false;
     // }
 
-    public function exportExcel()
+    // public function exportExcel()
+    // {
+    //     try {
+    //         ini_set('memory_limit', '4096M');
+    //         ini_set('max_execution_time', '1800');
+
+    //         $timestamp = now()->format('Ymd_His');
+    //         $folder = "exports_$timestamp";
+    //         $disk = 'public';
+
+    //         $exportPath = storage_path("app/public/$folder");
+    //         if (!file_exists($exportPath)) mkdir($exportPath, 0777, true);
+
+    //         $files = [];
+    //         $maxRows = 1000;
+
+    //         $filteredQuery =  DB::table('rumah');
+        
+    //         Log::info('📌 Export Excel - Filtered Query:', [
+    //             'sql' => $filteredQuery->toSql(),
+    //             'bindings' => $filteredQuery->getBindings(),
+    //         ]);
+            
+
+    //         $total = $filteredQuery->count();
+    //         $chunkCount = ceil($total / $maxRows);
+
+    //         for ($i = 0; $i < $chunkCount; $i++) {
+    //             $offset = $i * $maxRows;
+    //             $filename = "data_rumah_" . ($i + 1) . ".xlsx";
+
+    //             Excel::store(
+    //                 new RumahExport($offset, $maxRows),
+    //                 "$folder/$filename",
+    //                 $disk
+    //             );
+
+    //             $files[] = storage_path("app/public/$folder/$filename");
+    //         }
+
+    //         // 💰 Ekspor Bantuan
+    //         $bantuanFile = "data_bantuan.xlsx";
+    //         Excel::store(
+    //             new BantuanSheet(),
+    //             "$folder/$bantuanFile",
+    //             $disk
+    //         );
+    //         $files[] = storage_path("app/public/$folder/$bantuanFile");
+
+    //         // 🗜️ Buat ZIP
+    //          $zipFilename = "export_data_$timestamp.zip";
+    //         $zipFile = storage_path("app/public/export_data_$timestamp.zip");
+    //         $zip = new \ZipArchive();
+
+    //         if ($zip->open($zipFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE)) {
+    //             foreach ($files as $f) {
+    //                 if (file_exists($f)) $zip->addFile($f, basename($f));
+    //             }
+    //             $zip->close();
+    //         }
+
+    //         // 🧹 Hapus file sementara
+    //         foreach ($files as $f) {
+    //             if (file_exists($f)) @unlink($f);
+    //         }
+    //         if (is_dir($exportPath)) @rmdir($exportPath);
+
+            
+
+    //         // ✅ Kirim URL download ke JS
+    //        // $url = asset('storage/export_data_' . $timestamp . '.zip');
+    //         // $url = route('export.download', ['filename' => "export_data_$timestamp.zip"]);
+    //         // Log::info('✅ Excel ZIP generated', ['url' => $url]);
+
+    //         // $url = asset("storage/$zipFilename");
+           
+            
+    //         $url = route('download.export', ['timestamp' => $timestamp]);
+    //          Log::info('✅ Excel ZIP generated', [
+    //             'url' => $url,
+    //             'file_path' => $zipFile
+    //         ]);
+    //         //$this->dispatch('excel-ready', url: $url);
+    //         $this->dispatch('geojson-ready', url: $url);
+    //         // HAPUS ZIP FILE SETELAH URL DIKIRIM
+    //         // register_shutdown_function(function () use ($zipFile) {
+    //         //     if (file_exists($zipFile)) @unlink($zipFile);
+    //         // });
+    //     } catch (\Throwable $e) {
+    //         Log::error('Export Excel gagal: ' . $e->getMessage());
+    //         $this->dispatch('swal:error', [
+    //             'title' => 'Export Gagal!',
+    //             'text'  => $e->getMessage(),
+    //         ]);
+    //     }
+    // }
+
+    public function exportExcelLocal()
     {
         try {
             ini_set('memory_limit', '4096M');
@@ -471,92 +579,164 @@ class Data extends Component
             $folder = "exports_$timestamp";
             $disk = 'public';
 
+            // buat folder storage/app/public/exports_xxx
             $exportPath = storage_path("app/public/$folder");
             if (!file_exists($exportPath)) mkdir($exportPath, 0777, true);
 
-            $files = [];
-            $maxRows = 1000;
+            // nama file excel final
+            $excelFilename = "data_rumah_semua_sheet.xlsx";
 
-            $filteredQuery =  DB::table('rumah');
-        
-            Log::info('📌 Export Excel - Filtered Query:', [
-                'sql' => $filteredQuery->toSql(),
-                'bindings' => $filteredQuery->getBindings(),
-            ]);
-            
+            // query dasar (boleh nanti ditambah filter)
+            $filteredQuery = \App\Models\Rumah::query();
 
-            $total = $filteredQuery->count();
-            $chunkCount = ceil($total / $maxRows);
+            // Log::info('📌 Export Excel - Query:', [
+            //     'sql' => $filteredQuery->toSql(),
+            //     'bindings' => $filteredQuery->getBindings()
+            // ]);
 
-            for ($i = 0; $i < $chunkCount; $i++) {
-                $offset = $i * $maxRows;
-                $filename = "data_rumah_" . ($i + 1) . ".xlsx";
-
-                Excel::store(
-                    new RumahExport($offset, $maxRows),
-                    "$folder/$filename",
-                    $disk
-                );
-
-                $files[] = storage_path("app/public/$folder/$filename");
-            }
-
-            // 💰 Ekspor Bantuan
-            $bantuanFile = "data_bantuan.xlsx";
-            Excel::store(
-                new BantuanSheet(),
-                "$folder/$bantuanFile",
+            // SIMPAN 1 FILE EXCEL MULTI-SHEET
+            \Maatwebsite\Excel\Facades\Excel::store(
+                new \App\Exports\RumahExportAll($filteredQuery),
+                "$folder/$excelFilename",
                 $disk
             );
-            $files[] = storage_path("app/public/$folder/$bantuanFile");
 
-            // 🗜️ Buat ZIP
-             $zipFilename = "export_data_$timestamp.zip";
-            $zipFile = storage_path("app/public/export_data_$timestamp.zip");
+            // buat ZIP
+            $zipFilename = "export_data_$timestamp.zip";
+            $zipFile = storage_path("app/public/$zipFilename");
+
             $zip = new \ZipArchive();
-
             if ($zip->open($zipFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE)) {
-                foreach ($files as $f) {
-                    if (file_exists($f)) $zip->addFile($f, basename($f));
+
+                $pathExcel = storage_path("app/public/$folder/$excelFilename");
+
+                if (file_exists($pathExcel)) {
+                    $zip->addFile($pathExcel, $excelFilename);
                 }
+
                 $zip->close();
             }
 
-            // 🧹 Hapus file sementara
-            foreach ($files as $f) {
-                if (file_exists($f)) @unlink($f);
-            }
+            // hapus file excel setelah dimasukkan zip
+            $generated = storage_path("app/public/$folder/$excelFilename");
+            if (file_exists($generated)) @unlink($generated);
+
+            // hapus folder
             if (is_dir($exportPath)) @rmdir($exportPath);
 
-            
+             return response()->download($zipFile)->deleteFileAfterSend(true);
 
-            // ✅ Kirim URL download ke JS
-           // $url = asset('storage/export_data_' . $timestamp . '.zip');
-            // $url = route('export.download', ['filename' => "export_data_$timestamp.zip"]);
-            // Log::info('✅ Excel ZIP generated', ['url' => $url]);
-
-            // $url = asset("storage/$zipFilename");
-           
-            
-            $url = route('download.export', ['timestamp' => $timestamp]);
-             Log::info('✅ Excel ZIP generated', [
-                'url' => $url,
-                'file_path' => $zipFile
-            ]);
-            //$this->dispatch('excel-ready', url: $url);
-            $this->dispatch('geojson-ready', url: $url);
-            // HAPUS ZIP FILE SETELAH URL DIKIRIM
-            // register_shutdown_function(function () use ($zipFile) {
-            //     if (file_exists($zipFile)) @unlink($zipFile);
-            // });
         } catch (\Throwable $e) {
+
             Log::error('Export Excel gagal: ' . $e->getMessage());
+
             $this->dispatch('swal:error', [
                 'title' => 'Export Gagal!',
-                'text'  => $e->getMessage(),
+                'text' => $e->getMessage(),
             ]);
         }
     }
+
+    public function exportExcelProd()
+    {
+        try {
+            // LIMIT hosting agar tidak overload
+            ini_set('memory_limit', '1024M');
+            ini_set('max_execution_time', '600');
+
+            $timestamp = now()->format('Ymd_His');
+            $folder = "exports_$timestamp";
+            $disk = 'public';
+
+            // buat folder storage/app/public/exports_xxx
+            $exportPath = storage_path("app/public/$folder");
+            if (!file_exists($exportPath)) {
+                mkdir($exportPath, 0777, true);
+            }
+
+            // nama file excel final
+            $excelFilename = "data_rumah_semua_sheet.xlsx";
+
+            // query dasar → AMAN karena FAST MODE tidak eagerloading
+            $filteredQuery = \App\Models\Rumah::select('id_rumah');
+
+            /**
+             * ==========================
+             *   EXPORT FAST MODE
+             * ==========================
+             */
+            \Maatwebsite\Excel\Facades\Excel::store(
+                new \App\Exports\ProdExportAll($filteredQuery),
+                "$folder/$excelFilename",
+                $disk
+            );
+
+            /**
+             * ==========================
+             *   ZIP hasil Excel
+             * ==========================
+             */
+            $zipFilename = "export_data_$timestamp.zip";
+            $zipFile = storage_path("app/public/$zipFilename");
+
+            $zip = new \ZipArchive();
+            if ($zip->open($zipFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE)) {
+
+                $pathExcel = storage_path("app/public/$folder/$excelFilename");
+
+                if (file_exists($pathExcel)) {
+                    $zip->addFile($pathExcel, $excelFilename);
+                }
+
+                $zip->close();
+            }
+
+            // Hapus file excel individu setelah masuk ZIP
+            $generated = storage_path("app/public/$folder/$excelFilename");
+            if (file_exists($generated)) @unlink($generated);
+
+            // hapus folder kosong
+            if (is_dir($exportPath)) @rmdir($exportPath);
+
+            return response()->download($zipFile)->deleteFileAfterSend(true);
+
+        } catch (\Throwable $e) {
+
+            Log::error('Export Excel gagal: ' . $e->getMessage());
+
+            $this->dispatch('swal:error', [
+                'title' => 'Export Gagal!',
+                'text' => $e->getMessage(),
+            ]);
+        }
+    }
+
+   public function exportExcel()
+    {
+        $this->isProcessing = true;
+        $timestamp = now()->format('Ymd_His');
+
+        $this->jobFile = "exports/export_rumah_$timestamp.xlsx";
+
+        ExportRumahJob::dispatch($this->jobFile);
+
+        $this->dispatch('start-export-polling');
+    }
+
+
+    public function checkFile()
+{
+        if (storage_path("app/public/{$this->jobFile}") && file_exists(storage_path("app/public/{$this->jobFile}"))) {
+            $this->downloadUrl = asset("storage/{$this->jobFile}");
+            $this->isProcessing = false;
+              $this->dispatch('export-finished');
+        }
+    }
+
+    public function refreshState()
+{
+    // Digunakan JS untuk update state Livewire 3
+}
 
 
 
@@ -601,7 +781,7 @@ class Data extends Component
         $filePath = Storage::disk('public')->path($fileName);
 
         Storage::disk('public')->put($fileName, json_encode($geojson, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-
+         $this->isExporting = false;
         return response()->download($filePath)->deleteFileAfterSend(true);
     } catch (\Throwable $e) {
         Log::error('Export GeoJSON gagal: '.$e->getMessage());
@@ -775,6 +955,19 @@ class Data extends Component
                 return $anggota ? e($anggota->nama) : '-';
             })
             ->addColumn('alamat', fn($r) => e($r->alamat ?? '-'))
+            ->addColumn('foto', function ($r) {
+               
+                if ($r->dokumen && $r->dokumen->foto_rumah_satu) {
+                    $photoUrl = asset('storage/' . $r->dokumen->foto_rumah_satu);
+                    return '<img src="' . $photoUrl . '"
+                    class="img-fluid rounded shadow-sm mb-2 preview-foto"
+                    style="max-height: 180px; object-fit: cover; cursor: pointer;"
+                    data-bs-toggle="modal"
+                    data-bs-target="#previewModal"
+                    data-src="' . $photoUrl . '">';
+                }
+                return '<span class="text-muted">Foto rumah belum diunggah.</span>';
+            })
             ->addColumn('kecamatan', fn($r) => e($r->kelurahan->kecamatan->nama_kecamatan ?? '-'))
             ->addColumn('kelurahan', fn($r) => e($r->kelurahan->nama_kelurahan ?? '-'))
             ->addColumn('status_rumah', function ($r) {
@@ -852,7 +1045,7 @@ class Data extends Component
                     });
                 }
             })
-            ->rawColumns(['expand', 'status_rumah', 'status_backlog', 'action'])
+            ->rawColumns(['expand', 'status_rumah', 'status_backlog', 'action','foto'])
             ->toJson();
     }
 

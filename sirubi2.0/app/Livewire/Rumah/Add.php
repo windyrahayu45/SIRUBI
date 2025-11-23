@@ -64,6 +64,8 @@ use App\Models\PenilaianRumah;
 use App\Models\Rumah;
 use App\Models\SanitasiRumah;
 use App\Models\SosialEkonomiRumah;
+use App\Models\SurveyQuestion;
+use App\Models\SurveyQuestionAnswer;
 use App\Models\TblJenisPondasi;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
@@ -241,6 +243,11 @@ class Add extends Component
     public $foto_rumah_dua;
     public $foto_rumah_tiga;
     public $foto_imb;
+    public $is_question = false;
+    public $question = [];
+    public $questionAnswers = []; 
+    public $totalStep = 9; 
+    public $lastStep = 7; 
 
 
   
@@ -250,7 +257,13 @@ class Add extends Component
     {
         // Daftar listener Livewire 3 style
         // $this->on('setStep', fn ($step) => $this->setStep($step));
-
+        $this->is_question = SurveyQuestion::where('is_active', '1')->exists();
+         $this->totalStep = $this->is_question ? 10 : 9;
+        $this->question = SurveyQuestion::with('options')
+            ->where('is_active', 1)
+            ->orderBy('id', 'desc')
+            ->get();
+             $this->lastStep = $this->is_question ? 8 : 7;
         $this->iJumlahKK = IJumlahKk::all(['id_jumlah_kk', 'jumlah_kk']);
         $this->iJenisKelamin = IJenisKelamin::all();
         $this->iPendidikanTerakhir = IPendidikanTerakhir::all();
@@ -592,9 +605,32 @@ class Add extends Component
                 }
             }
         }
+
+
+         if ($this->currentStep === 8 && $step > 8) {
+            $requiredPhotos = [
+                // 'foto_kk'          => 'Foto Kartu Keluarga (KK)',
+                // 'foto_ktp'         => 'Foto Kartu Tanda Penduduk (KTP)',
+                'foto_rumah_satu'  => 'Foto Rumah 1',
+                'foto_rumah_dua'   => 'Foto Rumah 2',
+                'foto_rumah_tiga'  => 'Foto Rumah 3',
+                //'foto_imb'         => 'Foto IMB',
+            ];
+
+            foreach ($requiredPhotos as $field => $label) {
+                if (empty($this->$field)) {
+                    $this->dispatch('swal:error', [
+                        'title' => 'Data Belum Lengkap',
+                        'text'  => "Kolom {$label} wajib diisi sebelum melanjutkan ke tahap berikutnya.",
+                    ]);
+                    return;
+                }
+            }
+        }
+        
         
 
-        $this->currentStep = max(1, min($step, 8));
+        $this->currentStep = max(1, min($step, $this->totalStep));
 
         // 🔁 Kirim balik ke frontend agar header update
         $this->dispatch('stepChanged', $this->currentStep);
@@ -680,34 +716,85 @@ class Add extends Component
 
     public function submitForm()
     {
-        $requiredPhotos = [
+       
+         $requiredPhotos = [
             // 'foto_kk'          => 'Foto Kartu Keluarga (KK)',
             // 'foto_ktp'         => 'Foto Kartu Tanda Penduduk (KTP)',
             'foto_rumah_satu'  => 'Foto Rumah 1',
             'foto_rumah_dua'   => 'Foto Rumah 2',
             'foto_rumah_tiga'  => 'Foto Rumah 3',
             //'foto_imb'         => 'Foto IMB',
-        ];
+            ];
 
-        $wajibFoto = [
-            'foto_kk'          => 'Foto Kartu Keluarga (KK)',
-            'foto_ktp'         => 'Foto Kartu Tanda Penduduk (KTP)',
-            'foto_rumah_satu'  => 'Foto Rumah 1',
-            'foto_rumah_dua'   => 'Foto Rumah 2',
-            'foto_rumah_tiga'  => 'Foto Rumah 3',
-            'foto_imb'         => 'Foto IMB',
-        ];
+            $wajibFoto = [
+                'foto_kk'          => 'Foto Kartu Keluarga (KK)',
+                'foto_ktp'         => 'Foto Kartu Tanda Penduduk (KTP)',
+                'foto_rumah_satu'  => 'Foto Rumah 1',
+                'foto_rumah_dua'   => 'Foto Rumah 2',
+                'foto_rumah_tiga'  => 'Foto Rumah 3',
+                'foto_imb'         => 'Foto IMB',
+            ];
 
+        if ($this->is_question) {
 
-        foreach ($requiredPhotos as $field => $label) {
-            if (empty($this->$field)) {
-                $this->dispatch('swal:error', [
-                    'title' => 'Dokumentasi Belum Lengkap',
-                    'text'  => "{$label} wajib diunggah sebelum mengirim data.",
-                ]);
-                return;
+            // Loop seluruh pertanyaan (Collection)
+            foreach ($this->question as $q) {
+
+                // Ambil jawaban dari Livewire
+                $answer = $this->questionAnswers[$q->id] ?? null;
+
+                // Abaikan pertanyaan tidak wajib
+                if (!$q->is_required) {
+                    continue;
+                }
+
+                // TEXT, TEXTAREA, NUMBER, DATE
+                if (in_array($q->type, ['text', 'textarea', 'number', 'date'])) {
+                    if (empty($answer)) {
+                        return $this->dispatch('swal:error', [
+                            'title' => 'Pertanyaan Belum Terjawab',
+                            'text'  => "Pertanyaan '{$q->label}' wajib diisi.",
+                        ]);
+                    }
+                }
+
+                // SELECT & RADIO
+                if (in_array($q->type, ['select', 'radio'])) {
+                    if (empty($answer)) {
+                        return $this->dispatch('swal:error', [
+                            'title' => 'Pertanyaan Belum Terjawab',
+                            'text'  => "Pertanyaan '{$q->label}' wajib dipilih.",
+                        ]);
+                    }
+                }
+
+                // CHECKBOX (array minimal 1)
+                if ($q->type === 'checkbox') {
+                    if (empty($answer) || count($answer) === 0) {
+                        return $this->dispatch('swal:error', [
+                            'title' => 'Pertanyaan Belum Terjawab',
+                            'text'  => "Pertanyaan '{$q->label}' wajib memilih minimal 1 opsi.",
+                        ]);
+                    }
+                }
             }
         }
+        else{
+            
+
+
+            foreach ($requiredPhotos as $field => $label) {
+                if (empty($this->$field)) {
+                    $this->dispatch('swal:error', [
+                        'title' => 'Dokumentasi Belum Lengkap',
+                        'text'  => "{$label} wajib diunggah sebelum mengirim data.",
+                    ]);
+                    return;
+                }
+            }
+
+        }
+
 
 
         try {
@@ -726,7 +813,7 @@ class Add extends Component
                 'tahun_pembangunan_rumah' => $this->tahun_pembangunan_rumah,
             ]);
 
-
+             $kkPertama = null;
             if (!empty($this->kks) && count($this->kks) > 0) {
                 foreach ($this->kks as $kkIndex => $kk) {
 
@@ -739,6 +826,10 @@ class Add extends Component
                         'no_kk'    => $kk['no_kk'] ?? null,
                         'kode_kk'  => $kodeKK,
                     ]);
+
+                    if ($kkIndex === 0) {
+                        $kkPertama = $kk['no_kk'] ?? null;
+                    }
 
                     // Simpan anggota keluarga dari KK tersebut
                     if (!empty($kk['anggota']) && count($kk['anggota']) > 0) {
@@ -756,6 +847,55 @@ class Add extends Component
                             ]);
                         }
                     }
+                }
+            }
+
+            //pertanyaan lain
+            foreach ($this->question as $q) {
+
+                $answer = $this->questionAnswers[$q->id] ?? null;
+
+                // Abaikan jika pertanyaan tidak wajib dan tidak diisi
+                if (!$q->is_required && empty($answer)) {
+                    continue;
+                }
+
+                // TEXT, TEXTAREA, NUMBER, DATE
+                if (in_array($q->type, ['text','textarea','number','date'])) {
+                    SurveyQuestionAnswer::create([
+                        'rumah_id'      => $rumah->id_rumah,
+                        'question_id'   => $q->id,
+                        'answer_text'   => $answer,
+                    ]);
+                }
+
+                // SELECT dan RADIO → Simpan 1 ID option
+                elseif (in_array($q->type, ['select','radio'])) {
+                    SurveyQuestionAnswer::create([
+                        'rumah_id'          => $rumah->id_rumah,
+                        'question_id'       => $q->id,
+                        'answer_option_id'  => $answer,
+                    ]);
+                }
+
+                // CHECKBOX → Simpan sebagai array of IDs
+                elseif ($q->type === 'checkbox') {
+                    SurveyQuestionAnswer::create([
+                        'rumah_id'          => $rumah->id_rumah,
+                        'question_id'       => $q->id,
+                        'answer_option_ids' => is_array($answer) ? $answer : [],
+                    ]);
+                }
+
+                // FILE (jika suatu saat kamu aktifkan)
+                elseif ($q->type === 'file' && $answer) {
+                    $filePath = $answer->store('survey_answers', 'public');
+
+                    SurveyQuestionAnswer::create([
+                        'rumah_id'      => $rumah->id_rumah,
+                        'question_id'   => $q->id,
+                        'file_path'     => $filePath,
+                    ]);
                 }
             }
 

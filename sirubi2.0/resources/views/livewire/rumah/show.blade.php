@@ -471,12 +471,29 @@
                     <!--end::Sidebar-->
                     <!--begin::Content-->
                     <div class="flex-lg-row-fluid ms-lg-15">
-                       
+                       <ul class="nav nav-custom nav-tabs nav-line-tabs nav-line-tabs-2x border-0 fs-4 fw-semibold mb-8">
+                            <!--begin:::Tab item-->
+                            <li class="nav-item">
+                                <a class="nav-link text-active-primary pb-4 active" data-bs-toggle="tab" href="#kt_user_view_overview_tab">Detail Data</a>
+                            </li>
+                            <!--end:::Tab item-->
+                            <!--begin:::Tab item-->
+                            <li class="nav-item">
+                                <a class="nav-link text-active-primary pb-4" data-kt-countup-tabs="true" data-bs-toggle="tab" href="#kt_user_view_overview_security">Timeline Perubahan Data</a>
+                            </li>
+                            <!--end:::Tab item-->
+                            <!--begin:::Tab item-->
+                            
+                                <!--end::Menu-->
+                                <!--end::Menu-->
+                            
+                            <!--end:::Tab item-->
+                        </ul>
                         <!--end:::Tabs-->
                         <!--begin:::Tab content-->
                         <div class="tab-content" id="myTabContent">
                             <!--begin:::Tab pane-->
-                            <div class="tab-pane fade show active" id="kt_customer_view_overview_tab" role="tabpanel">
+                            <div class="tab-pane fade show active" id="kt_user_view_overview_tab" role="tabpanel">
                                 <!--begin::Card-->
                                 <div class="card pt-4 mb-6 mb-xl-9">
                                     <!--begin::Card header-->
@@ -798,6 +815,88 @@
                                 <!--end::Card-->
                             </div>
                             <!--end:::Tab pane-->
+
+                            <div class="tab-pane fade" id="kt_user_view_overview_security" role="tabpanel">
+													<!--begin::Card-->
+                                @foreach($this->historyByDate as $date => $users)
+                                    <div class="card my-10">
+
+                                        <div class="card-header">
+                                            <h3 class="fw-bold text-gray-800">
+                                                {{ \Carbon\Carbon::parse($date)->translatedFormat('d F Y') }}
+                                            </h3>
+                                        </div>
+
+                                        <div class="card-body">
+
+                                            <div class="timeline">
+                                               
+                                                @foreach($users as $userId => $changes)
+                                                <!-- Timeline item per User -->
+                                               
+                                                <div class="timeline-item">
+
+                                                    <div class="timeline-line w-40px"></div>
+
+                                                    <div class="timeline-icon symbol symbol-circle symbol-40px me-4">
+                                                        <div class="symbol-label bg-light">
+                                                            <span class="text-primary fw-bold">
+                                                                
+                                                                {{ strtoupper(substr($changes->first()->user->name, 0, 1)) }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="timeline-content mb-10">
+                                                        <div class="pe-3 mb-5">
+
+                                                           
+
+                                                            <div class="text-muted fs-7">
+                                                                Total perubahan: {{ $changes->count() }}
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Detail Changes -->
+                                                        <div class="border rounded p-5">
+                                                            
+                                                            @foreach($changes as $item)
+                                                           
+                                                            <div class="d-flex flex-column border-bottom pb-3 mb-3">
+                                                                <div class="fw-bold">
+                                                                    {{ ucfirst($item->kategori) }} → <span class="text-primary">{{ $item->field }}</span>
+                                                                </div>
+                                                                {{-- @php dd($item->kategori); @endphp --}}
+                                                                <div class="text-muted fs-8">
+                                                                    {{ $item->changed_at->format('H:i') }} WIB
+                                                                </div>
+
+                                                                <div class="fs-7 mt-1">
+                                                                    <span class="text-danger">Old:</span> {{ $item->old_value ?? '-' }} <br>
+                                                                    <span class="text-success">New:</span> {{ $item->new_value ?? '-' }}
+                                                                </div>
+                                                            </div>
+                                                            @endforeach
+
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                                @endforeach
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+                                @endforeach
+
+
+                                <!--end::Card-->
+                                <!--begin::Card-->
+                               
+                                <!--end::Card-->
+                            </div>
                             
                         </div>
                         <!--end:::Tab content-->

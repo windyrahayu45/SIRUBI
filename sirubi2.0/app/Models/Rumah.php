@@ -8,9 +8,7 @@ class Rumah extends Model
 {
     protected $table = 'rumah';
     protected $primaryKey = 'id_rumah';
-    public $incrementing = false;
-    protected $keyType = 'string'; // atau integer, sesuaikan
-
+   
     protected $fillable = [
         'id_rumah_lama',
         'alamat',
@@ -81,5 +79,10 @@ class Rumah extends Model
     public function kelurahan()
     {
         return $this->belongsTo(IKelurahan::class, 'kelurahan_id','id_kelurahan');
+    }
+
+    public function surveyAnswers()
+    {
+        return $this->hasMany(SurveyQuestionAnswer::class, 'rumah_id');
     }
 }
