@@ -1039,7 +1039,7 @@ class Edit extends Component
                 $newRumahData      // data baru
             );
 
-            $oldKK = KepalaKeluarga::with('anggota')
+                $oldKK = KepalaKeluarga::with('anggota')
             ->where('rumah_id', $rumah->id_rumah)
             ->get()
             ->map(function ($kk) {
@@ -1101,30 +1101,30 @@ class Edit extends Component
                     ->whereNotIn('kode_kk', $kkCodes)
                     ->delete();
             }
+        $newKK = KepalaKeluarga::with('anggota')
+            ->where('rumah_id', $rumah->id_rumah)
+            ->get()
+            ->map(function ($kk) {
+                return [
+                    'kode_kk' => $kk->kode_kk,
+                    'no_kk'   => $kk->no_kk,
+                    'anggota' => $kk->anggota->map(function ($a) {
+                        return [
+                            'kode_anggota' => $a->kode_anggota,
+                            'nik'          => $a->nik,
+                            'nama'         => $a->nama,
+                        ];
+                    })->toArray()
+                ];
+            })->toArray();
 
-            $newKK = KepalaKeluarga::with('anggota')
-                ->where('rumah_id', $rumah->id_rumah)
-                ->get()
-                ->map(function ($kk) {
-                    return [
-                        'kode_kk' => $kk->kode_kk,
-                        'no_kk'   => $kk->no_kk,
-                        'anggota' => $kk->anggota->map(function ($a) {
-                            return [
-                                'kode_anggota' => $a->kode_anggota,
-                                'nik'          => $a->nik,
-                                'nama'         => $a->nama,
-                            ];
-                        })->toArray()
-                    ];
-                })->toArray();
 
-            $this->logArrayChanges(
+          $this->logKKChange(
                 $rumah->id_rumah,
-                'kk',
                 $oldKK,
                 $newKK
             );
+
 
 
 

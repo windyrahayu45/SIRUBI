@@ -7,9 +7,12 @@ use App\Models\RumahHistory;
 use App\Models\TblBantuan;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Livewire\Component;
+use App\Traits\LogsRumahHistory;
 
 class Show extends Component
 {
+     use LogsRumahHistory;
+    
     public $rumah, $namaPemilik = '';
     public $bantuanRiwayat = [];
     //public $historyByDate = [];
