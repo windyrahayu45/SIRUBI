@@ -15,6 +15,8 @@ class SurveyQuestionAnswer extends Model
         'file_path'
     ];
 
+    protected $primaryKey = 'id';
+
     protected $casts = [
         'answer_option_ids' => 'array'
     ];

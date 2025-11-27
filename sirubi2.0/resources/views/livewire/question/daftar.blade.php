@@ -111,7 +111,7 @@
     <!-- =============================== -->
     <!-- MODAL TAMBAH PERTANYAAN (AKTIF) -->
     <!-- =============================== -->
-   <div class="modal fade" id="kt_modal_tambah_pertanyaan" tabindex="-1" wire:ignore.self>
+    <div class="modal fade" id="kt_modal_tambah_pertanyaan" tabindex="-1" wire:ignore.self>
         <div class="modal-dialog modal-dialog-centered mw-650px">
             <div class="modal-content">
 
@@ -137,13 +137,13 @@
                     <!-- TEXT -->
                     <div class="mb-5">
                         <label class="form-label">Teks Pertanyaan</label>
-                        <input type="text" class="form-control form-control-solid" wire:model="label">
+                        <input type="text" class="form-control form-control-solid" wire:model="label" style="border-color: rgb(54 54 96);">
                     </div>
 
                     <!-- KEY -->
                     <div class="mb-5">
                         <label class="form-label">Key</label>
-                        <input type="text" class="form-control form-control-solid" wire:model="key">
+                        <input type="text" class="form-control form-control-solid" wire:model="key" style="border-color: rgb(54 54 96);">
                     </div>
 
                     <!-- TIPE INPUT + OPSI -->
@@ -154,10 +154,21 @@
                             <label class="form-label">Tipe Input</label>
                             <select class="form-select form-select-solid"
                                     x-model="jenis"
-                                    wire:model="type">
+                                    wire:model="type" style="border-color: rgb(54 54 96);">
                                 <option value="">-- Pilih Tipe --</option>
                                 @foreach($types as $t)
                                     <option value="{{ $t->name }}">{{ $t->label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="mb-5">
+                            <label class="form-label">Modul</label>
+                            <select class="form-select form-select-solid"
+                                    wire:model="module" style="border-color: rgb(54 54 96);">
+                                <option value="">-- Pilih Modul --</option>
+                                @foreach($modules as $m)
+                                    <option value="{{ $m->module }}">{{ $m->label }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -171,7 +182,7 @@
 
                                     <input class="form-control form-control-solid"
                                         placeholder="Label opsi…"
-                                        wire:model="options.{{ $i }}.label">
+                                        wire:model="options.{{ $i }}.label" style="border-color: rgb(54 54 96);">
 
                                     <button class="btn btn-light-danger"
                                             wire:click="removeOption({{ $i }})">
@@ -192,6 +203,36 @@
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" wire:model="is_required">
                         </div>
+                    </div>
+
+                    <!-- CONDITIONAL QUESTION (opsional) -->
+                    <div class="mb-5">
+                        <label class="form-label fw-bold">Pertanyaan Ini Muncul Jika</label>
+
+                        <!-- pilih parent -->
+                        <select class="form-select form-select-solid mb-3"
+                                wire:model="parent_question_id" wire:change="handleParentChange($event.target.value)" style="border-color: rgb(54 54 96);">
+                            <option value="">-- Pertanyaan Utama (Tidak Ada Parent) --</option>
+
+                            @foreach($availableParents as $p)
+                                {{-- saat edit, jangan pilih diri sendiri --}}
+                                @if(!$editMode || $editId != $p->id)
+                                    <option value="{{ $p->id }}">{{ $p->label }}</option>
+                                @endif
+                            @endforeach
+                        </select>
+
+                        <!-- pilih opsi pemicu -->
+                        @if($parent_question_id)
+                            <select class="form-select form-select-solid"
+                                    wire:model="trigger_option_id" style="border-color: rgb(54 54 96);">
+                                <option value="">-- Pilih Opsi Pemicu --</option>
+
+                                @foreach($availableTriggerOptions as $opt)
+                                    <option value="{{ $opt->id }}">{{ $opt->label }}</option>
+                                @endforeach
+                            </select>
+                        @endif
                     </div>
 
                     <!-- BUTTON -->
@@ -362,7 +403,15 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    
+     Livewire.on('showAlert', (data) => {
+        Swal.fire({
+            icon: data[0].type ?? 'success',
+            title: data[0].message ?? '',
+            timer: 2000,
+            showConfirmButton: false
+        });
+    });
+
 
     
 

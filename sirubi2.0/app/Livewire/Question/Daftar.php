@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Question;
 
+use App\Models\SurveyModule;
 use App\Models\SurveyQuestion;
 use App\Models\SurveyQuestionOption;
 use App\Models\SurveyQuestionType;
@@ -19,8 +20,15 @@ class Daftar extends Component
 
     public $types = [];
 
+    public $parent_question_id = null;
+    public $trigger_option_id = null;
+    public $availableParents = [];
+    public $availableTriggerOptions = [];
+
     public $editMode = false;
     public $editId   = null;
+    public $module = null;
+    public $modules = [];
 
     protected $listeners = [
         'deleteQuestion',
@@ -125,7 +133,42 @@ class Daftar extends Component
     public function mount()
     {
         $this->types = SurveyQuestionType::all();
+
+       $this->modules = SurveyModule::all();
+
+      
+
+    $this->availableParents = SurveyQuestion::where('is_active', 1)
+        ->orderBy('order')
+        ->get();
     }
+
+    public function updatedParentQuestionId($value)
+    {
+        $this->trigger_option_id = null;
+
+        $this->availableTriggerOptions = SurveyQuestionOption::where('question_id', $value)
+            ->where('is_active', 1)
+            ->orderBy('order')
+            ->get();
+    }
+
+    public function handleParentChange($value)
+{
+    // pastikan nilai parent ke-set
+    $this->parent_question_id = $value ?: null;
+
+    // reset trigger yang lama
+    $this->trigger_option_id = null;
+
+    // AMBIL opsi dari parent yang dipilih
+    $this->availableTriggerOptions = SurveyQuestionOption::where('question_id', $this->parent_question_id)
+        ->where('is_active', 1)
+        ->orderBy('order')
+        ->get();
+}
+
+
 
     /* ==========================================================
      * RESET FORM (ADD MODE)
@@ -138,6 +181,12 @@ class Daftar extends Component
 
         $this->editMode = false;
         $this->options = [];
+
+        $this->reset([
+            'parent_question_id',
+            'trigger_option_id',
+            'availableTriggerOptions',
+        ]);
     }
 
     public function updatedLabel()
@@ -170,18 +219,44 @@ class Daftar extends Component
             return $this->update();
         }
 
+      try {
         $this->validate([
-            'label' => 'required',
-            'key'   => 'required|unique:survey_questions,key',
-            'type'  => 'required',
+            'label'  => 'required',
+            'module' => 'required',
+            'key'    => 'required|unique:survey_questions,key',
+            'type'   => 'required',
         ]);
 
+        // lanjutkan proses simpan...
+    
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        // Ambil pesan error pertama
+        $firstError = collect($e->validator->errors()->all())->first();
+
+            // Kirim ke JS
+            $this->dispatch('showAlert', [
+                'type' => 'error',
+                'message' => $firstError
+            ]);
+
+            return; 
+    }
+        // $q = SurveyQuestion::create([
+        //     'label'       => $this->label,
+        //     'key'         => $this->key,
+        //     'type'        => $this->type,
+        //     'is_required' => $this->is_required,
+        // ]);
+
         $q = SurveyQuestion::create([
-            'label'       => $this->label,
-            'key'         => $this->key,
-            'type'        => $this->type,
-            'is_required' => $this->is_required,
-        ]);
+                'label'             => $this->label,
+                'key'               => $this->key,
+                'module'            => $this->module,
+                'type'              => $this->type,
+                'is_required'       => $this->is_required,
+                'parent_question_id'=> $this->parent_question_id,
+                'trigger_option_id' => $this->trigger_option_id,
+            ]);
 
         if (in_array($this->type, ['select','radio','checkbox'])) {
             foreach ($this->options as $opt) {
@@ -192,7 +267,9 @@ class Daftar extends Component
                 ]);
             }
         }
-
+        $this->availableParents = SurveyQuestion::where('is_active', 1)
+        ->orderBy('order')
+        ->get();
         $this->dispatch('closeModalTambahPertanyaan');
         $this->resetForm();
     }
@@ -200,6 +277,53 @@ class Daftar extends Component
     /* ==========================================================
      * UPDATE DATA (EDIT MODE)
      * ==========================================================*/
+    // public function update()
+    // {
+    //     $this->validate([
+    //         'label' => 'required',
+    //         'key'   => 'required|unique:survey_questions,key,' . $this->editId,
+    //         'type'  => 'required',
+    //     ]);
+
+    //     $q = SurveyQuestion::find($this->editId);
+    //     if (!$q) return;
+
+    //     // UPDATE pertanyaan utama
+    //     $q->update([
+    //         'label'       => $this->label,
+    //         'key'         => $this->key,
+    //         'type'        => $this->type,
+    //         'is_required' => $this->is_required,
+    //     ]);
+
+    //     /* ---------------------------------------------------------
+    //     *  OPSI: BUAT RIWAYAT — TIDAK DIHAPUS
+    //     * --------------------------------------------------------- */
+
+    //     // 1) Tandai semua opsi lama sebagai tidak aktif
+    //     SurveyQuestionOption::where('question_id', $q->id)
+    //         ->update(['is_active' => 0]);
+
+    //     // 2) Tambah opsi baru
+    //     if (in_array($this->type, ['select','radio','checkbox'])) {
+
+    //         foreach ($this->options as $opt) {
+    //             SurveyQuestionOption::create([
+    //                 'question_id' => $q->id,
+    //                 'label'       => $opt['label'],
+    //                 'is_active'   => 1,      // aktif
+    //                 'order'       => 0,
+    //             ]);
+    //         }
+
+    //     }
+    //      $this->availableParents = SurveyQuestion::where('is_active', 1)
+    //     ->orderBy('order')
+    //     ->get();
+    //     $this->dispatch('closeModalTambahPertanyaan');
+    //     $this->resetForm();
+    // }
+
     public function update()
     {
         $this->validate([
@@ -213,37 +337,44 @@ class Daftar extends Component
 
         // UPDATE pertanyaan utama
         $q->update([
-            'label'       => $this->label,
-            'key'         => $this->key,
-            'type'        => $this->type,
-            'is_required' => $this->is_required,
+            'label'             => $this->label,
+            'key'               => $this->key,
+            'type'              => $this->type,
+            'is_required'       => $this->is_required,
+            'parent_question_id'=> $this->parent_question_id, // 🔥 penting
+            'trigger_option_id' => $this->trigger_option_id,  // 🔥 penting
         ]);
 
         /* ---------------------------------------------------------
-        *  OPSI: BUAT RIWAYAT — TIDAK DIHAPUS
+        * OPSI: BUAT RIWAYAT — TIDAK DIHAPUS
         * --------------------------------------------------------- */
 
-        // 1) Tandai semua opsi lama sebagai tidak aktif
+        // 1) Nonaktifkan semua opsi lama
         SurveyQuestionOption::where('question_id', $q->id)
             ->update(['is_active' => 0]);
 
-        // 2) Tambah opsi baru
+        // 2) Tambahkan opsi baru
         if (in_array($this->type, ['select','radio','checkbox'])) {
 
             foreach ($this->options as $opt) {
                 SurveyQuestionOption::create([
                     'question_id' => $q->id,
                     'label'       => $opt['label'],
-                    'is_active'   => 1,      // aktif
+                    'is_active'   => 1,
                     'order'       => 0,
                 ]);
             }
-
         }
+
+        // refresh daftar parent
+        $this->availableParents = SurveyQuestion::where('is_active', 1)
+            ->orderBy('order')
+            ->get();
 
         $this->dispatch('closeModalTambahPertanyaan');
         $this->resetForm();
     }
+
 
 
     /* ==========================================================
@@ -263,6 +394,15 @@ class Daftar extends Component
         $this->key         = $q->key;
         $this->type        = $q->type;
         $this->is_required = $q->is_required;
+        $this->parent_question_id = $q->parent_question_id;
+        $this->trigger_option_id  = $q->trigger_option_id;
+
+        // load opsi parent untuk dropdown trigger
+        if ($this->parent_question_id) {
+            $this->availableTriggerOptions = SurveyQuestionOption::where('question_id', $this->parent_question_id)
+                ->where('is_active', 1)
+                ->get();
+        }
 
         $this->options = in_array($q->type, ['select','radio','checkbox'])
             ? $q->options->map(fn($o) => ['label' => $o->label])->toArray()

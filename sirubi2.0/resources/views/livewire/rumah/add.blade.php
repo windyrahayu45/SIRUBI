@@ -135,6 +135,179 @@
                                                                         placeholder="Longitude akan muncul di sini" readonly style="border-color: rgb(54 54 96);">
                                                                 </div>
                                                             </div>
+
+                                                            <div class="mt-10" >
+                                                            @foreach($pertanyaanLokasi as $q)
+                                                                <div class="mb-8" wire:key="parent-{{ $q->id }}"  wire:ignore>
+
+                                                                    <!-- LABEL -->
+                                                                    <label class="fs-5 fw-semibold mb-2">
+                                                                        {{ $q->label }}
+                                                                        @if($q->is_required)
+                                                                            <span class="text-danger">*</span>
+                                                                        @endif
+                                                                    </label>
+
+                                                                    <!-- TIPE TEXT -->
+                                                                    @if($q->type === 'text')
+                                                                        <input type="text"
+                                                                            class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                            wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                    <!-- TIPE TEXTAREA -->
+                                                                    @elseif($q->type === 'textarea')
+                                                                        <textarea class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                                rows="3"
+                                                                                wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);"></textarea>
+
+                                                                    <!-- TIPE NUMBER -->
+                                                                    @elseif($q->type === 'number')
+                                                                        <input type="number"
+                                                                            class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                            wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                    <!-- TIPE DATE -->
+                                                                    @elseif($q->type === 'date')
+                                                                        <input type="date"
+                                                                            class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                            wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                    <!-- TIPE SELECT -->
+                                                                    @elseif($q->type === 'select' && $q->options->isNotEmpty())
+                                                                        <select class="form-select" data-control="select2" data-name="questionAnswers.{{ $q->id }}"
+                                                                                wire:model="questionAnswers.{{ $q->id }}" data-placeholder="Pilih Jawaban">
+                                                                            <option value="">-- Pilih --</option>
+
+                                                                            @foreach($q->options as $option)
+                                                                                <option value="{{ $option->id }}">{{ $option->label }}</option>
+                                                                            @endforeach
+                                                                        </select>
+
+                                                                    <!-- TIPE RADIO -->
+                                                                    @elseif($q->type === 'radio' && $q->options->isNotEmpty())
+                                                                        <div class="d-flex flex-column gap-2">
+                                                                            @foreach($q->options as $option)
+                                                                                <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                    <input class="form-check-input"
+                                                                                        type="radio"
+                                                                                        value="{{ $option->id }}"
+                                                                                        wire:model="questionAnswers.{{ $q->id }}"  data-name="questionAnswers.{{ $q->id }}">
+                                                                                    <span class="form-check-label">{{ $option->label }}</span>
+                                                                                </label>
+                                                                            @endforeach
+                                                                        </div>
+
+                                                                    <!-- TIPE CHECKBOX -->
+                                                                    @elseif($q->type === 'checkbox' && $q->options->isNotEmpty())
+                                                                        <div class="d-flex flex-column gap-2">
+                                                                            @foreach($q->options as $option)
+                                                                                <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                    <input class="form-check-input"
+                                                                                        type="checkbox"
+                                                                                        value="{{ $option->id }}"
+                                                                                        wire:model="questionAnswers.{{ $q->id }}"  data-name="questionAnswers.{{ $q->id }}">
+                                                                                    <span class="form-check-label">{{ $option->label }}</span>
+                                                                                </label>
+                                                                            @endforeach
+                                                                        </div>
+
+                                                                    <!-- FILE UPLOAD (jika kamu aktifkan) -->
+                                                                    @elseif($q->type === 'file')
+                                                                        <input type="file" class="form-control"
+                                                                            wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                    @else
+                                                                        <div class="text-muted">Tipe input tidak dikenali.</div>
+                                                                    @endif
+
+                                                                    <!-- ERROR -->
+                                                                    @error('questionAnswers.' . $q->id)
+                                                                        <div class="text-danger small mt-1">{{ $message }}</div>
+                                                                    @enderror
+
+                                                                </div>
+
+                                                                <!-- Cek apakah ada child question untuk parent ini -->
+                                                                @foreach($childQuestions as $child)
+                                                                    @if($child->parent_question_id == $q->id && $child->trigger_option_id == ($questionAnswers[$q->id] ?? null))
+
+                                                                        <div class="mb-8" wire:key="child-{{ $child->id }}"  wire:ignore>
+                                                                            <!-- LABEL CHILD -->
+                                                                            <label class="fs-6 fw-semibold mb-2">
+                                                                                {{ $child->label }}
+                                                                                @if($child->is_required)
+                                                                                    <span class="text-danger">*</span>
+                                                                                @endif
+                                                                            </label>
+
+                                                                            <!-- TIPE INPUT CHILD (copy dari parent) -->
+
+                                                                            @if($child->type === 'text')
+                                                                                <input type="text" class="form-control form-control-solid"
+                                                                                    wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                            @elseif($child->type === 'textarea')
+                                                                                <textarea class="form-control form-control-solid"
+                                                                                    wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);"></textarea>
+                                                                            @elseif($child->type === 'number')
+                                                                                <input type="number" class="form-control form-control-solid"
+                                                                                    wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                            @elseif($child->type === 'date')
+                                                                                <input type="date" class="form-control form-control-solid"
+                                                                                    wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                            @elseif($child->type === 'select' && $child->options->isNotEmpty())
+                                                                                <select class="form-select" data-control="select2" data-name="questionAnswers.{{ $child->id }}"
+                                                                                wire:model="questionAnswers.{{ $child->id }}" data-placeholder="Pilih Jawaban">
+                                                                                    <option value="">-- Pilih --</option>
+                                                                                    @foreach($child->options as $option)
+                                                                                        <option value="{{ $option->id }}">{{ $option->label }}</option>
+                                                                                    @endforeach
+                                                                                </select>
+
+                                                                            @elseif($child->type === 'radio')
+                                                                                <div class="d-flex flex-column gap-2">
+                                                                                    @foreach($child->options as $option)
+                                                                                        <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                            <input class="form-check-input"
+                                                                                                type="radio"
+                                                                                                value="{{ $option->id }}"
+                                                                                                wire:model="questionAnswers.{{ $child->id }}"  data-name="questionAnswers.{{ $child->id }}">
+                                                                                            <span class="form-check-label">{{ $option->label }}</span>
+                                                                                        </label>
+                                                                                    @endforeach
+                                                                                </div>
+                                                                            @elseif($child->type === 'checkbox' && $child->options->isNotEmpty())
+                                                                                <div class="d-flex flex-column gap-2">
+                                                                                    @foreach($child->options as $option)
+                                                                                        <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                            <input class="form-check-input"
+                                                                                                type="checkbox"
+                                                                                                value="{{ $option->id }}"
+                                                                                                wire:model="questionAnswers.{{ $child->id }}"  data-name="questionAnswers.{{ $child->id }}">
+                                                                                            <span class="form-check-label">{{ $option->label }}</span>
+                                                                                        </label>
+                                                                                    @endforeach
+                                                                                </div>
+
+                                                                            <!-- FILE UPLOAD (jika kamu aktifkan) -->
+                                                                            @elseif($child->type === 'file')
+                                                                                <input type="file" class="form-control"
+                                                                                    wire:model="questionAnswers.{{ $child->id }}">
+
+                                                                            @endif
+
+                                                                            @error('questionAnswers.' . $child->id)
+                                                                                <div class="text-danger small mt-1">{{ $message }}</div>
+                                                                            @enderror
+                                                                        </div>
+
+                                                                    @endif
+                                                                @endforeach
+
+                                                            @endforeach
+                                                            </div>
                                             
                                                            
                                                             <!--end::Input group-->
@@ -263,6 +436,179 @@
                                                                 </button>
                                                             @endif
 
+                                                            <div class="mt-10" >
+                                                            @foreach($pertanyaanKk as $q)
+                                                                <div class="mb-8" wire:key="parent-{{ $q->id }}"  wire:ignore>
+
+                                                                    <!-- LABEL -->
+                                                                    <label class="fs-5 fw-semibold mb-2">
+                                                                        {{ $q->label }}
+                                                                        @if($q->is_required)
+                                                                            <span class="text-danger">*</span>
+                                                                        @endif
+                                                                    </label>
+
+                                                                    <!-- TIPE TEXT -->
+                                                                    @if($q->type === 'text')
+                                                                        <input type="text"
+                                                                            class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                            wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                    <!-- TIPE TEXTAREA -->
+                                                                    @elseif($q->type === 'textarea')
+                                                                        <textarea class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                                rows="3"
+                                                                                wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);"></textarea>
+
+                                                                    <!-- TIPE NUMBER -->
+                                                                    @elseif($q->type === 'number')
+                                                                        <input type="number"
+                                                                            class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                            wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                    <!-- TIPE DATE -->
+                                                                    @elseif($q->type === 'date')
+                                                                        <input type="date"
+                                                                            class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                            wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                    <!-- TIPE SELECT -->
+                                                                    @elseif($q->type === 'select' && $q->options->isNotEmpty())
+                                                                        <select class="form-select" data-control="select2" data-name="questionAnswers.{{ $q->id }}"
+                                                                                wire:model="questionAnswers.{{ $q->id }}" data-placeholder="Pilih Jawaban">
+                                                                            <option value="">-- Pilih --</option>
+
+                                                                            @foreach($q->options as $option)
+                                                                                <option value="{{ $option->id }}">{{ $option->label }}</option>
+                                                                            @endforeach
+                                                                        </select>
+
+                                                                    <!-- TIPE RADIO -->
+                                                                    @elseif($q->type === 'radio' && $q->options->isNotEmpty())
+                                                                        <div class="d-flex flex-column gap-2">
+                                                                            @foreach($q->options as $option)
+                                                                                <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                    <input class="form-check-input"
+                                                                                        type="radio"
+                                                                                        value="{{ $option->id }}"
+                                                                                        wire:model="questionAnswers.{{ $q->id }}"  data-name="questionAnswers.{{ $q->id }}">
+                                                                                    <span class="form-check-label">{{ $option->label }}</span>
+                                                                                </label>
+                                                                            @endforeach
+                                                                        </div>
+
+                                                                    <!-- TIPE CHECKBOX -->
+                                                                    @elseif($q->type === 'checkbox' && $q->options->isNotEmpty())
+                                                                        <div class="d-flex flex-column gap-2">
+                                                                            @foreach($q->options as $option)
+                                                                                <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                    <input class="form-check-input"
+                                                                                        type="checkbox"
+                                                                                        value="{{ $option->id }}"
+                                                                                        wire:model="questionAnswers.{{ $q->id }}"  data-name="questionAnswers.{{ $q->id }}">
+                                                                                    <span class="form-check-label">{{ $option->label }}</span>
+                                                                                </label>
+                                                                            @endforeach
+                                                                        </div>
+
+                                                                    <!-- FILE UPLOAD (jika kamu aktifkan) -->
+                                                                    @elseif($q->type === 'file')
+                                                                        <input type="file" class="form-control"
+                                                                            wire:model="questionAnswers.{{ $q->id }}">
+
+                                                                    @else
+                                                                        <div class="text-muted">Tipe input tidak dikenali.</div>
+                                                                    @endif
+
+                                                                    <!-- ERROR -->
+                                                                    @error('questionAnswers.' . $q->id)
+                                                                        <div class="text-danger small mt-1">{{ $message }}</div>
+                                                                    @enderror
+
+                                                                </div>
+
+                                                                <!-- Cek apakah ada child question untuk parent ini -->
+                                                                @foreach($childQuestions as $child)
+                                                                    @if($child->parent_question_id == $q->id && $child->trigger_option_id == ($questionAnswers[$q->id] ?? null))
+
+                                                                        <div class="mb-8" wire:key="child-{{ $child->id }}"  wire:ignore>
+                                                                            <!-- LABEL CHILD -->
+                                                                            <label class="fs-6 fw-semibold mb-2">
+                                                                                {{ $child->label }}
+                                                                                @if($child->is_required)
+                                                                                    <span class="text-danger">*</span>
+                                                                                @endif
+                                                                            </label>
+
+                                                                            <!-- TIPE INPUT CHILD (copy dari parent) -->
+
+                                                                            @if($child->type === 'text')
+                                                                                <input type="text" class="form-control form-control-solid"
+                                                                                    wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                            @elseif($child->type === 'textarea')
+                                                                                <textarea class="form-control form-control-solid"
+                                                                                    wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);"></textarea>
+                                                                            @elseif($child->type === 'number')
+                                                                                <input type="number" class="form-control form-control-solid"
+                                                                                    wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                            @elseif($child->type === 'date')
+                                                                                <input type="date" class="form-control form-control-solid"
+                                                                                    wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                            @elseif($child->type === 'select' && $child->options->isNotEmpty())
+                                                                                <select class="form-select" data-control="select2" data-name="questionAnswers.{{ $child->id }}"
+                                                                                wire:model="questionAnswers.{{ $child->id }}" data-placeholder="Pilih Jawaban">
+                                                                                    <option value="">-- Pilih --</option>
+                                                                                    @foreach($child->options as $option)
+                                                                                        <option value="{{ $option->id }}">{{ $option->label }}</option>
+                                                                                    @endforeach
+                                                                                </select>
+
+                                                                            @elseif($child->type === 'radio')
+                                                                                <div class="d-flex flex-column gap-2">
+                                                                                    @foreach($child->options as $option)
+                                                                                        <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                            <input class="form-check-input"
+                                                                                                type="radio"
+                                                                                                value="{{ $option->id }}"
+                                                                                                wire:model="questionAnswers.{{ $child->id }}"  data-name="questionAnswers.{{ $child->id }}">
+                                                                                            <span class="form-check-label">{{ $option->label }}</span>
+                                                                                        </label>
+                                                                                    @endforeach
+                                                                                </div>
+                                                                             @elseif($child->type === 'checkbox' && $child->options->isNotEmpty())
+                                                                                <div class="d-flex flex-column gap-2">
+                                                                                    @foreach($child->options as $option)
+                                                                                        <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                            <input class="form-check-input"
+                                                                                                type="checkbox"
+                                                                                                value="{{ $option->id }}"
+                                                                                                wire:model="questionAnswers.{{ $child->id }}"  data-name="questionAnswers.{{ $child->id }}">
+                                                                                            <span class="form-check-label">{{ $option->label }}</span>
+                                                                                        </label>
+                                                                                    @endforeach
+                                                                                </div>
+
+                                                                            <!-- FILE UPLOAD (jika kamu aktifkan) -->
+                                                                            @elseif($child->type === 'file')
+                                                                                <input type="file" class="form-control"
+                                                                                    wire:model="questionAnswers.{{ $child->id }}">
+
+                                                                            @endif
+
+                                                                            @error('questionAnswers.' . $child->id)
+                                                                                <div class="text-danger small mt-1">{{ $message }}</div>
+                                                                            @enderror
+                                                                        </div>
+
+                                                                    @endif
+                                                                @endforeach
+
+                                                            @endforeach
+                                                            </div>
+
 
                                                             
 
@@ -272,7 +618,7 @@
                                                         </div>
                                                     </div>
 
-                                                    <div  data-kt-stepper-element="content" class="{{ $currentStep === 3 ? 'current' : ($currentStep > 3 ? 'completed' : '') }}">
+                                                    <div   data-kt-stepper-element="content" class="{{ $currentStep === 3 ? 'current' : ($currentStep > 3 ? 'completed' : '') }}">
                                                         <div class="w-100">
                                                             <div class="pb-10 pb-lg-15">
                                                                 <!--begin::Title-->
@@ -612,6 +958,179 @@
                                                                     </div>
                                                                 @endif
 
+                                                                <div class="mt-10" >
+                                                                @foreach($pertanyaanIdentitas as $q)
+                                                                    <div class="mb-8" wire:key="parent-{{ $q->id }}"  wire:ignore>
+
+                                                                        <!-- LABEL -->
+                                                                        <label class="fs-5 fw-semibold mb-2">
+                                                                            {{ $q->label }}
+                                                                            @if($q->is_required)
+                                                                                <span class="text-danger">*</span>
+                                                                            @endif
+                                                                        </label>
+
+                                                                        <!-- TIPE TEXT -->
+                                                                        @if($q->type === 'text')
+                                                                            <input type="text"
+                                                                                class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                                wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                        <!-- TIPE TEXTAREA -->
+                                                                        @elseif($q->type === 'textarea')
+                                                                            <textarea class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                                    rows="3"
+                                                                                    wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);"></textarea>
+
+                                                                        <!-- TIPE NUMBER -->
+                                                                        @elseif($q->type === 'number')
+                                                                            <input type="number"
+                                                                                class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                                wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                        <!-- TIPE DATE -->
+                                                                        @elseif($q->type === 'date')
+                                                                            <input type="date"
+                                                                                class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                                wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                        <!-- TIPE SELECT -->
+                                                                        @elseif($q->type === 'select' && $q->options->isNotEmpty())
+                                                                            <select class="form-select" data-control="select2" data-name="questionAnswers.{{ $q->id }}"
+                                                                                    wire:model="questionAnswers.{{ $q->id }}" data-placeholder="Pilih Jawaban">
+                                                                                <option value="">-- Pilih --</option>
+
+                                                                                @foreach($q->options as $option)
+                                                                                    <option value="{{ $option->id }}">{{ $option->label }}</option>
+                                                                                @endforeach
+                                                                            </select>
+
+                                                                        <!-- TIPE RADIO -->
+                                                                        @elseif($q->type === 'radio' && $q->options->isNotEmpty())
+                                                                            <div class="d-flex flex-column gap-2">
+                                                                                @foreach($q->options as $option)
+                                                                                    <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                        <input class="form-check-input"
+                                                                                            type="radio"
+                                                                                            value="{{ $option->id }}"
+                                                                                            wire:model="questionAnswers.{{ $q->id }}"  data-name="questionAnswers.{{ $q->id }}">
+                                                                                        <span class="form-check-label">{{ $option->label }}</span>
+                                                                                    </label>
+                                                                                @endforeach
+                                                                            </div>
+
+                                                                        <!-- TIPE CHECKBOX -->
+                                                                        @elseif($q->type === 'checkbox' && $q->options->isNotEmpty())
+                                                                            <div class="d-flex flex-column gap-2">
+                                                                                @foreach($q->options as $option)
+                                                                                    <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                        <input class="form-check-input"
+                                                                                            type="checkbox"
+                                                                                            value="{{ $option->id }}"
+                                                                                            wire:model="questionAnswers.{{ $q->id }}"  data-name="questionAnswers.{{ $q->id }}">
+                                                                                        <span class="form-check-label">{{ $option->label }}</span>
+                                                                                    </label>
+                                                                                @endforeach
+                                                                            </div>
+
+                                                                        <!-- FILE UPLOAD (jika kamu aktifkan) -->
+                                                                        @elseif($q->type === 'file')
+                                                                            <input type="file" class="form-control"
+                                                                                wire:model="questionAnswers.{{ $q->id }}">
+
+                                                                        @else
+                                                                            <div class="text-muted">Tipe input tidak dikenali.</div>
+                                                                        @endif
+
+                                                                        <!-- ERROR -->
+                                                                        @error('questionAnswers.' . $q->id)
+                                                                            <div class="text-danger small mt-1">{{ $message }}</div>
+                                                                        @enderror
+
+                                                                    </div>
+
+                                                                    <!-- Cek apakah ada child question untuk parent ini -->
+                                                                    @foreach($childQuestions as $child)
+                                                                        @if($child->parent_question_id == $q->id && $child->trigger_option_id == ($questionAnswers[$q->id] ?? null))
+
+                                                                            <div class="mb-8" wire:key="child-{{ $child->id }}"  wire:ignore>
+                                                                                <!-- LABEL CHILD -->
+                                                                                <label class="fs-6 fw-semibold mb-2">
+                                                                                    {{ $child->label }}
+                                                                                    @if($child->is_required)
+                                                                                        <span class="text-danger">*</span>
+                                                                                    @endif
+                                                                                </label>
+
+                                                                                <!-- TIPE INPUT CHILD (copy dari parent) -->
+
+                                                                                @if($child->type === 'text')
+                                                                                    <input type="text" class="form-control form-control-solid"
+                                                                                        wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                                @elseif($child->type === 'textarea')
+                                                                                    <textarea class="form-control form-control-solid"
+                                                                                        wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);"></textarea>
+                                                                                @elseif($child->type === 'number')
+                                                                                    <input type="number" class="form-control form-control-solid"
+                                                                                        wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                                @elseif($child->type === 'date')
+                                                                                    <input type="date" class="form-control form-control-solid"
+                                                                                        wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                                @elseif($child->type === 'select' && $child->options->isNotEmpty())
+                                                                                    <select class="form-select" data-control="select2" data-name="questionAnswers.{{ $child->id }}"
+                                                                                    wire:model="questionAnswers.{{ $child->id }}" data-placeholder="Pilih Jawaban">
+                                                                                        <option value="">-- Pilih --</option>
+                                                                                        @foreach($child->options as $option)
+                                                                                            <option value="{{ $option->id }}">{{ $option->label }}</option>
+                                                                                        @endforeach
+                                                                                    </select>
+
+                                                                                @elseif($child->type === 'radio')
+                                                                                    <div class="d-flex flex-column gap-2">
+                                                                                        @foreach($child->options as $option)
+                                                                                            <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                                <input class="form-check-input"
+                                                                                                    type="radio"
+                                                                                                    value="{{ $option->id }}"
+                                                                                                    wire:model="questionAnswers.{{ $child->id }}"  data-name="questionAnswers.{{ $child->id }}">
+                                                                                                <span class="form-check-label">{{ $option->label }}</span>
+                                                                                            </label>
+                                                                                        @endforeach
+                                                                                    </div>
+                                                                                @elseif($child->type === 'checkbox' && $child->options->isNotEmpty())
+                                                                                    <div class="d-flex flex-column gap-2">
+                                                                                        @foreach($child->options as $option)
+                                                                                            <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                                <input class="form-check-input"
+                                                                                                    type="checkbox"
+                                                                                                    value="{{ $option->id }}"
+                                                                                                    wire:model="questionAnswers.{{ $child->id }}"  data-name="questionAnswers.{{ $child->id }}">
+                                                                                                <span class="form-check-label">{{ $option->label }}</span>
+                                                                                            </label>
+                                                                                        @endforeach
+                                                                                    </div>
+
+                                                                                <!-- FILE UPLOAD (jika kamu aktifkan) -->
+                                                                                @elseif($child->type === 'file')
+                                                                                    <input type="file" class="form-control"
+                                                                                        wire:model="questionAnswers.{{ $child->id }}">
+
+                                                                                @endif
+
+                                                                                @error('questionAnswers.' . $child->id)
+                                                                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                                                                @enderror
+                                                                            </div>
+
+                                                                        @endif
+                                                                    @endforeach
+
+                                                                @endforeach
+                                                                </div>
+
                                                                
 
 
@@ -766,6 +1285,181 @@
                                                                         </select>
                                                                     </div>
                                                                 </div>
+
+                                                                <div class="mt-10" >
+                                                                @foreach($pertanyaanKeselamatan as $q)
+                                                                    <div class="mb-8" wire:key="parent-{{ $q->id }}"  wire:ignore>
+
+                                                                        <!-- LABEL -->
+                                                                        <label class="fs-5 fw-semibold mb-2">
+                                                                            {{ $q->label }}
+                                                                            @if($q->is_required)
+                                                                                <span class="text-danger">*</span>
+                                                                            @endif
+                                                                        </label>
+
+                                                                        <!-- TIPE TEXT -->
+                                                                        @if($q->type === 'text')
+                                                                            <input type="text"
+                                                                                class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                                wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                        <!-- TIPE TEXTAREA -->
+                                                                        @elseif($q->type === 'textarea')
+                                                                            <textarea class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                                    rows="3"
+                                                                                    wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);"></textarea>
+
+                                                                        <!-- TIPE NUMBER -->
+                                                                        @elseif($q->type === 'number')
+                                                                            <input type="number"
+                                                                                class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                                wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                        <!-- TIPE DATE -->
+                                                                        @elseif($q->type === 'date')
+                                                                            <input type="date"
+                                                                                class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                                wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                        <!-- TIPE SELECT -->
+                                                                        @elseif($q->type === 'select' && $q->options->isNotEmpty())
+                                                                            <select class="form-select" data-control="select2" data-name="questionAnswers.{{ $q->id }}"
+                                                                                    wire:model="questionAnswers.{{ $q->id }}" data-placeholder="Pilih Jawaban">
+                                                                                <option value="">-- Pilih --</option>
+
+                                                                                @foreach($q->options as $option)
+                                                                                    <option value="{{ $option->id }}">{{ $option->label }}</option>
+                                                                                @endforeach
+                                                                            </select>
+
+                                                                        <!-- TIPE RADIO -->
+                                                                        @elseif($q->type === 'radio' && $q->options->isNotEmpty())
+                                                                            <div class="d-flex flex-column gap-2">
+                                                                                @foreach($q->options as $option)
+                                                                                    <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                        <input class="form-check-input"
+                                                                                            type="radio"
+                                                                                            value="{{ $option->id }}"
+                                                                                            wire:model="questionAnswers.{{ $q->id }}"  data-name="questionAnswers.{{ $q->id }}">
+                                                                                        <span class="form-check-label">{{ $option->label }}</span>
+                                                                                    </label>
+                                                                                @endforeach
+                                                                            </div>
+
+                                                                        <!-- TIPE CHECKBOX -->
+                                                                        @elseif($q->type === 'checkbox' && $q->options->isNotEmpty())
+                                                                            <div class="d-flex flex-column gap-2">
+                                                                                @foreach($q->options as $option)
+                                                                                    <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                        <input class="form-check-input"
+                                                                                            type="checkbox"
+                                                                                            value="{{ $option->id }}"
+                                                                                            wire:model="questionAnswers.{{ $q->id }}"  data-name="questionAnswers.{{ $q->id }}">
+                                                                                        <span class="form-check-label">{{ $option->label }}</span>
+                                                                                    </label>
+                                                                                @endforeach
+                                                                            </div>
+
+                                                                        <!-- FILE UPLOAD (jika kamu aktifkan) -->
+                                                                        @elseif($q->type === 'file')
+                                                                            <input type="file" class="form-control"
+                                                                                wire:model="questionAnswers.{{ $q->id }}">
+
+                                                                        @else
+                                                                            <div class="text-muted">Tipe input tidak dikenali.</div>
+                                                                        @endif
+
+                                                                        <!-- ERROR -->
+                                                                        @error('questionAnswers.' . $q->id)
+                                                                            <div class="text-danger small mt-1">{{ $message }}</div>
+                                                                        @enderror
+
+                                                                    </div>
+
+                                                                    <!-- Cek apakah ada child question untuk parent ini -->
+                                                                    @foreach($childQuestions as $child)
+                                                                        @if($child->parent_question_id == $q->id && $child->trigger_option_id == ($questionAnswers[$q->id] ?? null))
+
+                                                                            <div class="mb-8" wire:key="child-{{ $child->id }}"  wire:ignore>
+                                                                                <!-- LABEL CHILD -->
+                                                                                <label class="fs-6 fw-semibold mb-2">
+                                                                                    {{ $child->label }}
+                                                                                    @if($child->is_required)
+                                                                                        <span class="text-danger">*</span>
+                                                                                    @endif
+                                                                                </label>
+
+                                                                                <!-- TIPE INPUT CHILD (copy dari parent) -->
+
+                                                                                @if($child->type === 'text')
+                                                                                    <input type="text" class="form-control form-control-solid"
+                                                                                        wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                                @elseif($child->type === 'textarea')
+                                                                                    <textarea class="form-control form-control-solid"
+                                                                                        wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);"></textarea>
+                                                                                @elseif($child->type === 'number')
+                                                                                    <input type="number" class="form-control form-control-solid"
+                                                                                        wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                                @elseif($child->type === 'date')
+                                                                                    <input type="date" class="form-control form-control-solid"
+                                                                                        wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                                @elseif($child->type === 'select' && $child->options->isNotEmpty())
+                                                                                    <select class="form-select" data-control="select2" data-name="questionAnswers.{{ $child->id }}"
+                                                                                    wire:model="questionAnswers.{{ $child->id }}" data-placeholder="Pilih Jawaban">
+                                                                                        <option value="">-- Pilih --</option>
+                                                                                        @foreach($child->options as $option)
+                                                                                            <option value="{{ $option->id }}">{{ $option->label }}</option>
+                                                                                        @endforeach
+                                                                                    </select>
+
+                                                                                @elseif($child->type === 'radio')
+                                                                                    <div class="d-flex flex-column gap-2">
+                                                                                        @foreach($child->options as $option)
+                                                                                            <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                                <input class="form-check-input"
+                                                                                                    type="radio"
+                                                                                                    value="{{ $option->id }}"
+                                                                                                    wire:model="questionAnswers.{{ $child->id }}"  data-name="questionAnswers.{{ $child->id }}">
+                                                                                                <span class="form-check-label">{{ $option->label }}</span>
+                                                                                            </label>
+                                                                                        @endforeach
+                                                                                    </div>
+                                                                                @elseif($child->type === 'checkbox' && $child->options->isNotEmpty())
+                                                                                    <div class="d-flex flex-column gap-2">
+                                                                                        @foreach($child->options as $option)
+                                                                                            <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                                <input class="form-check-input"
+                                                                                                    type="checkbox"
+                                                                                                    value="{{ $option->id }}"
+                                                                                                    wire:model="questionAnswers.{{ $child->id }}"  data-name="questionAnswers.{{ $child->id }}">
+                                                                                                <span class="form-check-label">{{ $option->label }}</span>
+                                                                                            </label>
+                                                                                        @endforeach
+                                                                                    </div>
+
+                                                                                <!-- FILE UPLOAD (jika kamu aktifkan) -->
+                                                                                @elseif($child->type === 'file')
+                                                                                    <input type="file" class="form-control"
+                                                                                        wire:model="questionAnswers.{{ $child->id }}">
+
+                                                                                @endif
+
+                                                                                @error('questionAnswers.' . $child->id)
+                                                                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                                                                @enderror
+                                                                            </div>
+
+                                                                        @endif
+                                                                    @endforeach
+
+                                                                @endforeach
+                                                                </div>
+
+
                                                             </div>
 
                                                             <!--end::Input group-->
@@ -986,6 +1680,181 @@
                                                                         </select>
                                                                     </div>
                                                                 </div>
+
+                                                                <div class="mt-10" >
+                                                                @foreach($pertanyaanKesehatan as $q)
+                                                                    <div class="mb-8" wire:key="parent-{{ $q->id }}"  wire:ignore>
+
+                                                                        <!-- LABEL -->
+                                                                        <label class="fs-5 fw-semibold mb-2">
+                                                                            {{ $q->label }}
+                                                                            @if($q->is_required)
+                                                                                <span class="text-danger">*</span>
+                                                                            @endif
+                                                                        </label>
+
+                                                                        <!-- TIPE TEXT -->
+                                                                        @if($q->type === 'text')
+                                                                            <input type="text"
+                                                                                class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                                wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                        <!-- TIPE TEXTAREA -->
+                                                                        @elseif($q->type === 'textarea')
+                                                                            <textarea class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                                    rows="3"
+                                                                                    wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);"></textarea>
+
+                                                                        <!-- TIPE NUMBER -->
+                                                                        @elseif($q->type === 'number')
+                                                                            <input type="number"
+                                                                                class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                                wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                        <!-- TIPE DATE -->
+                                                                        @elseif($q->type === 'date')
+                                                                            <input type="date"
+                                                                                class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                                wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                        <!-- TIPE SELECT -->
+                                                                        @elseif($q->type === 'select' && $q->options->isNotEmpty())
+                                                                            <select class="form-select" data-control="select2" data-name="questionAnswers.{{ $q->id }}"
+                                                                                    wire:model="questionAnswers.{{ $q->id }}" data-placeholder="Pilih Jawaban">
+                                                                                <option value="">-- Pilih --</option>
+
+                                                                                @foreach($q->options as $option)
+                                                                                    <option value="{{ $option->id }}">{{ $option->label }}</option>
+                                                                                @endforeach
+                                                                            </select>
+
+                                                                        <!-- TIPE RADIO -->
+                                                                        @elseif($q->type === 'radio' && $q->options->isNotEmpty())
+                                                                            <div class="d-flex flex-column gap-2">
+                                                                                @foreach($q->options as $option)
+                                                                                    <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                        <input class="form-check-input"
+                                                                                            type="radio"
+                                                                                            value="{{ $option->id }}"
+                                                                                            wire:model="questionAnswers.{{ $q->id }}"  data-name="questionAnswers.{{ $q->id }}">
+                                                                                        <span class="form-check-label">{{ $option->label }}</span>
+                                                                                    </label>
+                                                                                @endforeach
+                                                                            </div>
+
+                                                                        <!-- TIPE CHECKBOX -->
+                                                                        @elseif($q->type === 'checkbox' && $q->options->isNotEmpty())
+                                                                            <div class="d-flex flex-column gap-2">
+                                                                                @foreach($q->options as $option)
+                                                                                    <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                        <input class="form-check-input"
+                                                                                            type="checkbox"
+                                                                                            value="{{ $option->id }}"
+                                                                                            wire:model="questionAnswers.{{ $q->id }}"  data-name="questionAnswers.{{ $q->id }}">
+                                                                                        <span class="form-check-label">{{ $option->label }}</span>
+                                                                                    </label>
+                                                                                @endforeach
+                                                                            </div>
+
+                                                                        <!-- FILE UPLOAD (jika kamu aktifkan) -->
+                                                                        @elseif($q->type === 'file')
+                                                                            <input type="file" class="form-control"
+                                                                                wire:model="questionAnswers.{{ $q->id }}">
+
+                                                                        @else
+                                                                            <div class="text-muted">Tipe input tidak dikenali.</div>
+                                                                        @endif
+
+                                                                        <!-- ERROR -->
+                                                                        @error('questionAnswers.' . $q->id)
+                                                                            <div class="text-danger small mt-1">{{ $message }}</div>
+                                                                        @enderror
+
+                                                                    </div>
+
+                                                                    <!-- Cek apakah ada child question untuk parent ini -->
+                                                                    @foreach($childQuestions as $child)
+                                                                        @if($child->parent_question_id == $q->id && $child->trigger_option_id == ($questionAnswers[$q->id] ?? null))
+
+                                                                            <div class="mb-8" wire:key="child-{{ $child->id }}"  wire:ignore>
+                                                                                <!-- LABEL CHILD -->
+                                                                                <label class="fs-6 fw-semibold mb-2">
+                                                                                    {{ $child->label }}
+                                                                                    @if($child->is_required)
+                                                                                        <span class="text-danger">*</span>
+                                                                                    @endif
+                                                                                </label>
+
+                                                                                <!-- TIPE INPUT CHILD (copy dari parent) -->
+
+                                                                                @if($child->type === 'text')
+                                                                                    <input type="text" class="form-control form-control-solid"
+                                                                                        wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                                @elseif($child->type === 'textarea')
+                                                                                    <textarea class="form-control form-control-solid"
+                                                                                        wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);"></textarea>
+                                                                                @elseif($child->type === 'number')
+                                                                                    <input type="number" class="form-control form-control-solid"
+                                                                                        wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                                @elseif($child->type === 'date')
+                                                                                    <input type="date" class="form-control form-control-solid"
+                                                                                        wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                                @elseif($child->type === 'select' && $child->options->isNotEmpty())
+                                                                                    <select class="form-select" data-control="select2" data-name="questionAnswers.{{ $child->id }}"
+                                                                                    wire:model="questionAnswers.{{ $child->id }}" data-placeholder="Pilih Jawaban">
+                                                                                        <option value="">-- Pilih --</option>
+                                                                                        @foreach($child->options as $option)
+                                                                                            <option value="{{ $option->id }}">{{ $option->label }}</option>
+                                                                                        @endforeach
+                                                                                    </select>
+
+                                                                                @elseif($child->type === 'radio')
+                                                                                    <div class="d-flex flex-column gap-2">
+                                                                                        @foreach($child->options as $option)
+                                                                                            <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                                <input class="form-check-input"
+                                                                                                    type="radio"
+                                                                                                    value="{{ $option->id }}"
+                                                                                                    wire:model="questionAnswers.{{ $child->id }}"  data-name="questionAnswers.{{ $child->id }}">
+                                                                                                <span class="form-check-label">{{ $option->label }}</span>
+                                                                                            </label>
+                                                                                        @endforeach
+                                                                                    </div>
+                                                                                @elseif($child->type === 'checkbox' && $child->options->isNotEmpty())
+                                                                                    <div class="d-flex flex-column gap-2">
+                                                                                        @foreach($child->options as $option)
+                                                                                            <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                                <input class="form-check-input"
+                                                                                                    type="checkbox"
+                                                                                                    value="{{ $option->id }}"
+                                                                                                    wire:model="questionAnswers.{{ $child->id }}"  data-name="questionAnswers.{{ $child->id }}">
+                                                                                                <span class="form-check-label">{{ $option->label }}</span>
+                                                                                            </label>
+                                                                                        @endforeach
+                                                                                    </div>
+
+                                                                                <!-- FILE UPLOAD (jika kamu aktifkan) -->
+                                                                                @elseif($child->type === 'file')
+                                                                                    <input type="file" class="form-control"
+                                                                                        wire:model="questionAnswers.{{ $child->id }}">
+
+                                                                                @endif
+
+                                                                                @error('questionAnswers.' . $child->id)
+                                                                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                                                                @enderror
+                                                                            </div>
+
+                                                                        @endif
+                                                                    @endforeach
+
+                                                                @endforeach
+                                                                </div>
+
+
                                                             </div>
 
                                                             <!--end::Input group-->
@@ -1153,6 +2022,181 @@
                                                                             placeholder="e.g : 2001" style="border-color: rgb(54 54 96);" maxlength="4" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,4);">
                                                                     </div>
                                                                 </div>
+
+                                                                <div class="mt-10" >
+                                                                @foreach($pertanyaanLuasBangunan as $q)
+                                                                    <div class="mb-8" wire:key="parent-{{ $q->id }}"  wire:ignore>
+
+                                                                        <!-- LABEL -->
+                                                                        <label class="fs-5 fw-semibold mb-2">
+                                                                            {{ $q->label }}
+                                                                            @if($q->is_required)
+                                                                                <span class="text-danger">*</span>
+                                                                            @endif
+                                                                        </label>
+
+                                                                        <!-- TIPE TEXT -->
+                                                                        @if($q->type === 'text')
+                                                                            <input type="text"
+                                                                                class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                                wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                        <!-- TIPE TEXTAREA -->
+                                                                        @elseif($q->type === 'textarea')
+                                                                            <textarea class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                                    rows="3"
+                                                                                    wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);"></textarea>
+
+                                                                        <!-- TIPE NUMBER -->
+                                                                        @elseif($q->type === 'number')
+                                                                            <input type="number"
+                                                                                class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                                wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                        <!-- TIPE DATE -->
+                                                                        @elseif($q->type === 'date')
+                                                                            <input type="date"
+                                                                                class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                                wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                        <!-- TIPE SELECT -->
+                                                                        @elseif($q->type === 'select' && $q->options->isNotEmpty())
+                                                                            <select class="form-select" data-control="select2" data-name="questionAnswers.{{ $q->id }}"
+                                                                                    wire:model="questionAnswers.{{ $q->id }}" data-placeholder="Pilih Jawaban">
+                                                                                <option value="">-- Pilih --</option>
+
+                                                                                @foreach($q->options as $option)
+                                                                                    <option value="{{ $option->id }}">{{ $option->label }}</option>
+                                                                                @endforeach
+                                                                            </select>
+
+                                                                        <!-- TIPE RADIO -->
+                                                                        @elseif($q->type === 'radio' && $q->options->isNotEmpty())
+                                                                            <div class="d-flex flex-column gap-2">
+                                                                                @foreach($q->options as $option)
+                                                                                    <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                        <input class="form-check-input"
+                                                                                            type="radio"
+                                                                                            value="{{ $option->id }}"
+                                                                                            wire:model="questionAnswers.{{ $q->id }}"  data-name="questionAnswers.{{ $q->id }}">
+                                                                                        <span class="form-check-label">{{ $option->label }}</span>
+                                                                                    </label>
+                                                                                @endforeach
+                                                                            </div>
+
+                                                                        <!-- TIPE CHECKBOX -->
+                                                                        @elseif($q->type === 'checkbox' && $q->options->isNotEmpty())
+                                                                            <div class="d-flex flex-column gap-2">
+                                                                                @foreach($q->options as $option)
+                                                                                    <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                        <input class="form-check-input"
+                                                                                            type="checkbox"
+                                                                                            value="{{ $option->id }}"
+                                                                                            wire:model="questionAnswers.{{ $q->id }}"  data-name="questionAnswers.{{ $q->id }}">
+                                                                                        <span class="form-check-label">{{ $option->label }}</span>
+                                                                                    </label>
+                                                                                @endforeach
+                                                                            </div>
+
+                                                                        <!-- FILE UPLOAD (jika kamu aktifkan) -->
+                                                                        @elseif($q->type === 'file')
+                                                                            <input type="file" class="form-control"
+                                                                                wire:model="questionAnswers.{{ $q->id }}">
+
+                                                                        @else
+                                                                            <div class="text-muted">Tipe input tidak dikenali.</div>
+                                                                        @endif
+
+                                                                        <!-- ERROR -->
+                                                                        @error('questionAnswers.' . $q->id)
+                                                                            <div class="text-danger small mt-1">{{ $message }}</div>
+                                                                        @enderror
+
+                                                                    </div>
+
+                                                                    <!-- Cek apakah ada child question untuk parent ini -->
+                                                                    @foreach($childQuestions as $child)
+                                                                        @if($child->parent_question_id == $q->id && $child->trigger_option_id == ($questionAnswers[$q->id] ?? null))
+
+                                                                            <div class="mb-8" wire:key="child-{{ $child->id }}"  wire:ignore>
+                                                                                <!-- LABEL CHILD -->
+                                                                                <label class="fs-6 fw-semibold mb-2">
+                                                                                    {{ $child->label }}
+                                                                                    @if($child->is_required)
+                                                                                        <span class="text-danger">*</span>
+                                                                                    @endif
+                                                                                </label>
+
+                                                                                <!-- TIPE INPUT CHILD (copy dari parent) -->
+
+                                                                                @if($child->type === 'text')
+                                                                                    <input type="text" class="form-control form-control-solid"
+                                                                                        wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                                @elseif($child->type === 'textarea')
+                                                                                    <textarea class="form-control form-control-solid"
+                                                                                        wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);"></textarea>
+                                                                                @elseif($child->type === 'number')
+                                                                                    <input type="number" class="form-control form-control-solid"
+                                                                                        wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                                @elseif($child->type === 'date')
+                                                                                    <input type="date" class="form-control form-control-solid"
+                                                                                        wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                                @elseif($child->type === 'select' && $child->options->isNotEmpty())
+                                                                                    <select class="form-select" data-control="select2" data-name="questionAnswers.{{ $child->id }}"
+                                                                                    wire:model="questionAnswers.{{ $child->id }}" data-placeholder="Pilih Jawaban">
+                                                                                        <option value="">-- Pilih --</option>
+                                                                                        @foreach($child->options as $option)
+                                                                                            <option value="{{ $option->id }}">{{ $option->label }}</option>
+                                                                                        @endforeach
+                                                                                    </select>
+
+                                                                                @elseif($child->type === 'radio')
+                                                                                    <div class="d-flex flex-column gap-2">
+                                                                                        @foreach($child->options as $option)
+                                                                                            <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                                <input class="form-check-input"
+                                                                                                    type="radio"
+                                                                                                    value="{{ $option->id }}"
+                                                                                                    wire:model="questionAnswers.{{ $child->id }}"  data-name="questionAnswers.{{ $child->id }}">
+                                                                                                <span class="form-check-label">{{ $option->label }}</span>
+                                                                                            </label>
+                                                                                        @endforeach
+                                                                                    </div>
+                                                                                @elseif($child->type === 'checkbox' && $child->options->isNotEmpty())
+                                                                                    <div class="d-flex flex-column gap-2">
+                                                                                        @foreach($child->options as $option)
+                                                                                            <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                                <input class="form-check-input"
+                                                                                                    type="checkbox"
+                                                                                                    value="{{ $option->id }}"
+                                                                                                    wire:model="questionAnswers.{{ $child->id }}"  data-name="questionAnswers.{{ $child->id }}">
+                                                                                                <span class="form-check-label">{{ $option->label }}</span>
+                                                                                            </label>
+                                                                                        @endforeach
+                                                                                    </div>
+
+                                                                                <!-- FILE UPLOAD (jika kamu aktifkan) -->
+                                                                                @elseif($child->type === 'file')
+                                                                                    <input type="file" class="form-control"
+                                                                                        wire:model="questionAnswers.{{ $child->id }}">
+
+                                                                                @endif
+
+                                                                                @error('questionAnswers.' . $child->id)
+                                                                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                                                                @enderror
+                                                                            </div>
+
+                                                                        @endif
+                                                                    @endforeach
+
+                                                                @endforeach
+                                                                </div>
+
+
                                                             </div>
 
                                                             
@@ -1346,6 +2390,181 @@
                                                                         </select>
                                                                     </div>
                                                                 </div>
+
+                                                                <div class="mt-10" >
+                                                                @foreach($pertanyaanBahanBangunan as $q)
+                                                                    <div class="mb-8" wire:key="parent-{{ $q->id }}"  wire:ignore>
+
+                                                                        <!-- LABEL -->
+                                                                        <label class="fs-5 fw-semibold mb-2">
+                                                                            {{ $q->label }}
+                                                                            @if($q->is_required)
+                                                                                <span class="text-danger">*</span>
+                                                                            @endif
+                                                                        </label>
+
+                                                                        <!-- TIPE TEXT -->
+                                                                        @if($q->type === 'text')
+                                                                            <input type="text"
+                                                                                class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                                wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                        <!-- TIPE TEXTAREA -->
+                                                                        @elseif($q->type === 'textarea')
+                                                                            <textarea class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                                    rows="3"
+                                                                                    wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);"></textarea>
+
+                                                                        <!-- TIPE NUMBER -->
+                                                                        @elseif($q->type === 'number')
+                                                                            <input type="number"
+                                                                                class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                                wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                        <!-- TIPE DATE -->
+                                                                        @elseif($q->type === 'date')
+                                                                            <input type="date"
+                                                                                class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                                wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                        <!-- TIPE SELECT -->
+                                                                        @elseif($q->type === 'select' && $q->options->isNotEmpty())
+                                                                            <select class="form-select" data-control="select2" data-name="questionAnswers.{{ $q->id }}"
+                                                                                    wire:model="questionAnswers.{{ $q->id }}" data-placeholder="Pilih Jawaban">
+                                                                                <option value="">-- Pilih --</option>
+
+                                                                                @foreach($q->options as $option)
+                                                                                    <option value="{{ $option->id }}">{{ $option->label }}</option>
+                                                                                @endforeach
+                                                                            </select>
+
+                                                                        <!-- TIPE RADIO -->
+                                                                        @elseif($q->type === 'radio' && $q->options->isNotEmpty())
+                                                                            <div class="d-flex flex-column gap-2">
+                                                                                @foreach($q->options as $option)
+                                                                                    <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                        <input class="form-check-input"
+                                                                                            type="radio"
+                                                                                            value="{{ $option->id }}"
+                                                                                            wire:model="questionAnswers.{{ $q->id }}"  data-name="questionAnswers.{{ $q->id }}">
+                                                                                        <span class="form-check-label">{{ $option->label }}</span>
+                                                                                    </label>
+                                                                                @endforeach
+                                                                            </div>
+
+                                                                        <!-- TIPE CHECKBOX -->
+                                                                        @elseif($q->type === 'checkbox' && $q->options->isNotEmpty())
+                                                                            <div class="d-flex flex-column gap-2">
+                                                                                @foreach($q->options as $option)
+                                                                                    <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                        <input class="form-check-input"
+                                                                                            type="checkbox"
+                                                                                            value="{{ $option->id }}"
+                                                                                            wire:model="questionAnswers.{{ $q->id }}"  data-name="questionAnswers.{{ $q->id }}">
+                                                                                        <span class="form-check-label">{{ $option->label }}</span>
+                                                                                    </label>
+                                                                                @endforeach
+                                                                            </div>
+
+                                                                        <!-- FILE UPLOAD (jika kamu aktifkan) -->
+                                                                        @elseif($q->type === 'file')
+                                                                            <input type="file" class="form-control"
+                                                                                wire:model="questionAnswers.{{ $q->id }}">
+
+                                                                        @else
+                                                                            <div class="text-muted">Tipe input tidak dikenali.</div>
+                                                                        @endif
+
+                                                                        <!-- ERROR -->
+                                                                        @error('questionAnswers.' . $q->id)
+                                                                            <div class="text-danger small mt-1">{{ $message }}</div>
+                                                                        @enderror
+
+                                                                    </div>
+
+                                                                    <!-- Cek apakah ada child question untuk parent ini -->
+                                                                    @foreach($childQuestions as $child)
+                                                                        @if($child->parent_question_id == $q->id && $child->trigger_option_id == ($questionAnswers[$q->id] ?? null))
+
+                                                                            <div class="mb-8" wire:key="child-{{ $child->id }}"  wire:ignore>
+                                                                                <!-- LABEL CHILD -->
+                                                                                <label class="fs-6 fw-semibold mb-2">
+                                                                                    {{ $child->label }}
+                                                                                    @if($child->is_required)
+                                                                                        <span class="text-danger">*</span>
+                                                                                    @endif
+                                                                                </label>
+
+                                                                                <!-- TIPE INPUT CHILD (copy dari parent) -->
+
+                                                                                @if($child->type === 'text')
+                                                                                    <input type="text" class="form-control form-control-solid"
+                                                                                        wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                                @elseif($child->type === 'textarea')
+                                                                                    <textarea class="form-control form-control-solid"
+                                                                                        wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);"></textarea>
+                                                                                @elseif($child->type === 'number')
+                                                                                    <input type="number" class="form-control form-control-solid"
+                                                                                        wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                                @elseif($child->type === 'date')
+                                                                                    <input type="date" class="form-control form-control-solid"
+                                                                                        wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                                @elseif($child->type === 'select' && $child->options->isNotEmpty())
+                                                                                    <select class="form-select" data-control="select2" data-name="questionAnswers.{{ $child->id }}"
+                                                                                    wire:model="questionAnswers.{{ $child->id }}" data-placeholder="Pilih Jawaban">
+                                                                                        <option value="">-- Pilih --</option>
+                                                                                        @foreach($child->options as $option)
+                                                                                            <option value="{{ $option->id }}">{{ $option->label }}</option>
+                                                                                        @endforeach
+                                                                                    </select>
+
+                                                                                @elseif($child->type === 'radio')
+                                                                                    <div class="d-flex flex-column gap-2">
+                                                                                        @foreach($child->options as $option)
+                                                                                            <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                                <input class="form-check-input"
+                                                                                                    type="radio"
+                                                                                                    value="{{ $option->id }}"
+                                                                                                    wire:model="questionAnswers.{{ $child->id }}"  data-name="questionAnswers.{{ $child->id }}">
+                                                                                                <span class="form-check-label">{{ $option->label }}</span>
+                                                                                            </label>
+                                                                                        @endforeach
+                                                                                    </div>
+                                                                                @elseif($child->type === 'checkbox' && $child->options->isNotEmpty())
+                                                                                    <div class="d-flex flex-column gap-2">
+                                                                                        @foreach($child->options as $option)
+                                                                                            <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                                <input class="form-check-input"
+                                                                                                    type="checkbox"
+                                                                                                    value="{{ $option->id }}"
+                                                                                                    wire:model="questionAnswers.{{ $child->id }}"  data-name="questionAnswers.{{ $child->id }}">
+                                                                                                <span class="form-check-label">{{ $option->label }}</span>
+                                                                                            </label>
+                                                                                        @endforeach
+                                                                                    </div>
+
+                                                                                <!-- FILE UPLOAD (jika kamu aktifkan) -->
+                                                                                @elseif($child->type === 'file')
+                                                                                    <input type="file" class="form-control"
+                                                                                        wire:model="questionAnswers.{{ $child->id }}">
+
+                                                                                @endif
+
+                                                                                @error('questionAnswers.' . $child->id)
+                                                                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                                                                @enderror
+                                                                            </div>
+
+                                                                        @endif
+                                                                    @endforeach
+
+                                                                @endforeach
+                                                                </div>
+
+
                                                             </div>
                                                             
                                                             <!--end::Illustration-->
@@ -1434,6 +2653,179 @@
                                                                     </div>
                                                                 @endforeach
                                                             </div>
+                                                            <div class="mt-10" >
+
+                                                            @foreach($pertanyaanDokumentasi as $q)
+                                                                <div class="mb-8" wire:key="parent-{{ $q->id }}"  wire:ignore>
+
+                                                                    <!-- LABEL -->
+                                                                    <label class="fs-5 fw-semibold mb-2">
+                                                                        {{ $q->label }}
+                                                                        @if($q->is_required)
+                                                                            <span class="text-danger">*</span>
+                                                                        @endif
+                                                                    </label>
+
+                                                                    <!-- TIPE TEXT -->
+                                                                    @if($q->type === 'text')
+                                                                        <input type="text"
+                                                                            class="form-control form-control-solid" data-name="{{ $q->id }}" style="border-color: rgb(54 54 96);"
+                                                                            wire:model="questionAnswers.{{ $q->id }}">
+
+                                                                    <!-- TIPE TEXTAREA -->
+                                                                    @elseif($q->type === 'textarea')
+                                                                        <textarea class="form-control form-control-solid" data-name="{{ $q->id }}" style="border-color: rgb(54 54 96);">
+                                                                                rows="3"
+                                                                                wire:model="questionAnswers.{{ $q->id }}"></textarea>
+
+                                                                    <!-- TIPE NUMBER -->
+                                                                    @elseif($q->type === 'number')
+                                                                        <input type="number"
+                                                                            class="form-control form-control-solid" data-name="{{ $q->id }}" style="border-color: rgb(54 54 96);"
+                                                                            wire:model="questionAnswers.{{ $q->id }}">
+
+                                                                    <!-- TIPE DATE -->
+                                                                    @elseif($q->type === 'date')
+                                                                        <input type="date"
+                                                                            class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                            wire:model="questionAnswers.{{ $q->id }}">
+
+                                                                    <!-- TIPE SELECT -->
+                                                                    @elseif($q->type === 'select' && $q->options->isNotEmpty())
+                                                                        <select class="form-select" data-control="select2" data-name="questionAnswers.{{ $q->id }}"
+                                                                                wire:model="questionAnswers.{{ $q->id }}" data-placeholder="Pilih Jawaban">
+                                                                            <option value="">-- Pilih --</option>
+
+                                                                            @foreach($q->options as $option)
+                                                                                <option value="{{ $option->id }}">{{ $option->label }}</option>
+                                                                            @endforeach
+                                                                        </select>
+
+                                                                    <!-- TIPE RADIO -->
+                                                                    @elseif($q->type === 'radio' && $q->options->isNotEmpty())
+                                                                        <div class="d-flex flex-column gap-2">
+                                                                            @foreach($q->options as $option)
+                                                                                <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                    <input class="form-check-input"
+                                                                                        type="radio"
+                                                                                        value="{{ $option->id }}"
+                                                                                        wire:model="questionAnswers.{{ $q->id }}"  data-name="questionAnswers.{{ $q->id }}">
+                                                                                    <span class="form-check-label">{{ $option->label }}</span>
+                                                                                </label>
+                                                                            @endforeach
+                                                                        </div>
+
+                                                                    <!-- TIPE CHECKBOX -->
+                                                                    @elseif($q->type === 'checkbox' && $q->options->isNotEmpty())
+                                                                        <div class="d-flex flex-column gap-2">
+                                                                            @foreach($q->options as $option)
+                                                                                <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                    <input class="form-check-input"
+                                                                                        type="checkbox"
+                                                                                        value="{{ $option->id }}"
+                                                                                        wire:model="questionAnswers.{{ $q->id }}"  data-name="questionAnswers.{{ $q->id }}">
+                                                                                    <span class="form-check-label">{{ $option->label }}</span>
+                                                                                </label>
+                                                                            @endforeach
+                                                                        </div>
+
+                                                                    <!-- FILE UPLOAD (jika kamu aktifkan) -->
+                                                                    @elseif($q->type === 'file')
+                                                                        <input type="file" class="form-control"
+                                                                            wire:model="questionAnswers.{{ $q->id }}">
+
+                                                                    @else
+                                                                        <div class="text-muted">Tipe input tidak dikenali.</div>
+                                                                    @endif
+
+                                                                    <!-- ERROR -->
+                                                                    @error('questionAnswers.' . $q->id)
+                                                                        <div class="text-danger small mt-1">{{ $message }}</div>
+                                                                    @enderror
+
+                                                                </div>
+
+                                                                <!-- Cek apakah ada child question untuk parent ini -->
+                                                                @foreach($childQuestions as $child)
+                                                                    @if($child->parent_question_id == $q->id && $child->trigger_option_id == ($questionAnswers[$q->id] ?? null))
+
+                                                                        <div class="mb-8" wire:key="child-{{ $child->id }}"  wire:ignore>
+                                                                            <!-- LABEL CHILD -->
+                                                                            <label class="fs-6 fw-semibold mb-2">
+                                                                                {{ $child->label }}
+                                                                                @if($child->is_required)
+                                                                                    <span class="text-danger">*</span>
+                                                                                @endif
+                                                                            </label>
+
+                                                                            <!-- TIPE INPUT CHILD (copy dari parent) -->
+
+                                                                            @if($child->type === 'text')
+                                                                                <input type="text" class="form-control form-control-solid"
+                                                                                    wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                            @elseif($child->type === 'textarea')
+                                                                                <textarea class="form-control form-control-solid"
+                                                                                    wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);"></textarea>
+                                                                            @elseif($child->type === 'number')
+                                                                                <input type="number" class="form-control form-control-solid"
+                                                                                    wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                            @elseif($child->type === 'date')
+                                                                                <input type="date" class="form-control form-control-solid"
+                                                                                    wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                            @elseif($child->type === 'select' && $child->options->isNotEmpty())
+                                                                                <select class="form-select" data-control="select2" data-name="questionAnswers.{{ $child->id }}"
+                                                                                wire:model="questionAnswers.{{ $child->id }}" data-placeholder="Pilih Jawaban">
+                                                                                    <option value="">-- Pilih --</option>
+                                                                                    @foreach($child->options as $option)
+                                                                                        <option value="{{ $option->id }}">{{ $option->label }}</option>
+                                                                                    @endforeach
+                                                                                </select>
+
+                                                                            @elseif($child->type === 'radio')
+                                                                                <div class="d-flex flex-column gap-2">
+                                                                                    @foreach($child->options as $option)
+                                                                                        <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                            <input class="form-check-input"
+                                                                                                type="radio"
+                                                                                                value="{{ $option->id }}"
+                                                                                                wire:model="questionAnswers.{{ $child->id }}"  data-name="questionAnswers.{{ $child->id }}">
+                                                                                            <span class="form-check-label">{{ $option->label }}</span>
+                                                                                        </label>
+                                                                                    @endforeach
+                                                                                </div>
+                                                                            @elseif($child->type === 'checkbox' && $child->options->isNotEmpty())
+                                                                                <div class="d-flex flex-column gap-2">
+                                                                                    @foreach($child->options as $option)
+                                                                                        <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                            <input class="form-check-input"
+                                                                                                type="checkbox"
+                                                                                                value="{{ $option->id }}"
+                                                                                                wire:model="questionAnswers.{{ $child->id }}"  data-name="questionAnswers.{{ $child->id }}">
+                                                                                            <span class="form-check-label">{{ $option->label }}</span>
+                                                                                        </label>
+                                                                                    @endforeach
+                                                                                </div>
+
+                                                                            <!-- FILE UPLOAD (jika kamu aktifkan) -->
+                                                                            @elseif($child->type === 'file')
+                                                                                <input type="file" class="form-control"
+                                                                                    wire:model="questionAnswers.{{ $child->id }}">
+
+                                                                            @endif
+
+                                                                            @error('questionAnswers.' . $child->id)
+                                                                                <div class="text-danger small mt-1">{{ $message }}</div>
+                                                                            @enderror
+                                                                        </div>
+
+                                                                    @endif
+                                                                @endforeach
+
+                                                            @endforeach
+                                                            </div>
     
                                                             
             
@@ -1467,9 +2859,9 @@
                                                             </div>
                                                             <!--end::Heading-->
                                                             <!--begin::Actions-->
-                                                            <div class="mb-10">
-                                                                @foreach($question as $q)
-                                                                    <div class="mb-8">
+                                                            <div class="mt-10" >
+                                                                @foreach($pertanyaanLainnya as $q)
+                                                                    <div class="mb-8" wire:key="parent-{{ $q->id }}"  wire:ignore>
 
                                                                         <!-- LABEL -->
                                                                         <label class="fs-5 fw-semibold mb-2">
@@ -1482,31 +2874,31 @@
                                                                         <!-- TIPE TEXT -->
                                                                         @if($q->type === 'text')
                                                                             <input type="text"
-                                                                                class="form-control form-control-solid"
-                                                                                wire:model="questionAnswers.{{ $q->id }}">
+                                                                                class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                                wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);">
 
                                                                         <!-- TIPE TEXTAREA -->
                                                                         @elseif($q->type === 'textarea')
-                                                                            <textarea class="form-control form-control-solid"
+                                                                            <textarea class="form-control form-control-solid" data-name="{{ $q->id }}"
                                                                                     rows="3"
-                                                                                    wire:model="questionAnswers.{{ $q->id }}"></textarea>
+                                                                                    wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);"></textarea>
 
                                                                         <!-- TIPE NUMBER -->
                                                                         @elseif($q->type === 'number')
                                                                             <input type="number"
-                                                                                class="form-control form-control-solid"
-                                                                                wire:model="questionAnswers.{{ $q->id }}">
+                                                                                class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                                wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);">
 
                                                                         <!-- TIPE DATE -->
                                                                         @elseif($q->type === 'date')
                                                                             <input type="date"
-                                                                                class="form-control form-control-solid"
-                                                                                wire:model="questionAnswers.{{ $q->id }}">
+                                                                                class="form-control form-control-solid" data-name="{{ $q->id }}"
+                                                                                wire:model="questionAnswers.{{ $q->id }}" style="border-color: rgb(54 54 96);">
 
                                                                         <!-- TIPE SELECT -->
                                                                         @elseif($q->type === 'select' && $q->options->isNotEmpty())
-                                                                            <select class="form-select form-select-solid"
-                                                                                    wire:model="questionAnswers.{{ $q->id }}">
+                                                                            <select class="form-select" data-control="select2" data-name="questionAnswers.{{ $q->id }}"
+                                                                                    wire:model="questionAnswers.{{ $q->id }}" data-placeholder="Pilih Jawaban">
                                                                                 <option value="">-- Pilih --</option>
 
                                                                                 @foreach($q->options as $option)
@@ -1522,7 +2914,7 @@
                                                                                         <input class="form-check-input"
                                                                                             type="radio"
                                                                                             value="{{ $option->id }}"
-                                                                                            wire:model="questionAnswers.{{ $q->id }}">
+                                                                                            wire:model="questionAnswers.{{ $q->id }}"  data-name="questionAnswers.{{ $q->id }}">
                                                                                         <span class="form-check-label">{{ $option->label }}</span>
                                                                                     </label>
                                                                                 @endforeach
@@ -1536,7 +2928,7 @@
                                                                                         <input class="form-check-input"
                                                                                             type="checkbox"
                                                                                             value="{{ $option->id }}"
-                                                                                            wire:model="questionAnswers.{{ $q->id }}">
+                                                                                            wire:model="questionAnswers.{{ $q->id }}"  data-name="questionAnswers.{{ $q->id }}">
                                                                                         <span class="form-check-label">{{ $option->label }}</span>
                                                                                     </label>
                                                                                 @endforeach
@@ -1557,6 +2949,86 @@
                                                                         @enderror
 
                                                                     </div>
+
+                                                                <!-- Cek apakah ada child question untuk parent ini -->
+                                                                    @foreach($childQuestions as $child)
+                                                                        @if($child->parent_question_id == $q->id && $child->trigger_option_id == ($questionAnswers[$q->id] ?? null))
+
+                                                                            <div class="mb-8" wire:key="child-{{ $child->id }}"  wire:ignore>
+                                                                                <!-- LABEL CHILD -->
+                                                                                <label class="fs-6 fw-semibold mb-2">
+                                                                                    {{ $child->label }}
+                                                                                    @if($child->is_required)
+                                                                                        <span class="text-danger">*</span>
+                                                                                    @endif
+                                                                                </label>
+
+                                                                                <!-- TIPE INPUT CHILD (copy dari parent) -->
+
+                                                                                @if($child->type === 'text')
+                                                                                    <input type="text" class="form-control form-control-solid"
+                                                                                        wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                                @elseif($child->type === 'textarea')
+                                                                                    <textarea class="form-control form-control-solid"
+                                                                                        wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);"></textarea>
+                                                                                @elseif($child->type === 'number')
+                                                                                    <input type="number" class="form-control form-control-solid"
+                                                                                        wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);">
+
+                                                                                @elseif($child->type === 'date')
+                                                                                    <input type="date" class="form-control form-control-solid"
+                                                                                        wire:model="questionAnswers.{{ $child->id }}" style="border-color: rgb(54 54 96);">
+                                                                                        
+                                                                                @elseif($child->type === 'select' && $child->options->isNotEmpty())
+                                                                                    <select class="form-select" data-control="select2" data-name="questionAnswers.{{ $child->id }}"
+                                                                                    wire:model="questionAnswers.{{ $child->id }}" data-placeholder="Pilih Jawaban">
+                                                                                        <option value="">-- Pilih --</option>
+                                                                                        @foreach($child->options as $option)
+                                                                                            <option value="{{ $option->id }}">{{ $option->label }}</option>
+                                                                                        @endforeach
+                                                                                    </select>
+
+                                                                                @elseif($child->type === 'radio')
+                                                                                    <div class="d-flex flex-column gap-2">
+                                                                                        @foreach($child->options as $option)
+                                                                                            <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                                <input class="form-check-input"
+                                                                                                    type="radio"
+                                                                                                    value="{{ $option->id }}"
+                                                                                                    wire:model="questionAnswers.{{ $child->id }}"  data-name="questionAnswers.{{ $child->id }}">
+                                                                                                <span class="form-check-label">{{ $option->label }}</span>
+                                                                                            </label>
+                                                                                        @endforeach
+                                                                                    </div>
+                                                                                @elseif($child->type === 'checkbox' && $child->options->isNotEmpty())
+                                                                                    <div class="d-flex flex-column gap-2">
+                                                                                        @foreach($child->options as $option)
+                                                                                            <label class="form-check form-check-custom form-check-sm form-check-solid">
+                                                                                                <input class="form-check-input"
+                                                                                                    type="checkbox"
+                                                                                                    value="{{ $option->id }}"
+                                                                                                    wire:model="questionAnswers.{{ $child->id }}"  data-name="questionAnswers.{{ $child->id }}">
+                                                                                                <span class="form-check-label">{{ $option->label }}</span>
+                                                                                            </label>
+                                                                                        @endforeach
+                                                                                    </div>
+
+                                                                                <!-- FILE UPLOAD (jika kamu aktifkan) -->
+                                                                                @elseif($child->type === 'file')
+                                                                                    <input type="file" class="form-control"
+                                                                                        wire:model="questionAnswers.{{ $child->id }}">
+
+                                                                                @endif
+
+                                                                                @error('questionAnswers.' . $child->id)
+                                                                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                                                                @enderror
+                                                                            </div>
+
+                                                                        @endif
+                                                                    @endforeach
+
                                                                 @endforeach
                                                             </div>
 
@@ -1604,7 +3076,7 @@
                                                                 </span>
                                                             </button>
 
-                                                            <button type="button" class="btn btn-lg btn-primary" data-kt-stepper-action="next" wire:click="setStep({{ $currentStep + 1 }})"@disabled($currentStep >= $totalStep)>Continue
+                                                            <button type="button" class="btn btn-lg btn-primary" data-kt-stepper-action="next" wire:click="setStep({{ $currentStep + 1 }})"@disabled($currentStep > $totalStep)>Continue
                                                             <!--begin::Svg Icon | path: icons/duotune/arrows/arr064.svg-->
                                                             <span class="svg-icon svg-icon-3 ms-1 me-0">
                                                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1668,9 +3140,11 @@ document.addEventListener("livewire:navigated", function () {
 
     // 🔄 Update tombol + sinkron step
      const lastStep = {{ $lastStep }};
+     const totalStep = {{ $totalStep }};
     stepper.on("kt.stepper.changed", function () {
         const currentStep = stepper.getCurrentStepIndex();
         console.log("🔹 Step changed:", currentStep);
+        console.log("🔹 Last step:", totalStep);
 
         if (currentStep === lastStep) {
             btnSubmit.classList.remove("d-none");
@@ -1725,6 +3199,26 @@ document.addEventListener("livewire:navigated", function () {
 });
 </script>
 
+<script>
+document.addEventListener("livewire:update", () => {
+    refreshStepperDOM();
+});
+
+function refreshStepperDOM() {
+    const stepperElement = document.querySelector("#kt_modal_create_campaign_stepper");
+    if (!stepperElement) return;
+
+    const stepper = KTStepper.getInstance(stepperElement);
+
+    if (stepper) {
+        // Force DOM update tanpa re-init
+        stepper.update();
+        // INI PENTING BANGET
+        stepper.goTo(stepper.getCurrentStepIndex());
+    }
+}
+
+</script>
 
 
 <script>
@@ -1829,10 +3323,32 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- Set nilai awal ke input ---
     updateLatLng(startLat, startLng);
 });
+document.addEventListener("livewire:update", () => {
+    initSelect2();
+});
+
 </script>
 <script>
-document.addEventListener('livewire:navigated', initSelect2);
-document.addEventListener('livewire:load', initSelect2);
+// document.addEventListener('livewire:load', () => {
+//     initSelect2();
+//     initDynamicInputs();
+// });
+
+// document.addEventListener('livewire:navigated', () => {
+//     initSelect2();
+//     initDynamicInputs();
+// });
+
+// document.addEventListener('refreshChildQuestions', () => {
+    
+//     setTimeout(() => initSelect2(), 10);
+// });
+
+document.addEventListener("DOMContentLoaded", () => {
+    initSelect2();
+    initDynamicInputs();
+});
+// Tambahkan hook ini ‼️
 
 function initSelect2() {
     console.log("✅ Init Select2 triggered");
@@ -1840,17 +3356,25 @@ function initSelect2() {
     $('[data-control="select2"]').each(function() {
         const el = $(this);
 
-        // Pastikan tidak diinisialisasi dua kali
+        //Pastikan tidak diinisialisasi dua kali
         // if (el.data('select2')) {
         //     el.select2('destroy');
         // }
         // console.log(el.data('placeholder'))
-        el.select2({
+        // el.select2({
           
-            width: '100%',
-            placeholder: el.data('placeholder') ?? '',
+        //     width: '100%',
+        //     placeholder: el.data('placeholder') ?? '',
           
-        });
+        // });
+        if (!el.data('select2')) {
+            el.select2({
+                width: '100%',
+                placeholder: el.data('placeholder') ?? '',
+            });
+        }
+       
+
 
         // Saat value diubah, kirim ke Livewire
         el.on('change', function () {
@@ -1871,6 +3395,41 @@ function initSelect2() {
         });
     });
 }
+
+function initDynamicInputs() {
+
+    // === RADIO HANDLER ===
+    $('input[type=radio][data-name]').off().on('change', function () {
+        const name = $(this).data('name');
+        const value = $(this).val();
+        const componentId = $(this).closest('[wire\\:id]').attr('wire:id');
+
+        if (componentId) {
+            Livewire.find(componentId).call('select2Changed', { name, value });
+        }
+    });
+
+    // === CHECKBOX HANDLER ===
+    $('input[type=checkbox][data-name]').off().on('change', function () {
+        const name = $(this).data('name');
+
+        // ambil semua checkbox yg ceklis untuk name yg sama
+        const group = $(`input[type=checkbox][data-name="${name}"]:checked`)
+            .map(function () {
+                return $(this).val();
+            }).get();
+
+        const componentId = $(this).closest('[wire\\:id]').attr('wire:id');
+
+        if (componentId) {
+            Livewire.find(componentId).call('select2Changed', {
+                name,
+                value: group // array value
+            });
+        }
+    });
+}
+
 </script>
 
 <script>

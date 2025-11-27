@@ -72,6 +72,8 @@ use Illuminate\Support\Facades\DB;
 use Livewire\WithFileUploads;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use App\Traits\LogsRumahHistory;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
 
 class Edit extends Component
 {
@@ -142,6 +144,7 @@ class Edit extends Component
     public $iJenisKawasanLokasi = [];
     
     public $filteredKelurahan = [];
+    public $skipQuestions = [];
 
 
     public $pondasi_id;
@@ -254,6 +257,20 @@ class Edit extends Component
     public $totalStep = 9; 
     public $lastStep = 7; 
 
+     public $allQuestions = [];
+    
+    public $pertanyaanLokasi = [];
+    public $pertanyaanKk = [];
+    public $pertanyaanIdentitas = [];
+    public $pertanyaanKeselamatan = [];
+    public  $pertanyaanKesehatan = [];
+    public $pertanyaanLuasBangunan = [];
+    public  $pertanyaanBahanBangunan = [];
+    public $pertanyaanDokumentasi = [];
+    public $pertanyaanLainnya = [];
+     public $childQuestions = [];
+
+
 
 
   
@@ -264,11 +281,29 @@ class Edit extends Component
         $this->id_rumah = $id;
         $this->is_question = SurveyQuestion::where('is_active', '1')->exists();
         $this->totalStep = $this->is_question ? 10 : 9;
-        $this->question = SurveyQuestion::with('options')
+       $this->question = SurveyQuestion::with('options')
             ->where('is_active', 1)
+            ->whereNull('parent_question_id')
             ->orderBy('id', 'desc')
+            ->get(); 
+
+            
+        
+        $this->pertanyaanLokasi        = $this->question->where('module', 'lokasi');
+        $this->pertanyaanKk            = $this->question->where('module', 'penghuni_rumah');
+        $this->pertanyaanIdentitas     = $this->question->where('module', 'identitas_rumah');
+        $this->pertanyaanKeselamatan   = $this->question->where('module', 'aspek_keselamatan');
+        $this->pertanyaanKesehatan     = $this->question->where('module', 'aspek_kesehatan');
+        $this->pertanyaanLuasBangunan  = $this->question->where('module', 'aspek_luas_kebutuhan');
+        $this->pertanyaanBahanBangunan = $this->question->where('module', 'aspek_bahan_bangunan');
+        $this->pertanyaanDokumentasi   = $this->question->where('module', 'foto_dokumentasi');
+        $this->pertanyaanLainnya       = $this->question->where('module', 'pertanyaan_lainnya');
+
+        $this->allQuestions = SurveyQuestion::with('options')->where('is_active', 1)->orderBy('id', 'desc')->get();
+        $this->childQuestions = SurveyQuestion::with('options')
+            ->where('is_active', 1)
+            ->whereNotNull('parent_question_id')
             ->get();
-             $this->lastStep = $this->is_question ? 8 : 7;
 
 
         $existingAnswers = SurveyQuestionAnswer::where('rumah_id', $id)->get();
@@ -296,6 +331,8 @@ class Edit extends Component
             }
         }
 
+        Log::info('📥 Loaded existing answers', $this->questionAnswers);
+        $this->dispatch('fillSelect2', answers: $this->questionAnswers);
         // Daftar listener Livewire 3 style
         // $this->on('setStep', fn ($step) => $this->setStep($step));
         $this->loadRumah($id);
@@ -540,6 +577,15 @@ class Edit extends Component
             logger("✅ Livewire menerima {$name} = {$value}");
         }
 
+         if (str_starts_with($name, 'questionAnswers.')) {
+
+            // Contoh name: questionAnswers.6
+            Arr::set($this->questionAnswers, str_replace('questionAnswers.', '', $name), $value);
+
+            logger("Updated $name = $value");
+        }
+
+
         // 🔹 Jika kecamatan berubah, filter kelurahan
         if ($name === 'kecamatan_id') {
             $this->filterKelurahan();
@@ -603,41 +649,127 @@ class Edit extends Component
                 ]);
                 return;
             }
+
+            foreach ($this->pertanyaanLokasi as $q) {
+
+                // Ambil jawaban dari Livewire
+                $answer = $this->questionAnswers[$q->id] ?? null;
+
+                
+
+                // Abaikan pertanyaan tidak wajib
+                if (!$q->is_required) {
+                    continue;
+                }
+
+                // TEXT, TEXTAREA, NUMBER, DATE
+                if (in_array($q->type, ['text', 'textarea', 'number', 'date'])) {
+                    if (empty($answer)) {
+                        return $this->dispatch('swal:error', [
+                            'title' => 'Pertanyaan Belum Terjawab',
+                            'text'  => "Pertanyaan '{$q->label}' wajib diisi.",
+                        ]);
+                    }
+                }
+
+                // SELECT & RADIO
+                if (in_array($q->type, ['select', 'radio'])) {
+                    if (empty($answer)) {
+                        return $this->dispatch('swal:error', [
+                            'title' => 'Pertanyaan Belum Terjawab',
+                            'text'  => "Pertanyaan '{$q->label}' wajib dipilih.",
+                        ]);
+                    }
+                }
+
+                // CHECKBOX (array minimal 1)
+                if ($q->type === 'checkbox') {
+                    if (empty($answer) || count($answer) === 0) {
+                        return $this->dispatch('swal:error', [
+                            'title' => 'Pertanyaan Belum Terjawab',
+                            'text'  => "Pertanyaan '{$q->label}' wajib memilih minimal 1 opsi.",
+                        ]);
+                    }
+                }
+            }
         }
 
         if ($this->currentStep === 2 && $step > 2) {
-            if (count($this->kks) < 1) {
-                $this->dispatch('swal:error', [
-                    'title' => 'Data Belum Lengkap',
-                    'text'  => 'Harus menambahkan minimal 1 KK sebelum melanjutkan.',
-                ]);
-                return;
-            }
+            // if (count($this->kks) < 1) {
+            //     $this->dispatch('swal:error', [
+            //         'title' => 'Data Belum Lengkap',
+            //         'text'  => 'Harus menambahkan minimal 1 KK sebelum melanjutkan.',
+            //     ]);
+            //     return;
+            // }
 
-            foreach ($this->kks as $kkIndex => $kk) {
-                if (empty($kk['no_kk'])) {
-                    $this->dispatch('swal:error', [
-                        'title' => 'Nomor KK Belum Diisi',
-                        'text'  => 'Nomor KK ke-' . ($kkIndex + 1) . ' wajib diisi.',
-                    ]);
-                    return;
+            // foreach ($this->kks as $kkIndex => $kk) {
+            //     if (empty($kk['no_kk'])) {
+            //         $this->dispatch('swal:error', [
+            //             'title' => 'Nomor KK Belum Diisi',
+            //             'text'  => 'Nomor KK ke-' . ($kkIndex + 1) . ' wajib diisi.',
+            //         ]);
+            //         return;
+            //     }
+
+            //     if (count($kk['anggota']) < 1) {
+            //         $this->dispatch('swal:error', [
+            //             'title' => 'Anggota Belum Ada',
+            //             'text'  => 'KK ke-' . ($kkIndex + 1) . ' harus memiliki minimal 1 anggota.',
+            //         ]);
+            //         return;
+            //     }
+
+            //     foreach ($kk['anggota'] as $anggotaIndex => $anggota) {
+            //         if (empty($anggota['nama']) || empty($anggota['nik'])) {
+            //             $this->dispatch('swal:error', [
+            //                 'title' => 'Data Anggota Belum Lengkap',
+            //                 'text'  => 'Nama dan NIK anggota pada KK ke-' . ($kkIndex + 1) . ' wajib diisi.',
+            //             ]);
+            //             return;
+            //         }
+            //     }
+            // }
+
+            foreach ($this->pertanyaanKk as $q) {
+
+                // Ambil jawaban dari Livewire
+                $answer = $this->questionAnswers[$q->id] ?? null;
+
+                
+
+                // Abaikan pertanyaan tidak wajib
+                if (!$q->is_required) {
+                    continue;
                 }
 
-                if (count($kk['anggota']) < 1) {
-                    $this->dispatch('swal:error', [
-                        'title' => 'Anggota Belum Ada',
-                        'text'  => 'KK ke-' . ($kkIndex + 1) . ' harus memiliki minimal 1 anggota.',
-                    ]);
-                    return;
-                }
-
-                foreach ($kk['anggota'] as $anggotaIndex => $anggota) {
-                    if (empty($anggota['nama']) || empty($anggota['nik'])) {
-                        $this->dispatch('swal:error', [
-                            'title' => 'Data Anggota Belum Lengkap',
-                            'text'  => 'Nama dan NIK anggota pada KK ke-' . ($kkIndex + 1) . ' wajib diisi.',
+                // TEXT, TEXTAREA, NUMBER, DATE
+                if (in_array($q->type, ['text', 'textarea', 'number', 'date'])) {
+                    if (empty($answer)) {
+                        return $this->dispatch('swal:error', [
+                            'title' => 'Pertanyaan Belum Terjawab',
+                            'text'  => "Pertanyaan '{$q->label}' wajib diisi.",
                         ]);
-                        return;
+                    }
+                }
+
+                // SELECT & RADIO
+                if (in_array($q->type, ['select', 'radio'])) {
+                    if (empty($answer)) {
+                        return $this->dispatch('swal:error', [
+                            'title' => 'Pertanyaan Belum Terjawab',
+                            'text'  => "Pertanyaan '{$q->label}' wajib dipilih.",
+                        ]);
+                    }
+                }
+
+                // CHECKBOX (array minimal 1)
+                if ($q->type === 'checkbox') {
+                    if (empty($answer) || count($answer) === 0) {
+                        return $this->dispatch('swal:error', [
+                            'title' => 'Pertanyaan Belum Terjawab',
+                            'text'  => "Pertanyaan '{$q->label}' wajib memilih minimal 1 opsi.",
+                        ]);
                     }
                 }
             }
@@ -698,6 +830,49 @@ class Edit extends Component
                     }
                 }
             }
+
+            foreach ($this->pertanyaanIdentitas as $q) {
+
+                // Ambil jawaban dari Livewire
+                $answer = $this->questionAnswers[$q->id] ?? null;
+
+                
+
+                // Abaikan pertanyaan tidak wajib
+                if (!$q->is_required) {
+                    continue;
+                }
+
+                // TEXT, TEXTAREA, NUMBER, DATE
+                if (in_array($q->type, ['text', 'textarea', 'number', 'date'])) {
+                    if (empty($answer)) {
+                        return $this->dispatch('swal:error', [
+                            'title' => 'Pertanyaan Belum Terjawab',
+                            'text'  => "Pertanyaan '{$q->label}' wajib diisi.",
+                        ]);
+                    }
+                }
+
+                // SELECT & RADIO
+                if (in_array($q->type, ['select', 'radio'])) {
+                    if (empty($answer)) {
+                        return $this->dispatch('swal:error', [
+                            'title' => 'Pertanyaan Belum Terjawab',
+                            'text'  => "Pertanyaan '{$q->label}' wajib dipilih.",
+                        ]);
+                    }
+                }
+
+                // CHECKBOX (array minimal 1)
+                if ($q->type === 'checkbox') {
+                    if (empty($answer) || count($answer) === 0) {
+                        return $this->dispatch('swal:error', [
+                            'title' => 'Pertanyaan Belum Terjawab',
+                            'text'  => "Pertanyaan '{$q->label}' wajib memilih minimal 1 opsi.",
+                        ]);
+                    }
+                }
+            }
         }
 
         if ($this->currentStep === 4 && $step > 4) {
@@ -718,6 +893,49 @@ class Edit extends Component
                         'text'  => "Kolom {$label} wajib diisi sebelum melanjutkan ke tahap berikutnya.",
                     ]);
                     return;
+                }
+            }
+
+            foreach ($this->pertanyaanKeselamatan as $q) {
+
+                // Ambil jawaban dari Livewire
+                $answer = $this->questionAnswers[$q->id] ?? null;
+
+                
+
+                // Abaikan pertanyaan tidak wajib
+                if (!$q->is_required) {
+                    continue;
+                }
+
+                // TEXT, TEXTAREA, NUMBER, DATE
+                if (in_array($q->type, ['text', 'textarea', 'number', 'date'])) {
+                    if (empty($answer)) {
+                        return $this->dispatch('swal:error', [
+                            'title' => 'Pertanyaan Belum Terjawab',
+                            'text'  => "Pertanyaan '{$q->label}' wajib diisi.",
+                        ]);
+                    }
+                }
+
+                // SELECT & RADIO
+                if (in_array($q->type, ['select', 'radio'])) {
+                    if (empty($answer)) {
+                        return $this->dispatch('swal:error', [
+                            'title' => 'Pertanyaan Belum Terjawab',
+                            'text'  => "Pertanyaan '{$q->label}' wajib dipilih.",
+                        ]);
+                    }
+                }
+
+                // CHECKBOX (array minimal 1)
+                if ($q->type === 'checkbox') {
+                    if (empty($answer) || count($answer) === 0) {
+                        return $this->dispatch('swal:error', [
+                            'title' => 'Pertanyaan Belum Terjawab',
+                            'text'  => "Pertanyaan '{$q->label}' wajib memilih minimal 1 opsi.",
+                        ]);
+                    }
                 }
             }
         }
@@ -749,6 +967,49 @@ class Edit extends Component
                     return;
                 }
             }
+
+            foreach ($this->pertanyaanKesehatan as $q) {
+
+                // Ambil jawaban dari Livewire
+                $answer = $this->questionAnswers[$q->id] ?? null;
+
+                
+
+                // Abaikan pertanyaan tidak wajib
+                if (!$q->is_required) {
+                    continue;
+                }
+
+                // TEXT, TEXTAREA, NUMBER, DATE
+                if (in_array($q->type, ['text', 'textarea', 'number', 'date'])) {
+                    if (empty($answer)) {
+                        return $this->dispatch('swal:error', [
+                            'title' => 'Pertanyaan Belum Terjawab',
+                            'text'  => "Pertanyaan '{$q->label}' wajib diisi.",
+                        ]);
+                    }
+                }
+
+                // SELECT & RADIO
+                if (in_array($q->type, ['select', 'radio'])) {
+                    if (empty($answer)) {
+                        return $this->dispatch('swal:error', [
+                            'title' => 'Pertanyaan Belum Terjawab',
+                            'text'  => "Pertanyaan '{$q->label}' wajib dipilih.",
+                        ]);
+                    }
+                }
+
+                // CHECKBOX (array minimal 1)
+                if ($q->type === 'checkbox') {
+                    if (empty($answer) || count($answer) === 0) {
+                        return $this->dispatch('swal:error', [
+                            'title' => 'Pertanyaan Belum Terjawab',
+                            'text'  => "Pertanyaan '{$q->label}' wajib memilih minimal 1 opsi.",
+                        ]);
+                    }
+                }
+            }
         }
 
         if ($this->currentStep === 6 && $step > 6) {
@@ -777,6 +1038,49 @@ class Edit extends Component
                     return;
                 }
             }
+
+            foreach ($this->pertanyaanLuasBangunan as $q) {
+
+                // Ambil jawaban dari Livewire
+                $answer = $this->questionAnswers[$q->id] ?? null;
+
+                
+
+                // Abaikan pertanyaan tidak wajib
+                if (!$q->is_required) {
+                    continue;
+                }
+
+                // TEXT, TEXTAREA, NUMBER, DATE
+                if (in_array($q->type, ['text', 'textarea', 'number', 'date'])) {
+                    if (empty($answer)) {
+                        return $this->dispatch('swal:error', [
+                            'title' => 'Pertanyaan Belum Terjawab',
+                            'text'  => "Pertanyaan '{$q->label}' wajib diisi.",
+                        ]);
+                    }
+                }
+
+                // SELECT & RADIO
+                if (in_array($q->type, ['select', 'radio'])) {
+                    if (empty($answer)) {
+                        return $this->dispatch('swal:error', [
+                            'title' => 'Pertanyaan Belum Terjawab',
+                            'text'  => "Pertanyaan '{$q->label}' wajib dipilih.",
+                        ]);
+                    }
+                }
+
+                // CHECKBOX (array minimal 1)
+                if ($q->type === 'checkbox') {
+                    if (empty($answer) || count($answer) === 0) {
+                        return $this->dispatch('swal:error', [
+                            'title' => 'Pertanyaan Belum Terjawab',
+                            'text'  => "Pertanyaan '{$q->label}' wajib memilih minimal 1 opsi.",
+                        ]);
+                    }
+                }
+            }
         }
 
         if ($this->currentStep === 7 && $step > 7) {
@@ -803,9 +1107,54 @@ class Edit extends Component
                     return;
                 }
             }
+
+            foreach ($this->pertanyaanBahanBangunan as $q) {
+
+                // Ambil jawaban dari Livewire
+                $answer = $this->questionAnswers[$q->id] ?? null;
+
+                
+
+                // Abaikan pertanyaan tidak wajib
+                if (!$q->is_required) {
+                    continue;
+                }
+
+                // TEXT, TEXTAREA, NUMBER, DATE
+                if (in_array($q->type, ['text', 'textarea', 'number', 'date'])) {
+                    if (empty($answer)) {
+                        return $this->dispatch('swal:error', [
+                            'title' => 'Pertanyaan Belum Terjawab',
+                            'text'  => "Pertanyaan '{$q->label}' wajib diisi.",
+                        ]);
+                    }
+                }
+
+                // SELECT & RADIO
+                if (in_array($q->type, ['select', 'radio'])) {
+                    if (empty($answer)) {
+                        return $this->dispatch('swal:error', [
+                            'title' => 'Pertanyaan Belum Terjawab',
+                            'text'  => "Pertanyaan '{$q->label}' wajib dipilih.",
+                        ]);
+                    }
+                }
+
+                // CHECKBOX (array minimal 1)
+                if ($q->type === 'checkbox') {
+                    if (empty($answer) || count($answer) === 0) {
+                        return $this->dispatch('swal:error', [
+                            'title' => 'Pertanyaan Belum Terjawab',
+                            'text'  => "Pertanyaan '{$q->label}' wajib memilih minimal 1 opsi.",
+                        ]);
+                    }
+                }
+            }
         }
 
+
          if ($this->currentStep === 8 && $step > 8) {
+            $this->dispatch('stepChanged', 8);
             $requiredPhotos = [
                 // 'foto_kk'          => 'Foto Kartu Keluarga (KK)',
                 // 'foto_ktp'         => 'Foto Kartu Tanda Penduduk (KTP)',
@@ -824,10 +1173,54 @@ class Edit extends Component
                     return;
                 }
             }
+
+            foreach ($this->pertanyaanDokumentasi as $q) {
+
+                // Ambil jawaban dari Livewire
+                $answer = $this->questionAnswers[$q->id] ?? null;
+
+                
+
+                // Abaikan pertanyaan tidak wajib
+                if (!$q->is_required) {
+                    continue;
+                }
+
+                // TEXT, TEXTAREA, NUMBER, DATE
+                if (in_array($q->type, ['text', 'textarea', 'number', 'date'])) {
+                    if (empty($answer)) {
+                        return $this->dispatch('swal:error', [
+                            'title' => 'Pertanyaan Belum Terjawab',
+                            'text'  => "Pertanyaan '{$q->label}' wajib diisi.",
+                        ]);
+                    }
+                }
+
+                // SELECT & RADIO
+                if (in_array($q->type, ['select', 'radio'])) {
+                    if (empty($answer)) {
+                        return $this->dispatch('swal:error', [
+                            'title' => 'Pertanyaan Belum Terjawab',
+                            'text'  => "Pertanyaan '{$q->label}' wajib dipilih.",
+                        ]);
+                    }
+                }
+
+                // CHECKBOX (array minimal 1)
+                if ($q->type === 'checkbox') {
+                    if (empty($answer) || count($answer) === 0) {
+                        return $this->dispatch('swal:error', [
+                            'title' => 'Pertanyaan Belum Terjawab',
+                            'text'  => "Pertanyaan '{$q->label}' wajib memilih minimal 1 opsi.",
+                        ]);
+                    }
+                }
+            }
         }
         
+        
 
-        $this->currentStep = max(1, min($step, $this->totalStep));
+        $this->currentStep = max(1, min($step, 9));
 
         // 🔁 Kirim balik ke frontend agar header update
         $this->dispatch('stepChanged', $this->currentStep);
@@ -934,10 +1327,21 @@ class Edit extends Component
             if ($this->is_question) {
 
                 // Loop seluruh pertanyaan (Collection)
-                foreach ($this->question as $q) {
+                foreach ($this->allQuestions as $q) {
 
                     // Ambil jawaban dari Livewire
                     $answer = $this->questionAnswers[$q->id] ?? null;
+
+                    // 🔥 LEWATKAN CHILD YANG TIDAK AKTIF
+                if ($q->parent_question_id !== null) {
+
+                    $parentAnswer = $this->questionAnswers[$q->parent_question_id] ?? null;
+
+                    // Jika trigger tidak cocok → child tidak aktif → skip
+                    if ($q->trigger_option_id != $parentAnswer) {
+                        continue;
+                    }
+                }
 
                     // Abaikan pertanyaan tidak wajib
                     if (!$q->is_required) {
@@ -1143,8 +1547,40 @@ class Edit extends Component
             })
             ->toArray();
 
-            foreach ($this->question as $q) {
+            foreach ($this->childQuestions as $child) {
 
+                $parentAnswer = $this->questionAnswers[$child->parent_question_id] ?? null;
+                // Child TIDAK AKTIF ketika trigger_option_id tidak sama dengan jawaban induk
+                if ($child->trigger_option_id != $parentAnswer) {
+                    $this->skipQuestions[$child->id] = true;
+                    Log::info("{$child->id}/{$rumah->id_rumah}");
+
+                    $id_data = SurveyQuestionAnswer::where('rumah_id', $rumah->id_rumah)
+                        ->where('question_id', $child->id)
+                        ->value('id');
+                        
+                    SurveyQuestionAnswer::find($id_data)->delete();
+
+                    DB::enableQueryLog();
+                  DB::delete("
+                    DELETE FROM survey_question_answers
+                    WHERE rumah_id='".$rumah->id_rumah."' AND question_id = '".$child->id."'
+                ");
+
+                Log::info('query', [DB::getQueryLog()]);
+                unset($this->questionAnswers[$child->id]);
+
+                    // 🔑 Penting: kosongkan juga di state Livewire
+                  //  unset($this->questionAnswers[$child->id]);
+                }
+            }
+
+            foreach ($this->allQuestions as $q) {
+
+                if (isset($skipQuestions[$q->id])) {
+                    Log::info("Skip question {$q->id} for rumah {$rumah->id_rumah}");
+                    continue; // ❌ LEWATKAN, JANGAN SIMPAN ULANG
+                }
                 $answer = $this->questionAnswers[$q->id] ?? null;
 
                 // Abaikan jika pertanyaan tidak wajib dan tidak diisi
