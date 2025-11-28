@@ -16,14 +16,35 @@ class Add extends Component
     public $keterangan;
     public $polygon; // geojson
 
+    #[On('setPolygonFromShp')]
+    public function setPolygonFromShp($data)
+    {
+        $this->polygon = $data['polygon'];
+    }
+
+
     public function save()
     {
-        $this->validate([
-            'nama_kawasan' => 'required|string|max:255',
-            'jenis_id' => 'required',
-            'luas' => 'required',
-            'polygon' => 'required', // wajib polygon ada
-        ]);
+        try {
+            $this->validate([
+                'nama_kawasan' => 'required|string|max:255',
+                'jenis_id'     => 'required',
+                'luas'         => 'required',
+                'polygon'      => 'required', // wajib polygon
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+
+            // Ambil pesan error pertama
+            $message = collect($e->errors())->first()[0] ?? "Harap lengkapi semua field wajib.";
+
+            // Tampilkan SweetAlert
+            $this->dispatch('errorAlert', [
+                'type'    => 'error',
+                'message' => $message
+            ]);
+
+            return;
+        }
 
         TblPolygon::create([
             'nama_kawasan' => $this->nama_kawasan,
@@ -44,6 +65,7 @@ class Add extends Component
 
     public function mount($id = null)
     {
+        $this->mode = 'create';
         if ($id) {
             $this->mode = 'edit';
             $this->edit_id = $id;

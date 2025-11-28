@@ -1,3 +1,4 @@
+
 <div id="kt_app_content" class="app-content flex-column-fluid">
             <!--begin::Content container-->
             <div id="kt_app_content_container" class="app-container container-xxl">
@@ -87,6 +88,44 @@
                                         @empty
                                             <div class="text-center text-muted py-5">Belum ada data kartu keluarga.</div>
                                         @endforelse
+                                    </div>
+                                   <div class="mt-5">
+                                        <table class="table table-bordered align-middle fs-7">
+                                            <tbody>
+
+                                                @foreach($pertanyaanKk as $q)
+
+                                                    {{-- PARENT QUESTION --}}
+                                                    <tr>
+                                                        <td style="width: 50%" class="fw-bold text-gray-800">
+                                                            {{ $q->label }}
+                                                        </td>
+                                                        <td style="width: 50%">
+                                                            {{ $displayAnswer($q) }}
+                                                        </td>
+                                                    </tr>
+
+                                                    {{-- CHILD QUESTION --}}
+                                                    @foreach($childQuestions as $child)
+                                                        @if($child->parent_question_id == $q->id &&
+                                                            $child->trigger_option_id == ($questionAnswers[$q->id] ?? null))
+
+                                                            <tr>
+                                                                <td class="ps-10 text-gray-700">
+                                                                    👉 {{ $child->label }}
+                                                                </td>
+                                                                <td>
+                                                                    {{ $displayAnswer($child) }}
+                                                                </td>
+                                                            </tr>
+
+                                                        @endif
+                                                    @endforeach
+
+                                                @endforeach
+
+                                            </tbody>
+                                        </table>
                                     </div>
 
                                     <!--end::Card body-->
@@ -190,6 +229,45 @@
                                                     </tr>
                                                 </tbody>
                                             </table>
+
+                                            <div class="mt-5">
+                                                <table class="table table-bordered align-middle fs-7">
+                                                    <tbody>
+
+                                                        @foreach($pertanyaanIdentitas as $q)
+
+                                                            {{-- PARENT QUESTION --}}
+                                                            <tr>
+                                                                <td style="width: 50%" class="fw-bold text-gray-800">
+                                                                    {{ $q->label }}
+                                                                </td>
+                                                                <td style="width: 50%">
+                                                                    {{ $displayAnswer($q) }}
+                                                                </td>
+                                                            </tr>
+
+                                                            {{-- CHILD QUESTION --}}
+                                                            @foreach($childQuestions as $child)
+                                                                @if($child->parent_question_id == $q->id &&
+                                                                    $child->trigger_option_id == ($questionAnswers[$q->id] ?? null))
+
+                                                                    <tr>
+                                                                        <td class="ps-10 text-gray-700">
+                                                                            👉 {{ $child->label }}
+                                                                        </td>
+                                                                        <td>
+                                                                            {{ $displayAnswer($child) }}
+                                                                        </td>
+                                                                    </tr>
+
+                                                                @endif
+                                                            @endforeach
+
+                                                        @endforeach
+
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         </div>
                                     </div>
                                     <!--end::Card body-->
@@ -399,6 +477,45 @@
                                                 </tr>
                                             </tbody>
                                         </table>
+
+                                        <div class="mt-5">
+                                            <table class="table table-bordered align-middle fs-7">
+                                                <tbody>
+
+                                                    @foreach($pertanyaanKeselamatan as $q)
+
+                                                        {{-- PARENT QUESTION --}}
+                                                        <tr>
+                                                            <td style="width: 50%" class="fw-bold text-gray-800">
+                                                                {{ $q->label }}
+                                                            </td>
+                                                            <td style="width: 50%">
+                                                                {{ $displayAnswer($q) }}
+                                                            </td>
+                                                        </tr>
+
+                                                        {{-- CHILD QUESTION --}}
+                                                        @foreach($childQuestions as $child)
+                                                            @if($child->parent_question_id == $q->id &&
+                                                                $child->trigger_option_id == ($questionAnswers[$q->id] ?? null))
+
+                                                                <tr>
+                                                                    <td class="ps-10 text-gray-700">
+                                                                        👉 {{ $child->label }}
+                                                                    </td>
+                                                                    <td>
+                                                                        {{ $displayAnswer($child) }}
+                                                                    </td>
+                                                                </tr>
+
+                                                            @endif
+                                                        @endforeach
+
+                                                    @endforeach
+
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
                                 </div>
                             <!--end::Card body-->
@@ -489,6 +606,44 @@
 
                                         </tbody>
                                     </table>
+                                    <div class="mt-5">
+                                        <table class="table table-bordered align-middle fs-7">
+                                            <tbody>
+
+                                                @foreach($pertanyaanLuasBangunan as $q)
+
+                                                    {{-- PARENT QUESTION --}}
+                                                    <tr>
+                                                        <td style="width: 50%" class="fw-bold text-gray-800">
+                                                            {{ $q->label }}
+                                                        </td>
+                                                        <td style="width: 50%">
+                                                            {{ $displayAnswer($q) }}
+                                                        </td>
+                                                    </tr>
+
+                                                    {{-- CHILD QUESTION --}}
+                                                    @foreach($childQuestions as $child)
+                                                        @if($child->parent_question_id == $q->id &&
+                                                            $child->trigger_option_id == ($questionAnswers[$q->id] ?? null))
+
+                                                            <tr>
+                                                                <td class="ps-10 text-gray-700">
+                                                                    👉 {{ $child->label }}
+                                                                </td>
+                                                                <td>
+                                                                    {{ $displayAnswer($child) }}
+                                                                </td>
+                                                            </tr>
+
+                                                        @endif
+                                                    @endforeach
+
+                                                @endforeach
+
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                             <!--end::Card body-->
@@ -617,6 +772,44 @@
                                                     </tr>
                                                 </tbody>
                                             </table>
+                                            <div class="mt-5">
+                                                <table class="table table-bordered align-middle fs-7">
+                                                    <tbody>
+
+                                                        @foreach($pertanyaanKesehatan as $q)
+
+                                                            {{-- PARENT QUESTION --}}
+                                                            <tr>
+                                                                <td style="width: 50%" class="fw-bold text-gray-800">
+                                                                    {{ $q->label }}
+                                                                </td>
+                                                                <td style="width: 50%">
+                                                                    {{ $displayAnswer($q) }}
+                                                                </td>
+                                                            </tr>
+
+                                                            {{-- CHILD QUESTION --}}
+                                                            @foreach($childQuestions as $child)
+                                                                @if($child->parent_question_id == $q->id &&
+                                                                    $child->trigger_option_id == ($questionAnswers[$q->id] ?? null))
+
+                                                                    <tr>
+                                                                        <td class="ps-10 text-gray-700">
+                                                                            👉 {{ $child->label }}
+                                                                        </td>
+                                                                        <td>
+                                                                            {{ $displayAnswer($child) }}
+                                                                        </td>
+                                                                    </tr>
+
+                                                                @endif
+                                                            @endforeach
+
+                                                        @endforeach
+
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         </div>
                                     </div>
                                     <!--end::Card body-->
@@ -710,6 +903,44 @@
                                     </tr>
                                 </tbody>
                             </table>
+                            <div class="mt-5">
+                                <table class="table table-bordered align-middle fs-7">
+                                    <tbody>
+
+                                        @foreach($pertanyaanBahanBangunan as $q)
+
+                                            {{-- PARENT QUESTION --}}
+                                            <tr>
+                                                <td style="width: 50%" class="fw-bold text-gray-800">
+                                                    {{ $q->label }}
+                                                </td>
+                                                <td style="width: 50%">
+                                                    {{ $displayAnswer($q) }}
+                                                </td>
+                                            </tr>
+
+                                            {{-- CHILD QUESTION --}}
+                                            @foreach($childQuestions as $child)
+                                                @if($child->parent_question_id == $q->id &&
+                                                    $child->trigger_option_id == ($questionAnswers[$q->id] ?? null))
+
+                                                    <tr>
+                                                        <td class="ps-10 text-gray-700">
+                                                            👉 {{ $child->label }}
+                                                        </td>
+                                                        <td>
+                                                            {{ $displayAnswer($child) }}
+                                                        </td>
+                                                    </tr>
+
+                                                @endif
+                                            @endforeach
+
+                                        @endforeach
+
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                     <!--end::Card body-->
@@ -756,6 +987,88 @@
                             </tr>
                         @endforeach
                     </table>
+                       <div class="mt-5">
+                            <table class="table table-bordered align-middle fs-7">
+                                <tbody>
+
+                                    @foreach($pertanyaanDokumentasi as $q)
+
+                                        {{-- PARENT QUESTION --}}
+                                        <tr>
+                                            <td style="width: 50%" class="fw-bold text-gray-800">
+                                                {{ $q->label }}
+                                            </td>
+                                            <td style="width: 50%">
+                                                {{ $displayAnswer($q) }}
+                                            </td>
+                                        </tr>
+
+                                        {{-- CHILD QUESTION --}}
+                                        @foreach($childQuestions as $child)
+                                            @if($child->parent_question_id == $q->id &&
+                                                $child->trigger_option_id == ($questionAnswers[$q->id] ?? null))
+
+                                                <tr>
+                                                    <td class="ps-10 text-gray-700">
+                                                        👉 {{ $child->label }}
+                                                    </td>
+                                                    <td>
+                                                        {{ $displayAnswer($child) }}
+                                                    </td>
+                                                </tr>
+
+                                            @endif
+                                        @endforeach
+
+                                    @endforeach
+
+                                </tbody>
+                            </table>
+                        </div>
+                </div>
+
+                 <div style="margin-top: 25px;">
+                    <h3 style="font-size: 16px; margin-bottom: 12px; text-align: left;">Pertanyaan Lainnya</h3>
+
+                    
+                       <div class="mt-5">
+                            <table class="table table-bordered align-middle fs-7">
+                                <tbody>
+
+                                    @foreach($pertanyaanLainnya as $q)
+
+                                        {{-- PARENT QUESTION --}}
+                                        <tr>
+                                            <td style="width: 50%" class="fw-bold text-gray-800">
+                                                {{ $q->label }}
+                                            </td>
+                                            <td style="width: 50%">
+                                                {{ $displayAnswer($q) }}
+                                            </td>
+                                        </tr>
+
+                                        {{-- CHILD QUESTION --}}
+                                        @foreach($childQuestions as $child)
+                                            @if($child->parent_question_id == $q->id &&
+                                                $child->trigger_option_id == ($questionAnswers[$q->id] ?? null))
+
+                                                <tr>
+                                                    <td class="ps-10 text-gray-700">
+                                                        👉 {{ $child->label }}
+                                                    </td>
+                                                    <td>
+                                                        {{ $displayAnswer($child) }}
+                                                    </td>
+                                                </tr>
+
+                                            @endif
+                                        @endforeach
+
+                                    @endforeach
+
+                                </tbody>
+                            </table>
+                        </div>
                 </div>
 
 <div style="margin-top: 20px;">
@@ -765,6 +1078,44 @@
     @else
         <p style="color: #777;">Lokasi belum tersedia.</p>
     @endif
+</div>
+<div class="mt-5">
+    <table class="table table-bordered align-middle fs-7">
+    <tbody>
+
+    @foreach($pertanyaanLokasi as $q)
+
+    {{-- PARENT QUESTION --}}
+    <tr>
+    <td style="width: 50%" class="fw-bold text-gray-800">
+        {{ $q->label }}
+    </td>
+    <td style="width: 50%">
+        {{ $displayAnswer($q) }}
+    </td>
+    </tr>
+
+    {{-- CHILD QUESTION --}}
+    @foreach($childQuestions as $child)
+    @if($child->parent_question_id == $q->id &&
+        $child->trigger_option_id == ($questionAnswers[$q->id] ?? null))
+
+        <tr>
+            <td class="ps-10 text-gray-700">
+                👉 {{ $child->label }}
+            </td>
+            <td>
+                {{ $displayAnswer($child) }}
+            </td>
+        </tr>
+
+    @endif
+    @endforeach
+
+    @endforeach
+
+    </tbody>
+    </table>
 </div>
 
 

@@ -918,6 +918,84 @@ class Data extends Component
             );
         }
 
+        if ($request->filled('status_umum')) {
+            $status_umum = $request->get('status_umum');
+            if($status_umum == 'rlh') {
+                $query->whereHas('penilaian', fn($q) =>
+                    $q->where('status_rumah', 'RLH')
+                );
+            }
+            elseif($status_umum == 'rtlh') {
+                $query->whereHas('penilaian', fn($q) =>
+                    $q->where('status_rumah',  'RTLH')
+                );
+            }
+            elseif($status_umum == 'rtlh_non_sewa') {
+                $query->whereHas('penilaian', fn($q) =>
+                    $q->where('status_rumah', 'RTLH')
+                );
+                $query->whereHas('kepemilikan', fn($q) =>
+                    $q->where('status_kepemilikan_rumah_id', '1')
+                );
+            }
+
+             elseif($status_umum == 'rtlh_sewa') {
+                $query->whereHas('penilaian', fn($q) =>
+                    $q->where('status_rumah', 'RTLH')
+                );
+                $query->whereHas('kepemilikan', fn($q) =>
+                    $q->where('status_kepemilikan_rumah_id', '2')
+                     ->orWhere('status_kepemilikan_rumah_id', '3')
+                );
+            }
+            elseif($status_umum == 'laki') {
+                $query->whereHas('fisik', fn($q) =>
+                    $q->where('jumlah_penghuni_laki', '!=', '')
+                );
+            }
+            elseif($status_umum == 'perempuan') {
+                $query->whereHas('fisik', fn($q) =>
+                    $q->where('jumlah_penghuni_perempuan', '!=', '')
+                );
+            }
+            elseif($status_umum == 'abk') {
+                $query->whereHas('fisik', fn($q) =>
+                    $q->where('jumlah_abk', '!=', '')
+                );
+            }
+            elseif($status_umum == 'dtks') {
+                 $query->whereHas('sosialEkonomi', fn($q) =>
+                    $q->where('status_dtks_id', '1')
+                );
+            }
+            elseif($status_umum == 'imb') {
+                 $query->whereHas('kepemilikan', fn($q) =>
+                    $q->where('status_imb_id', '1')
+                );
+            }
+            elseif($status_umum == 'non_imb') {
+                 $query->whereHas('kepemilikan', fn($q) =>
+                    $q->where('status_imb_id', '2')
+                );
+            }
+            elseif($status_umum == 'backlog') {
+                 $query->whereHas('sosialEkonomi', fn($q) =>
+                    $q->where('jumlah_kk_id', '>','1')
+                );
+            }
+            elseif($status_umum == 'bencana') {
+                 $query->whereHas('kepemilikan', fn($q) =>
+                    $q->where('jenis_kawasan_lokasi_rumah_id','6')
+                );
+            }
+            elseif($status_umum == 'non_permukiman') {
+                 $query->whereHas('kepemilikan', fn($q) =>
+                    $q->where('jenis_kawasan_lokasi_rumah_id','7')
+                );
+            }
+           
+        }
+
         // ================================
         // 🧩 7️⃣ FILTER PRIORITAS
         // ================================

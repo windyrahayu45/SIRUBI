@@ -1,4 +1,5 @@
-<div x-data x-init="window.livewireComponentId = $el.getAttribute('wire:id')" wire:key="price-table" class="d-flex flex-column flex-fill">
+<div x-data x-init="window.livewireComponentId = $el.getAttribute('wire:id')" wire:key="price-table">
+
     
     <div class="d-flex flex-column flex-column-fluid">
         <!--begin::Toolbar-->
@@ -86,6 +87,15 @@
                                             wire:model="keterangan" rows="3" style="border-color: rgb(54 54 96);"></textarea>
                                 </div>
 
+                                <div class="mb-5">
+                                    <label class="form-label fw-bold">Upload Shapefile (.zip) (Jika ada file polygon lain selain buat sendiri)</label>
+                                    <input type="file" id="file" class="form-control form-control-solid"
+                                         accept=".zip"
+                                        style="border-color: rgb(54 54 96);">
+
+                                    @error('zipfile') <small class="text-danger">{{ $message }}</small> @enderror
+                                </div>
+
                                 <!-- HIDDEN polygon -->
                                 <textarea wire:model="polygon" id="polygon_geojson" class="d-none"></textarea>
                                 <button class="btn btn-primary"
@@ -123,8 +133,9 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
-
+<script src="https://unpkg.com/shpjs/dist/shp.min.js"></script>
 <script>
+   
 document.addEventListener('livewire:navigated', function () {
 
  
@@ -139,6 +150,108 @@ document.addEventListener('livewire:navigated', function () {
             window.location.href = "{{ route('polygon') }}";
         });
     });
+
+      Livewire.on('errorAlert', (data) => {
+        Swal.fire({
+            icon: data[0].type ?? 'success',
+            title: data[0].message ?? '',
+            timer: 1500,
+            showConfirmButton: false
+        });
+    });
+
+     document.getElementById('file').addEventListener('change', async (e) => {
+     const file = e.target.files[0];
+        if (!file) return;
+
+        if (!file.name.endsWith(".zip")) {
+            Swal.fire({
+                icon: "error",
+                title: "File harus ZIP",
+                text: "Upload file .zip yang berisi shapefile"
+            });
+            return;
+        }
+
+        try {
+            /** ================================
+             * 1) BACA ZIP SEBAGAI ARRAYBUFFER
+             * ================================ */
+            const arrayBuffer = await file.arrayBuffer();
+
+            /** ================================
+             * 2) BACA ZIP UNTUK VALIDASI
+             * ================================ */
+            const zip = await JSZip.loadAsync(arrayBuffer);
+            const entries = Object.keys(zip.files);
+
+            const hasShp = entries.some(e => e.endsWith('.shp'));
+            const hasShx = entries.some(e => e.endsWith('.shx'));
+            const hasDbf = entries.some(e => e.endsWith('.dbf'));
+
+            if (!hasShp || !hasShx || !hasDbf) {
+                Swal.fire({
+                    icon: "error",
+                    title: "ZIP tidak lengkap",
+                    html: "Harus ada file:<br>• .shp<br>• .shx<br>• .dbf"
+                });
+                return;
+            }
+
+            /** ================================
+             * 3) PROSES SHP.JS
+             *    gunakan arrayBuffer, bukan file!
+             * ================================ */
+            const geojson = await shp(arrayBuffer); // << INI FIX-nya 🔥🔥🔥
+
+            console.log("GEOJSON:", geojson);
+
+            const json = JSON.stringify(geojson);
+
+            // Set ke hidden field
+            document.getElementById('polygon_geojson').value = json;
+
+            // Kirim ke Livewire
+          Livewire.find(window.livewireComponentId)
+            .set('polygon', json);
+
+             Livewire.dispatch('polygonUploaded', { geojson: json });
+
+            Swal.fire({
+                icon: "success",
+                title: "Berhasil membaca SHP!",
+                timer: 1500,
+                showConfirmButton: false
+            });
+
+        } catch (err) {
+            console.error(err);
+            Swal.fire({
+                icon: "error",
+                title: "Gagal memproses SHP",
+                text: err.toString()
+            });
+        }
+    });
+
+    Livewire.on('polygonUploaded', (payload) => {
+        console.log("Polygon diterima dari upload ZIP:", payload.geojson);
+
+        if (!payload.geojson) return;
+
+        let geo = JSON.parse(payload.geojson);
+
+        drawnItems.clearLayers();
+
+        // jika featureCollection
+        L.geoJSON(geo, {
+            style: { color: "#ff0000", weight: 2 }
+        }).eachLayer(layer => {
+            drawnItems.addLayer(layer);
+            map.fitBounds(layer.getBounds());
+        });
+    });
+
 
    
 

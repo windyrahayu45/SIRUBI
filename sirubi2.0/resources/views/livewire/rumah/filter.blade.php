@@ -210,6 +210,34 @@
                                                     @endforeach
                                                 </select>
                                             </div>
+
+                                            
+                                            <div class="col-md-12 fv-row" wire:ignore>
+                                                <label class=" fs-5 fw-semibold mb-2">Status</label>
+                                                <select class="form-select "   data-control="select2"
+                                                        data-placeholder="Pilih Status"
+                                                        id="status_umum"
+                                                        data-name="status_umum" >
+                                                        <option value="">-- Pilih Status --</option>
+                                                        <option value="rlh">Rumah Layak Huni</option>
+                                                        <option value="rtlh">Rumah  Tidak Layak Huni</option>
+                                                        <option value="rtlh_non_sewa">RLTH Non Sewa</option>
+                                                        <option value="rtlh_sewa">RLTH Sewa</option>
+                                                        <option value="laki">Penghuni Laki-Laki</option>
+                                                        <option value="perempuan">Penghuni Perempuan</option>
+                                                        <option value="abk">Penghuni ABK</option>
+                                                        <option value="dtks">DTKS</option>
+                                                        <option value="imb">Memiliki IMB</option>
+                                                        <option value="non_imb">Tidak Memiliki IMB</option>
+                                                        <option value="backlog">Backlog</option>
+                                                        <option value="bencana">Kawasan Rawan Bencana</option>
+                                                        <option value="non_permukiman">Kawasan  Permukiman</option>
+
+                                                  
+                                                        
+                                                   
+                                                </select>
+                                            </div>
                                         </div>
 
 

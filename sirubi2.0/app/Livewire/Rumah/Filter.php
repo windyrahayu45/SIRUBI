@@ -108,6 +108,8 @@ class Filter extends Component
 
     // 🔹 Bantuan
     public $pernah_mendapatkan_bantuan_id = [];
+
+    public $status_umum = [];
     // public $no_kk_penerima;
     // public $tahun_bantuan;
     // public $nama_bantuan;
@@ -445,6 +447,86 @@ class Filter extends Component
             $query->whereHas('bantuan', fn($q) =>
                 $q->whereIn('pernah_mendapatkan_bantuan_id', $this->pernah_mendapatkan_bantuan_id)
             );
+        }
+
+        $status = $this->filteredData['status_umum'] ?? null;
+
+         if ($status) {
+
+            if($status == 'rlh') {
+                $query->whereHas('penilaian', fn($q) =>
+                    $q->where('status_rumah', 'RLH')
+                );
+            }
+            elseif($status == 'rtlh') {
+                $query->whereHas('penilaian', fn($q) =>
+                    $q->where('status_rumah',  'RTLH')
+                );
+            }
+            elseif($status == 'rtlh_non_sewa') {
+                $query->whereHas('penilaian', fn($q) =>
+                    $q->where('status_rumah', 'RTLH')
+                );
+                $query->whereHas('kepemilikan', fn($q) =>
+                    $q->where('status_kepemilikan_rumah_id', '1')
+                );
+            }
+
+             elseif($status == 'rtlh_sewa') {
+                $query->whereHas('penilaian', fn($q) =>
+                    $q->where('status_rumah', 'RTLH')
+                );
+                $query->whereHas('kepemilikan', fn($q) =>
+                    $q->where('status_kepemilikan_rumah_id', '2')
+                     ->orWhere('status_kepemilikan_rumah_id', '3')
+                );
+            }
+            elseif($status == 'laki') {
+                $query->whereHas('fisik', fn($q) =>
+                    $q->where('jumlah_penghuni_laki', '!=', '')
+                );
+            }
+            elseif($status == 'perempuan') {
+                $query->whereHas('fisik', fn($q) =>
+                    $q->where('jumlah_penghuni_perempuan', '!=', '')
+                );
+            }
+            elseif($status == 'abk') {
+                $query->whereHas('fisik', fn($q) =>
+                    $q->where('jumlah_abk', '!=', '')
+                );
+            }
+            elseif($status == 'dtks') {
+                 $query->whereHas('sosialEkonomi', fn($q) =>
+                    $q->where('status_dtks_id', '1')
+                );
+            }
+            elseif($status == 'imb') {
+                 $query->whereHas('kepemilikan', fn($q) =>
+                    $q->where('status_imb_id', '1')
+                );
+            }
+            elseif($status == 'non_imb') {
+                 $query->whereHas('kepemilikan', fn($q) =>
+                    $q->where('status_imb_id', '2')
+                );
+            }
+            elseif($status == 'backlog') {
+                 $query->whereHas('sosialEkonomi', fn($q) =>
+                    $q->where('jumlah_kk_id', '>','1')
+                );
+            }
+            elseif($status == 'bencana') {
+                 $query->whereHas('kepemilikan', fn($q) =>
+                    $q->where('jenis_kawasan_lokasi_rumah_id','6')
+                );
+            }
+            elseif($status == 'non_permukiman') {
+                 $query->whereHas('kepemilikan', fn($q) =>
+                    $q->where('jenis_kawasan_lokasi_rumah_id','7')
+                );
+            }
+           
         }
 
         // 🧩 Filter Prioritas

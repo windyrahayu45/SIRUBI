@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -57,10 +58,26 @@
 
 {{-- ================== KONTEN =================== --}}
 <div id="kt_app_content" class="app-content flex-column-fluid">
-    {{-- ⚠️ Salin struktur konten kamu di sini --}}
+ 
     @include('pdf.rumah-content', [
-        'rumah' => $rumah,
-        'bantuanRiwayat' => $bantuanRiwayat
+         'rumah' => $rumah,
+        'namaPemilik' => $namaPemilik,
+        'bantuanRiwayat' => $bantuanRiwayat,
+
+        // Ini WAJIB
+        'pertanyaanLokasi'        => $pertanyaanLokasi,
+        'pertanyaanKk'            => $pertanyaanKk,
+        'pertanyaanIdentitas'     => $pertanyaanIdentitas,
+        'pertanyaanKeselamatan'   => $pertanyaanKeselamatan,
+        'pertanyaanKesehatan'     => $pertanyaanKesehatan,
+        'pertanyaanLuasBangunan'  => $pertanyaanLuasBangunan,
+        'pertanyaanBahanBangunan' => $pertanyaanBahanBangunan,
+        'pertanyaanDokumentasi'   => $pertanyaanDokumentasi,
+        'pertanyaanLainnya'       => $pertanyaanLainnya,
+
+        'childQuestions'          => $childQuestions,
+        'questionAnswers'         => $questionAnswers,
+        'displayAnswer'               => $displayAnswer ?? null,
     ])
 </div>
 
