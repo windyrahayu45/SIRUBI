@@ -22,4 +22,7 @@ Route::middleware('jwt')->group(function () {
     Route::post('data/tambahRumah', [MasterController::class, 'store']);
     Route::delete('data/deleteRumah', [MasterController::class, 'deleteRumah']);
     Route::get('data/search', [MasterController::class, 'search']);
+    Route::get('data/pertanyaan', [MasterController::class, 'pertanyaan']);
+    Route::post('data/rumah/{id}', [MasterController::class, 'updateRumah']);
+
 });

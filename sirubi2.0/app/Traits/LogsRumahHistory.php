@@ -14,6 +14,27 @@ use Illuminate\Support\Facades\Log;
 
 trait LogsRumahHistory
 {
+
+     protected function getUserId()
+    {
+        // 1. JWT user (via middleware)
+        if (request()->has('auth')) {
+            return request()->auth->id_user
+                ?? request()->auth->id
+                ?? null;
+        }
+        else{
+
+            return auth()->user()->if;
+        }
+
+        // // 2. Livewire / Laravel default guard
+        // if (auth()->check()) {
+        //     return auth()->id();
+        // }
+
+        return null;
+    }
     /**
      * Mencatat perubahan pada data rumah (single field)
      */
@@ -30,7 +51,7 @@ trait LogsRumahHistory
             'field'      => $field,
             'old_value'  => $oldValue,
             'new_value'  => $newValue,
-            'changed_by' => Auth()->user()->id,
+            'changed_by' => $this->getUserId(),
             'changed_at' => now(),
         ]);
     }
@@ -61,7 +82,7 @@ public function logArrayChanges($rumahId, $kategori, $oldData, $newData, $prefix
             'field'      => $fullKey,
             'old_value'  => $oldValue,
             'new_value'  => $newValue,
-            'changed_by' => auth()->user()->id,
+            'changed_by' => $this->getUserId(),
             'changed_at' => now(),
         ]);
     }
@@ -368,7 +389,7 @@ public function logKKChange($rumahId, $oldKK, $newKK)
             'field'      => 'data_kartu_keluarga',
             'old_value'  => $oldFormatted,
             'new_value'  => $newFormatted,
-            'changed_by' => auth()->user()->id,
+            'changed_by' => $this->getUserId(),
             'changed_at' => now(),
         ]);
     }
