@@ -75,6 +75,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/datatable/dokumentasi', [Dokumentasi::class, 'getData'])->name('livewire.datatables.dokumentasi');
     Route::get('/datatable/question', [Daftar::class, 'getData'])->name('livewire.datatables.question');
     Route::get('/datatable/user', [Users::class, 'getData'])->name('livewire.datatables.user');
+    Route::get('/master', \App\Livewire\MasterCrud::class)->name('master.crud');
 
     Route::get('/datatable/rumah/detail/{id}', function ($id) {
         $rumah = Rumah::with([

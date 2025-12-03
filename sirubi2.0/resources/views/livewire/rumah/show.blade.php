@@ -152,47 +152,53 @@
 
                                     </div>
                                     <div class="separator separator-dashed my-3"></div>
-                                    <div class="mt-5">
-                                        @foreach($pertanyaanLokasi as $q)
-                                            <div class="mb-6">
+                                    <div class="mt-1">
+                                        <table class="table table-row-dashed align-middle gs-0 gy-4">
+                                            <tbody>
 
-                                                <!-- LABEL -->
-                                                <div class="fw-bold fs-6">
-                                                    {{ $q->label }}
-                                                
-                                                </div>
+                                                @foreach($pertanyaanLokasi as $q)
+                                                    <tr>
+                                                        <!-- Label -->
+                                                        <td >
+                                                            {{ $q->label }}
+                                                          <span class="text-primary fw-bold">*</span>
+                                                        </td>
 
-                                                <!-- NILAI JAWABAN -->
-                                                <div class="text-gray-800 ms-2">
-                                                    {{ $this->displayAnswer($q) }}
-                                                </div>
-                                                <div class="separator separator-dashed my-3"></div>
-                                            </div>
+                                                        <!-- Jawaban -->
+                                                        <td class="text-gray-800">
+                                                            {{ $this->displayAnswer($q) }}
+                                                        </td>
+                                                    </tr>
 
-                                            <!-- CHILD QUESTIONS -->
-                                            @foreach($childQuestions as $child)
-                                                @if($child->parent_question_id == $q->id && $child->trigger_option_id == ($questionAnswers[$q->id] ?? null))
+                                                    <!-- CHILD QUESTIONS -->
+                                                    @foreach($childQuestions as $child)
+                                                        @if(
+                                                            $child->parent_question_id == $q->id &&
+                                                            $child->trigger_option_id == ($questionAnswers[$q->id] ?? null)
+                                                        )
+                                                            <tr>
+                                                                <!-- Label Child -->
+                                                                <td class="ps-10 fw-semibold fs-7 text-dark">
+                                                                    — {{ $child->label }}
 
-                                                    <div class="mb-6 ms-5">
+                                                                    @if($child->is_required)
+                                                                        <span class="text-primary fw-bold">*</span>
+                                                                    @endif
+                                                                </td>
 
-                                                        <!-- LABEL CHILD -->
-                                                        <div class="fw-semibold fs-7">
-                                                            {{ $child->label }}
-                                                        
-                                                        </div>
+                                                                <!-- Jawaban Child -->
+                                                                <td class="text-gray-700">
+                                                                    {{ $this->displayAnswer($child) }}
+                                                                </td>
+                                                            </tr>
+                                                        @endif
+                                                    @endforeach
 
-                                                        <!-- JAWABAN CHILD -->
-                                                        <div class="text-gray-700 ms-2">
-                                                            {{ $this->displayAnswer($child) }}
-                                                        </div>
-                                                        <div class="separator separator-dashed my-3"></div>
+                                                @endforeach
 
-                                                    </div>
+                                            </tbody>
+                                        </table>
 
-                                                @endif
-                                            @endforeach
-
-                                        @endforeach
                                     </div>
                                 </div>
                                 <!--end::Details content-->
@@ -415,47 +421,53 @@
                                     </div>
 
                                     <div class="separator separator-dashed my-3"></div>
-                                    <div class="mt-5">
-                                        @foreach($pertanyaanKeselamatan as $q)
-                                            <div class="mb-6">
+                                    <div class="mt-1">
+                                       
+                                        <table class="table table-row-dashed align-middle gs-0 gy-4">
+                                            <tbody>
 
-                                                <!-- LABEL -->
-                                                <div class="fw-bold fs-6">
-                                                    {{ $q->label }}
-                                                
-                                                </div>
+                                                @foreach($pertanyaanKeselamatan as $q)
+                                                    <tr>
+                                                        <!-- Label -->
+                                                        <td >
+                                                            {{ $q->label }}
+                                                          <span class="text-primary fw-bold">*</span>
+                                                        </td>
 
-                                                <!-- NILAI JAWABAN -->
-                                                <div class="text-gray-800 ms-2">
-                                                    {{ $this->displayAnswer($q) }}
-                                                </div>
-                                                <div class="separator separator-dashed my-3"></div>
-                                            </div>
+                                                        <!-- Jawaban -->
+                                                        <td class="text-gray-800">
+                                                            {{ $this->displayAnswer($q) }}
+                                                        </td>
+                                                    </tr>
 
-                                            <!-- CHILD QUESTIONS -->
-                                            @foreach($childQuestions as $child)
-                                                @if($child->parent_question_id == $q->id && $child->trigger_option_id == ($questionAnswers[$q->id] ?? null))
+                                                    <!-- CHILD QUESTIONS -->
+                                                    @foreach($childQuestions as $child)
+                                                        @if(
+                                                            $child->parent_question_id == $q->id &&
+                                                            $child->trigger_option_id == ($questionAnswers[$q->id] ?? null)
+                                                        )
+                                                            <tr>
+                                                                <!-- Label Child -->
+                                                                <td class="ps-10 fw-semibold fs-7 text-dark">
+                                                                    — {{ $child->label }}
 
-                                                    <div class="mb-6 ms-5">
+                                                                    @if($child->is_required)
+                                                                        <span class="text-primary fw-bold">*</span>
+                                                                    @endif
+                                                                </td>
 
-                                                        <!-- LABEL CHILD -->
-                                                        <div class="fw-semibold fs-7">
-                                                            {{ $child->label }}
-                                                        
-                                                        </div>
+                                                                <!-- Jawaban Child -->
+                                                                <td class="text-gray-700">
+                                                                    {{ $this->displayAnswer($child) }}
+                                                                </td>
+                                                            </tr>
+                                                        @endif
+                                                    @endforeach
 
-                                                        <!-- JAWABAN CHILD -->
-                                                        <div class="text-gray-700 ms-2">
-                                                            {{ $this->displayAnswer($child) }}
-                                                        </div>
-                                                        <div class="separator separator-dashed my-3"></div>
+                                                @endforeach
 
-                                                    </div>
-
-                                                @endif
-                                            @endforeach
-
-                                        @endforeach
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             <!--end::Card body-->
@@ -552,47 +564,53 @@
                                 </div>
 
                                 <div class="separator separator-dashed my-3"></div>
-                                    <div class="mt-5">
-                                        @foreach($pertanyaanLuasBangunan as $q)
-                                            <div class="mb-6">
+                                    <div class="mt-1">
+                                      
+                                        <table class="table table-row-dashed align-middle gs-0 gy-4">
+                                            <tbody>
 
-                                                <!-- LABEL -->
-                                                <div class="fw-bold fs-6">
-                                                    {{ $q->label }}
-                                                
-                                                </div>
+                                                @foreach($pertanyaanLuasBangunan as $q)
+                                                    <tr>
+                                                        <!-- Label -->
+                                                        <td >
+                                                            {{ $q->label }}
+                                                          <span class="text-primary fw-bold">*</span>
+                                                        </td>
 
-                                                <!-- NILAI JAWABAN -->
-                                                <div class="text-gray-800 ms-2">
-                                                    {{ $this->displayAnswer($q) }}
-                                                </div>
-                                                <div class="separator separator-dashed my-3"></div>
-                                            </div>
+                                                        <!-- Jawaban -->
+                                                        <td class="text-gray-800">
+                                                            {{ $this->displayAnswer($q) }}
+                                                        </td>
+                                                    </tr>
 
-                                            <!-- CHILD QUESTIONS -->
-                                            @foreach($childQuestions as $child)
-                                                @if($child->parent_question_id == $q->id && $child->trigger_option_id == ($questionAnswers[$q->id] ?? null))
+                                                    <!-- CHILD QUESTIONS -->
+                                                    @foreach($childQuestions as $child)
+                                                        @if(
+                                                            $child->parent_question_id == $q->id &&
+                                                            $child->trigger_option_id == ($questionAnswers[$q->id] ?? null)
+                                                        )
+                                                            <tr>
+                                                                <!-- Label Child -->
+                                                                <td class="ps-10 fw-semibold fs-7 text-dark">
+                                                                    — {{ $child->label }}
 
-                                                    <div class="mb-6 ms-5">
+                                                                    @if($child->is_required)
+                                                                        <span class="text-primary fw-bold">*</span>
+                                                                    @endif
+                                                                </td>
 
-                                                        <!-- LABEL CHILD -->
-                                                        <div class="fw-semibold fs-7">
-                                                            {{ $child->label }}
-                                                        
-                                                        </div>
+                                                                <!-- Jawaban Child -->
+                                                                <td class="text-gray-700">
+                                                                    {{ $this->displayAnswer($child) }}
+                                                                </td>
+                                                            </tr>
+                                                        @endif
+                                                    @endforeach
 
-                                                        <!-- JAWABAN CHILD -->
-                                                        <div class="text-gray-700 ms-2">
-                                                            {{ $this->displayAnswer($child) }}
-                                                        </div>
-                                                        <div class="separator separator-dashed my-3"></div>
+                                                @endforeach
 
-                                                    </div>
-
-                                                @endif
-                                            @endforeach
-
-                                        @endforeach
+                                            </tbody>
+                                        </table>
                                     </div>
                             </div>
                             <!--end::Card body-->
@@ -614,47 +632,53 @@
                             
 
                                 <div class="separator separator-dashed my-3"></div>
-                                    <div class="mt-5">
-                                        @foreach($pertanyaanLainnya as $q)
-                                            <div class="mb-6">
+                                    <div class="mt-1">
+                                     
+                                         <table class="table table-row-dashed align-middle gs-0 gy-4">
+                                            <tbody>
 
-                                                <!-- LABEL -->
-                                                <div class="fw-bold fs-6">
-                                                    {{ $q->label }}
-                                                
-                                                </div>
+                                                @foreach($pertanyaanLainnya as $q)
+                                                    <tr>
+                                                        <!-- Label -->
+                                                        <td >
+                                                            {{ $q->label }}
+                                                          <span class="text-primary fw-bold">*</span>
+                                                        </td>
 
-                                                <!-- NILAI JAWABAN -->
-                                                <div class="text-gray-800 ms-2">
-                                                    {{ $this->displayAnswer($q) }}
-                                                </div>
-                                                <div class="separator separator-dashed my-3"></div>
-                                            </div>
+                                                        <!-- Jawaban -->
+                                                        <td class="text-gray-800">
+                                                            {{ $this->displayAnswer($q) }}
+                                                        </td>
+                                                    </tr>
 
-                                            <!-- CHILD QUESTIONS -->
-                                            @foreach($childQuestions as $child)
-                                                @if($child->parent_question_id == $q->id && $child->trigger_option_id == ($questionAnswers[$q->id] ?? null))
+                                                    <!-- CHILD QUESTIONS -->
+                                                    @foreach($childQuestions as $child)
+                                                        @if(
+                                                            $child->parent_question_id == $q->id &&
+                                                            $child->trigger_option_id == ($questionAnswers[$q->id] ?? null)
+                                                        )
+                                                            <tr>
+                                                                <!-- Label Child -->
+                                                                <td class="ps-10 fw-semibold fs-7 text-dark">
+                                                                    — {{ $child->label }}
 
-                                                    <div class="mb-6 ms-5">
+                                                                    @if($child->is_required)
+                                                                        <span class="text-primary fw-bold">*</span>
+                                                                    @endif
+                                                                </td>
 
-                                                        <!-- LABEL CHILD -->
-                                                        <div class="fw-semibold fs-7">
-                                                            {{ $child->label }}
-                                                        
-                                                        </div>
+                                                                <!-- Jawaban Child -->
+                                                                <td class="text-gray-700">
+                                                                    {{ $this->displayAnswer($child) }}
+                                                                </td>
+                                                            </tr>
+                                                        @endif
+                                                    @endforeach
 
-                                                        <!-- JAWABAN CHILD -->
-                                                        <div class="text-gray-700 ms-2">
-                                                            {{ $this->displayAnswer($child) }}
-                                                        </div>
-                                                        <div class="separator separator-dashed my-3"></div>
+                                                @endforeach
 
-                                                    </div>
-
-                                                @endif
-                                            @endforeach
-
-                                        @endforeach
+                                            </tbody>
+                                        </table>
                                     </div>
                             </div>
                             <!--end::Card body-->
@@ -761,47 +785,55 @@
                                         @endforelse
 
                                         <div class="separator separator-dashed my-3"></div>
-                                        <div class="mt-5">
-                                            @foreach($pertanyaanKk as $q)
-                                                <div class="mb-6">
+                                        <div class="mt-1">
+                                           
+                                            <table class="table table-row-dashed align-middle gs-0 gy-4">
+                                                <tbody>
 
-                                                    <!-- LABEL -->
-                                                    <div class="fw-bold fs-6">
-                                                        {{ $q->label }}
-                                                    
-                                                    </div>
+                                                    @foreach($pertanyaanKk as $q)
+                                                        <tr>
+                                                            <!-- Label -->
+                                                            <td >
+                                                                {{ $q->label }}
+                                                               <span class="text-primary fw-bold">*</span>
+                                                            </td>
 
-                                                    <!-- NILAI JAWABAN -->
-                                                    <div class="text-gray-800 ms-2">
-                                                        {{ $this->displayAnswer($q) }}
-                                                    </div>
-                                                    <div class="separator separator-dashed my-3"></div>
-                                                </div>
+                                                            <!-- Jawaban -->
+                                                            <td class="text-gray-800">
+                                                                {{ $this->displayAnswer($q) }}
+                                                            </td>
+                                                        </tr>
 
-                                                <!-- CHILD QUESTIONS -->
-                                                @foreach($childQuestions as $child)
-                                                    @if($child->parent_question_id == $q->id && $child->trigger_option_id == ($questionAnswers[$q->id] ?? null))
+                                                        <!-- CHILD QUESTIONS -->
+                                                        @foreach($childQuestions as $child)
+                                                            @if(
+                                                                $child->parent_question_id == $q->id &&
+                                                                $child->trigger_option_id == ($questionAnswers[$q->id] ?? null)
+                                                            )
+                                                                <tr>
+                                                                    <!-- Label Child -->
+                                                                    <td class="ps-10 fw-semibold fs-7 text-dark">
+                                                                        — {{ $child->label }}
 
-                                                        <div class="mb-6 ms-5">
+                                                                        @if($child->is_required)
+                                                                            <span class="text-primary fw-bold">*</span>
+                                                                        @endif
+                                                                    </td>
 
-                                                            <!-- LABEL CHILD -->
-                                                            <div class="fw-semibold fs-7">
-                                                                {{ $child->label }}
-                                                            
-                                                            </div>
+                                                                    <!-- Jawaban Child -->
+                                                                    <td class="text-gray-700">
+                                                                        {{ $this->displayAnswer($child) }}
+                                                                    </td>
+                                                                </tr>
+                                                            @endif
+                                                        @endforeach
 
-                                                            <!-- JAWABAN CHILD -->
-                                                            <div class="text-gray-700 ms-2">
-                                                                {{ $this->displayAnswer($child) }}
-                                                            </div>
-                                                            <div class="separator separator-dashed my-3"></div>
+                                                    @endforeach
 
-                                                        </div>
+                                                </tbody>
+                                            </table>
 
-                                                    @endif
-                                                @endforeach
-
-                                            @endforeach
+                                            
                                         </div>
                                     </div>
 
@@ -916,47 +948,53 @@
                                         </div>
 
                                         <div class="separator separator-dashed my-3"></div>
-                                        <div class="mt-5">
-                                            @foreach($pertanyaanIdentitas as $q)
-                                                <div class="mb-6">
+                                        <div class="mt-1">
+                                            
+                                              <table class="table table-row-dashed align-middle gs-0 gy-4">
+                                                <tbody>
 
-                                                    <!-- LABEL -->
-                                                    <div class="fw-bold fs-6">
-                                                        {{ $q->label }}
-                                                    
-                                                    </div>
+                                                    @foreach($pertanyaanIdentitas as $q)
+                                                        <tr>
+                                                            <!-- Label -->
+                                                            <td >
+                                                                {{ $q->label }}
+                                                               <span class="text-primary fw-bold">*</span>
+                                                            </td>
 
-                                                    <!-- NILAI JAWABAN -->
-                                                    <div class="text-gray-800 ms-2">
-                                                        {{ $this->displayAnswer($q) }}
-                                                    </div>
-                                                    <div class="separator separator-dashed my-3"></div>
-                                                </div>
+                                                            <!-- Jawaban -->
+                                                            <td class="text-gray-800">
+                                                                {{ $this->displayAnswer($q) }}
+                                                            </td>
+                                                        </tr>
 
-                                                <!-- CHILD QUESTIONS -->
-                                                @foreach($childQuestions as $child)
-                                                    @if($child->parent_question_id == $q->id && $child->trigger_option_id == ($questionAnswers[$q->id] ?? null))
+                                                        <!-- CHILD QUESTIONS -->
+                                                        @foreach($childQuestions as $child)
+                                                            @if(
+                                                                $child->parent_question_id == $q->id &&
+                                                                $child->trigger_option_id == ($questionAnswers[$q->id] ?? null)
+                                                            )
+                                                                <tr>
+                                                                    <!-- Label Child -->
+                                                                    <td class="ps-10 fw-semibold fs-7 text-dark">
+                                                                        — {{ $child->label }}
 
-                                                        <div class="mb-6 ms-5">
+                                                                        @if($child->is_required)
+                                                                            <span class="text-primary fw-bold">*</span>
+                                                                        @endif
+                                                                    </td>
 
-                                                            <!-- LABEL CHILD -->
-                                                            <div class="fw-semibold fs-7">
-                                                                {{ $child->label }}
-                                                            
-                                                            </div>
+                                                                    <!-- Jawaban Child -->
+                                                                    <td class="text-gray-700">
+                                                                        {{ $this->displayAnswer($child) }}
+                                                                    </td>
+                                                                </tr>
+                                                            @endif
+                                                        @endforeach
 
-                                                            <!-- JAWABAN CHILD -->
-                                                            <div class="text-gray-700 ms-2">
-                                                                {{ $this->displayAnswer($child) }}
-                                                            </div>
-                                                            <div class="separator separator-dashed my-3"></div>
+                                                    @endforeach
 
-                                                        </div>
-
-                                                    @endif
-                                                @endforeach
-
-                                            @endforeach
+                                                </tbody>
+                                            </table>
                                         </div>
                                     </div>
                                     <!--end::Card body-->
@@ -1092,47 +1130,53 @@
                                         </div>
 
                                          <div class="separator separator-dashed my-3"></div>
-                                        <div class="mt-5">
-                                            @foreach($pertanyaanKesehatan as $q)
-                                                <div class="mb-6">
+                                        <div class="mt-1">
+                                           
+                                            <table class="table table-row-dashed align-middle gs-0 gy-4">
+                                                <tbody>
 
-                                                    <!-- LABEL -->
-                                                    <div class="fw-bold fs-6">
-                                                        {{ $q->label }}
-                                                    
-                                                    </div>
+                                                    @foreach($pertanyaanKesehatan as $q)
+                                                        <tr>
+                                                            <!-- Label -->
+                                                            <td >
+                                                                {{ $q->label }}
+                                                               <span class="text-primary fw-bold">*</span>
+                                                            </td>
 
-                                                    <!-- NILAI JAWABAN -->
-                                                    <div class="text-gray-800 ms-2">
-                                                        {{ $this->displayAnswer($q) }}
-                                                    </div>
-                                                    <div class="separator separator-dashed my-3"></div>
-                                                </div>
+                                                            <!-- Jawaban -->
+                                                            <td class="text-gray-800">
+                                                                {{ $this->displayAnswer($q) }}
+                                                            </td>
+                                                        </tr>
 
-                                                <!-- CHILD QUESTIONS -->
-                                                @foreach($childQuestions as $child)
-                                                    @if($child->parent_question_id == $q->id && $child->trigger_option_id == ($questionAnswers[$q->id] ?? null))
+                                                        <!-- CHILD QUESTIONS -->
+                                                        @foreach($childQuestions as $child)
+                                                            @if(
+                                                                $child->parent_question_id == $q->id &&
+                                                                $child->trigger_option_id == ($questionAnswers[$q->id] ?? null)
+                                                            )
+                                                                <tr>
+                                                                    <!-- Label Child -->
+                                                                    <td class="ps-10 fw-semibold fs-7 text-dark">
+                                                                        — {{ $child->label }}
 
-                                                        <div class="mb-6 ms-5">
+                                                                        @if($child->is_required)
+                                                                            <span class="text-primary fw-bold">*</span>
+                                                                        @endif
+                                                                    </td>
 
-                                                            <!-- LABEL CHILD -->
-                                                            <div class="fw-semibold fs-7">
-                                                                {{ $child->label }}
-                                                            
-                                                            </div>
+                                                                    <!-- Jawaban Child -->
+                                                                    <td class="text-gray-700">
+                                                                        {{ $this->displayAnswer($child) }}
+                                                                    </td>
+                                                                </tr>
+                                                            @endif
+                                                        @endforeach
 
-                                                            <!-- JAWABAN CHILD -->
-                                                            <div class="text-gray-700 ms-2">
-                                                                {{ $this->displayAnswer($child) }}
-                                                            </div>
-                                                            <div class="separator separator-dashed my-3"></div>
+                                                    @endforeach
 
-                                                        </div>
-
-                                                    @endif
-                                                @endforeach
-
-                                            @endforeach
+                                                </tbody>
+                                            </table>
                                         </div>
                                     </div>
                                     <!--end::Card body-->
@@ -1370,53 +1414,62 @@
                         </div>
 
                          <div class="separator separator-dashed my-3"></div>
-                        <div class="mt-5">
-                            @foreach($pertanyaanBahanBangunan as $q)
-                                <div class="mb-6">
+                        <div class="mt-1">
+                          
 
-                                    <!-- LABEL -->
-                                    <div class="fw-bold fs-6">
-                                        {{ $q->label }}
-                                    
-                                    </div>
+                                <table class="table table-row-dashed align-middle gs-0 gy-4">
+                                    <tbody>
 
-                                    <!-- NILAI JAWABAN -->
-                                    <div class="text-gray-800 ms-2">
-                                        {{ $this->displayAnswer($q) }}
-                                    </div>
-                                    <div class="separator separator-dashed my-3"></div>
-                                </div>
+                                        @foreach($pertanyaanBahanBangunan as $q)
+                                            <tr>
+                                                <!-- Label -->
+                                                <td >
+                                                    {{ $q->label }}
+                                                    @if($q->is_required)
+                                                        <span class="text-primary fw-bold">*</span>
+                                                    @endif
+                                                </td>
 
-                                <!-- CHILD QUESTIONS -->
-                                @foreach($childQuestions as $child)
-                                    @if($child->parent_question_id == $q->id && $child->trigger_option_id == ($questionAnswers[$q->id] ?? null))
+                                                <!-- Jawaban -->
+                                                <td class="text-gray-800">
+                                                    {{ $this->displayAnswer($q) }}
+                                                </td>
+                                            </tr>
 
-                                        <div class="mb-6 ms-5">
+                                            <!-- CHILD QUESTIONS -->
+                                            @foreach($childQuestions as $child)
+                                                @if(
+                                                    $child->parent_question_id == $q->id &&
+                                                    $child->trigger_option_id == ($questionAnswers[$q->id] ?? null)
+                                                )
+                                                    <tr>
+                                                        <!-- Label Child -->
+                                                        <td class="ps-10 fw-semibold fs-7 text-dark">
+                                                            — {{ $child->label }}
 
-                                            <!-- LABEL CHILD -->
-                                            <div class="fw-semibold fs-7">
-                                                {{ $child->label }}
-                                            
-                                            </div>
+                                                            @if($child->is_required)
+                                                                <span class="text-primary fw-bold">*</span>
+                                                            @endif
+                                                        </td>
 
-                                            <!-- JAWABAN CHILD -->
-                                            <div class="text-gray-700 ms-2">
-                                                {{ $this->displayAnswer($child) }}
-                                            </div>
-                                            <div class="separator separator-dashed my-3"></div>
+                                                        <!-- Jawaban Child -->
+                                                        <td class="text-gray-700">
+                                                            {{ $this->displayAnswer($child) }}
+                                                        </td>
+                                                    </tr>
+                                                @endif
+                                            @endforeach
 
-                                        </div>
+                                        @endforeach
 
-                                    @endif
-                                @endforeach
-
-                            @endforeach
+                                    </tbody>
+                                </table>
                         </div>
                     </div>
                     <!--end::Card body-->
                 </div>
                 <!--end::Layout-->
-                <div class="card card-flush border border-gray-200 shadow-sm mt-5">
+                <div class="card card-flush border border-gray-200 shadow-sm mt-1">
                         <div class="card-header border-0">
                             <!--begin::Card title-->
                             <div class="card-title">
@@ -1472,47 +1525,55 @@
                                 @endforeach
 
                                   <div class="separator separator-dashed my-3"></div>
-                        <div class="mt-5">
-                            @foreach($pertanyaanDokumentasi as $q)
-                                <div class="mb-6">
+                        <div class="mt-1">
+                           
+                               <table class="table table-row-dashed align-middle gs-0 gy-4">
+                                    <tbody>
 
-                                    <!-- LABEL -->
-                                    <div class="fw-bold fs-6">
-                                        {{ $q->label }}
-                                    
-                                    </div>
+                                        @foreach($pertanyaanDokumentasi as $q)
+                                            <tr>
+                                                <!-- Label -->
+                                                <td >
+                                                    {{ $q->label }}
+                                                    @if($q->is_required)
+                                                        <span class="text-primary fw-bold">*</span>
+                                                    @endif
+                                                </td>
 
-                                    <!-- NILAI JAWABAN -->
-                                    <div class="text-gray-800 ms-2">
-                                        {{ $this->displayAnswer($q) }}
-                                    </div>
-                                    <div class="separator separator-dashed my-3"></div>
-                                </div>
+                                                <!-- Jawaban -->
+                                                <td class="text-gray-800">
+                                                    {{ $this->displayAnswer($q) }}
+                                                </td>
+                                            </tr>
 
-                                <!-- CHILD QUESTIONS -->
-                                @foreach($childQuestions as $child)
-                                    @if($child->parent_question_id == $q->id && $child->trigger_option_id == ($questionAnswers[$q->id] ?? null))
+                                            <!-- CHILD QUESTIONS -->
+                                            @foreach($childQuestions as $child)
+                                                @if(
+                                                    $child->parent_question_id == $q->id &&
+                                                    $child->trigger_option_id == ($questionAnswers[$q->id] ?? null)
+                                                )
+                                                    <tr>
+                                                        <!-- Label Child -->
+                                                        <td class="ps-10 fw-semibold fs-7 text-dark">
+                                                            — {{ $child->label }}
 
-                                        <div class="mb-6 ms-5">
+                                                            @if($child->is_required)
+                                                                <span class="text-primary fw-bold">*</span>
+                                                            @endif
+                                                        </td>
 
-                                            <!-- LABEL CHILD -->
-                                            <div class="fw-semibold fs-7">
-                                                {{ $child->label }}
-                                            
-                                            </div>
+                                                        <!-- Jawaban Child -->
+                                                        <td class="text-gray-700">
+                                                            {{ $this->displayAnswer($child) }}
+                                                        </td>
+                                                    </tr>
+                                                @endif
+                                            @endforeach
 
-                                            <!-- JAWABAN CHILD -->
-                                            <div class="text-gray-700 ms-2">
-                                                {{ $this->displayAnswer($child) }}
-                                            </div>
-                                            <div class="separator separator-dashed my-3"></div>
+                                        @endforeach
 
-                                        </div>
-
-                                    @endif
-                                @endforeach
-
-                            @endforeach
+                                    </tbody>
+                                </table>
                         </div>
                             </div>
                         </div>
@@ -1538,7 +1599,7 @@
                     $nilaiTotal = $penilaian->nilai ?? '-';
                 @endphp
 
-                <div class="card card-flush border border-gray-200 shadow-sm mt-5">
+                <div class="card card-flush border border-gray-200 shadow-sm mt-1">
                     <!--begin::Header-->
                     <div class="card-header pt-5">
                         <h3 class="card-title align-items-start flex-column">

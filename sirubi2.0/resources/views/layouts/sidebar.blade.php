@@ -48,275 +48,11 @@
 						<div class="app-sidebar-menu overflow-hidden flex-column-fluid">
 							<!--begin::Menu wrapper-->
 							<div id="kt_app_sidebar_menu_wrapper" class="app-sidebar-wrapper hover-scroll-overlay-y my-5" data-kt-scroll="true" data-kt-scroll-activate="true" data-kt-scroll-height="auto" data-kt-scroll-dependencies="#kt_app_sidebar_logo, #kt_app_sidebar_footer" data-kt-scroll-wrappers="#kt_app_sidebar_menu" data-kt-scroll-offset="5px" data-kt-scroll-save-state="true">
+
+
 								<!--begin::Menu-->
 								<div class="menu menu-column menu-rounded menu-sub-indention px-3" id="#kt_app_sidebar_menu" data-kt-menu="true" data-kt-menu-expand="false">
-									<!--begin:Menu item-->
-									{{-- <div data-kt-menu-trigger="click" class="menu-item here show menu-accordion">
-										<!--begin:Menu link-->
-										<span class="menu-link">
-											<span class="menu-icon">
-												<!--begin::Svg Icon | path: icons/duotune/general/gen025.svg-->
-												<span class="svg-icon svg-icon-2">
-													<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-														<rect x="2" y="2" width="9" height="9" rx="2" fill="currentColor" />
-														<rect opacity="0.3" x="13" y="2" width="9" height="9" rx="2" fill="currentColor" />
-														<rect opacity="0.3" x="13" y="13" width="9" height="9" rx="2" fill="currentColor" />
-														<rect opacity="0.3" x="2" y="13" width="9" height="9" rx="2" fill="currentColor" />
-													</svg>
-												</span>
-												<!--end::Svg Icon-->
-											</span>
-											<span class="menu-title">Dashboards</span>
-											<span class="menu-arrow"></span>
-										</span>
-										<!--end:Menu link-->
-										<!--begin:Menu sub-->
-										<div class="menu-sub menu-sub-accordion">
-											<!--begin:Menu item-->
-											<div class="menu-item">
-												<!--begin:Menu link-->
-												<a class="menu-link active" href="../../demo1/dist/index.html">
-													<span class="menu-bullet">
-														<span class="bullet bullet-dot"></span>
-													</span>
-													<span class="menu-title">Default</span>
-												</a>
-												<!--end:Menu link-->
-											</div>
-											<!--end:Menu item-->
-											<!--begin:Menu item-->
-											<div class="menu-item">
-												<!--begin:Menu link-->
-												<a class="menu-link" href="../../demo1/dist/dashboards/ecommerce.html">
-													<span class="menu-bullet">
-														<span class="bullet bullet-dot"></span>
-													</span>
-													<span class="menu-title">eCommerce</span>
-												</a>
-												<!--end:Menu link-->
-											</div>
-											<!--end:Menu item-->
-											<!--begin:Menu item-->
-											<div class="menu-item">
-												<!--begin:Menu link-->
-												<a class="menu-link" href="../../demo1/dist/dashboards/projects.html">
-													<span class="menu-bullet">
-														<span class="bullet bullet-dot"></span>
-													</span>
-													<span class="menu-title">Projects</span>
-												</a>
-												<!--end:Menu link-->
-											</div>
-											<!--end:Menu item-->
-											<!--begin:Menu item-->
-											<div class="menu-item">
-												<!--begin:Menu link-->
-												<a class="menu-link" href="../../demo1/dist/dashboards/online-courses.html">
-													<span class="menu-bullet">
-														<span class="bullet bullet-dot"></span>
-													</span>
-													<span class="menu-title">Online Courses</span>
-												</a>
-												<!--end:Menu link-->
-											</div>
-											<!--end:Menu item-->
-											<!--begin:Menu item-->
-											<div class="menu-item">
-												<!--begin:Menu link-->
-												<a class="menu-link" href="../../demo1/dist/dashboards/marketing.html">
-													<span class="menu-bullet">
-														<span class="bullet bullet-dot"></span>
-													</span>
-													<span class="menu-title">Marketing</span>
-												</a>
-												<!--end:Menu link-->
-											</div>
-											<!--end:Menu item-->
-											<div class="menu-inner flex-column collapse" id="kt_app_sidebar_menu_dashboards_collapse">
-												<!--begin:Menu item-->
-												<div class="menu-item">
-													<!--begin:Menu link-->
-													<a class="menu-link" href="../../demo1/dist/dashboards/bidding.html">
-														<span class="menu-bullet">
-															<span class="bullet bullet-dot"></span>
-														</span>
-														<span class="menu-title">Bidding</span>
-													</a>
-													<!--end:Menu link-->
-												</div>
-												<!--end:Menu item-->
-												<!--begin:Menu item-->
-												<div class="menu-item">
-													<!--begin:Menu link-->
-													<a class="menu-link" href="../../demo1/dist/dashboards/pos.html">
-														<span class="menu-bullet">
-															<span class="bullet bullet-dot"></span>
-														</span>
-														<span class="menu-title">POS System</span>
-													</a>
-													<!--end:Menu link-->
-												</div>
-												<!--end:Menu item-->
-												<!--begin:Menu item-->
-												<div class="menu-item">
-													<!--begin:Menu link-->
-													<a class="menu-link" href="../../demo1/dist/dashboards/call-center.html">
-														<span class="menu-bullet">
-															<span class="bullet bullet-dot"></span>
-														</span>
-														<span class="menu-title">Call Center</span>
-													</a>
-													<!--end:Menu link-->
-												</div>
-												<!--end:Menu item-->
-												<!--begin:Menu item-->
-												<div class="menu-item">
-													<!--begin:Menu link-->
-													<a class="menu-link" href="../../demo1/dist/dashboards/logistics.html">
-														<span class="menu-bullet">
-															<span class="bullet bullet-dot"></span>
-														</span>
-														<span class="menu-title">Logistics</span>
-													</a>
-													<!--end:Menu link-->
-												</div>
-												<!--end:Menu item-->
-												<!--begin:Menu item-->
-												<div class="menu-item">
-													<!--begin:Menu link-->
-													<a class="menu-link" href="../../demo1/dist/dashboards/website-analytics.html">
-														<span class="menu-bullet">
-															<span class="bullet bullet-dot"></span>
-														</span>
-														<span class="menu-title">Website Analytics</span>
-													</a>
-													<!--end:Menu link-->
-												</div>
-												<!--end:Menu item-->
-												<!--begin:Menu item-->
-												<div class="menu-item">
-													<!--begin:Menu link-->
-													<a class="menu-link" href="../../demo1/dist/dashboards/finance-performance.html">
-														<span class="menu-bullet">
-															<span class="bullet bullet-dot"></span>
-														</span>
-														<span class="menu-title">Finance Performance</span>
-													</a>
-													<!--end:Menu link-->
-												</div>
-												<!--end:Menu item-->
-												<!--begin:Menu item-->
-												<div class="menu-item">
-													<!--begin:Menu link-->
-													<a class="menu-link" href="../../demo1/dist/dashboards/store-analytics.html">
-														<span class="menu-bullet">
-															<span class="bullet bullet-dot"></span>
-														</span>
-														<span class="menu-title">Store Analytics</span>
-													</a>
-													<!--end:Menu link-->
-												</div>
-												<!--end:Menu item-->
-												<!--begin:Menu item-->
-												<div class="menu-item">
-													<!--begin:Menu link-->
-													<a class="menu-link" href="../../demo1/dist/dashboards/social.html">
-														<span class="menu-bullet">
-															<span class="bullet bullet-dot"></span>
-														</span>
-														<span class="menu-title">Social</span>
-													</a>
-													<!--end:Menu link-->
-												</div>
-												<!--end:Menu item-->
-												<!--begin:Menu item-->
-												<div class="menu-item">
-													<!--begin:Menu link-->
-													<a class="menu-link" href="../../demo1/dist/dashboards/delivery.html">
-														<span class="menu-bullet">
-															<span class="bullet bullet-dot"></span>
-														</span>
-														<span class="menu-title">Delivery</span>
-													</a>
-													<!--end:Menu link-->
-												</div>
-												<!--end:Menu item-->
-												<!--begin:Menu item-->
-												<div class="menu-item">
-													<!--begin:Menu link-->
-													<a class="menu-link" href="../../demo1/dist/dashboards/crypto.html">
-														<span class="menu-bullet">
-															<span class="bullet bullet-dot"></span>
-														</span>
-														<span class="menu-title">Crypto</span>
-													</a>
-													<!--end:Menu link-->
-												</div>
-												<!--end:Menu item-->
-												<!--begin:Menu item-->
-												<div class="menu-item">
-													<!--begin:Menu link-->
-													<a class="menu-link" href="../../demo1/dist/dashboards/school.html">
-														<span class="menu-bullet">
-															<span class="bullet bullet-dot"></span>
-														</span>
-														<span class="menu-title">School</span>
-													</a>
-													<!--end:Menu link-->
-												</div>
-												<!--end:Menu item-->
-												<!--begin:Menu item-->
-												<div class="menu-item">
-													<!--begin:Menu link-->
-													<a class="menu-link" href="../../demo1/dist/dashboards/podcast.html">
-														<span class="menu-bullet">
-															<span class="bullet bullet-dot"></span>
-														</span>
-														<span class="menu-title">Podcast</span>
-													</a>
-													<!--end:Menu link-->
-												</div>
-												<!--end:Menu item-->
-												<!--begin:Menu item-->
-												<div class="menu-item">
-													<!--begin:Menu link-->
-													<a class="menu-link" href="../../demo1/dist/landing.html">
-														<span class="menu-bullet">
-															<span class="bullet bullet-dot"></span>
-														</span>
-														<span class="menu-title">Landing</span>
-													</a>
-													<!--end:Menu link-->
-												</div>
-												<!--end:Menu item-->
-											</div>
-											<div class="menu-item">
-												<div class="menu-content">
-													<a class="btn btn-flex btn-color-primary d-flex flex-stack fs-base p-0 ms-2 mb-2 toggle collapsible collapsed" data-bs-toggle="collapse" href="#kt_app_sidebar_menu_dashboards_collapse" data-kt-toggle-text="Show Less">
-														<span data-kt-toggle-text-target="true">Show 12 More</span>
-														<!--begin::Svg Icon | path: icons/duotune/general/gen036.svg-->
-														<span class="svg-icon toggle-on svg-icon-2 me-0">
-															<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-																<rect opacity="0.3" x="2" y="2" width="20" height="20" rx="5" fill="currentColor" />
-																<rect x="6.0104" y="10.9247" width="12" height="2" rx="1" fill="currentColor" />
-															</svg>
-														</span>
-														<!--end::Svg Icon-->
-														<!--begin::Svg Icon | path: icons/duotune/general/gen035.svg-->
-														<span class="svg-icon toggle-off svg-icon-2 me-0">
-															<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-																<rect opacity="0.3" x="2" y="2" width="20" height="20" rx="5" fill="currentColor" />
-																<rect x="10.8891" y="17.8033" width="12" height="2" rx="1" transform="rotate(-90 10.8891 17.8033)" fill="currentColor" />
-																<rect x="6.01041" y="10.9247" width="12" height="2" rx="1" fill="currentColor" />
-															</svg>
-														</span>
-														<!--end::Svg Icon-->
-													</a>
-												</div>
-											</div>
-										</div>
-										<!--end:Menu sub-->
-									</div> --}}
+									
 
 									<div class="menu-item">
 										<!--begin:Menu link-->
@@ -518,20 +254,275 @@
 														<span class="menu-title">Pertanyaan</span>
 													</a>
 												</div>
-{{-- 
-												<div class="menu-item">
-													<a class="menu-link "
-													href="#">
-														<span class="menu-bullet">
-															<span class="bullet bullet-dot"></span>
-														</span>
-														<span class="menu-title">Opsi Pertanyaan</span>
-													</a>
-												</div> --}}
+
 											
 										</div>
 										<!--end:Menu sub-->
 									</div>
+
+
+									@php
+										$t = request()->t;
+
+										function itemActive($key) {
+											return request()->t == $key ? 'active' : '';
+										}
+
+										function groupActive($keys) {
+											return in_array(request()->t, $keys) ? 'here show' : '';
+										}
+
+										function menuName($key) {
+											$key = preg_replace('/^(a_|b_|c_|d_|i_|tbl_)/', '', $key);
+											return ucwords(str_replace('_', ' ', $key));
+										}
+									@endphp
+
+									<div data-kt-menu-trigger="click"
+										class="menu-item menu-accordion {{ request()->routeIs('master*') ? 'here show' : '' }}">
+
+										<!--begin:Menu link-->
+										<span class="menu-link">
+											<span class="menu-icon">
+												<span class="svg-icon svg-icon-2">
+													<svg width="24" height="24" viewBox="0 0 24 24">
+														<path d="M6.5 11C8.98 11 11 8.98 11 6.5S8.98 2 6.5 2 2 4.02 2 6.5 4.02 11 6.5 11Z" fill="currentColor"/>
+														<path opacity="0.3"
+															d="M13 6.5C13 4 15 2 17.5 2S22 4 22 6.5 20 11 17.5 11 13 9 13 6.5Z"
+															fill="currentColor"/>
+													</svg>
+												</span>
+											</span>
+											<span class="menu-title">Data Master</span>
+											<span class="menu-arrow"></span>
+										</span>
+										<!--end:Menu link-->
+
+										<!--begin:Menu sub-->
+										<div class="menu-sub menu-sub-accordion">
+
+											{{-- ========================================================= --}}
+											{{-- ======================== GROUP A ========================= --}}
+											{{-- ========================================================= --}}
+											@php
+												$groupA = [
+													'a_kondisi_balok','a_kondisi_kolom_tiang','a_kondisi_pondasi','a_kondisi_sloof',
+													'a_kondisi_struktur_atap','a_pondasi','tbl_jenis_pondasi'
+												];
+											@endphp
+
+											<div data-kt-menu-trigger="click"
+												class="menu-item menu-accordion mb-1 {{ groupActive($groupA) }}">
+
+												<span class="menu-link">
+													<span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+													<span class="menu-title">Struktur Bangunan</span>
+													<span class="menu-arrow"></span>
+												</span>
+
+												<div class="menu-sub menu-sub-accordion">
+
+													<div class="menu-item">
+														<a class="menu-link {{ itemActive('a_kondisi_balok') }}"
+														href="{{ route('master.crud',['t'=>'a_kondisi_balok']) }}">
+															<span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+															<span class="menu-title">Kondisi Balok</span>
+														</a>
+													</div>
+
+													<div class="menu-item">
+														<a class="menu-link {{ itemActive('a_kondisi_kolom_tiang') }}"
+														href="{{ route('master.crud',['t'=>'a_kondisi_kolom_tiang']) }}">
+															<span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+															<span class="menu-title">Kondisi Kolom/Tiang</span>
+														</a>
+													</div>
+
+													<div class="menu-item">
+														<a class="menu-link {{ itemActive('a_kondisi_pondasi') }}"
+														href="{{ route('master.crud',['t'=>'a_kondisi_pondasi']) }}">
+															<span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+															<span class="menu-title">Kondisi Pondasi</span>
+														</a>
+													</div>
+
+													<div class="menu-item">
+														<a class="menu-link {{ itemActive('a_kondisi_sloof') }}"
+														href="{{ route('master.crud',['t'=>'a_kondisi_sloof']) }}">
+															<span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+															<span class="menu-title">Kondisi Sloof</span>
+														</a>
+													</div>
+
+													<div class="menu-item">
+														<a class="menu-link {{ itemActive('a_kondisi_struktur_atap') }}"
+														href="{{ route('master.crud',['t'=>'a_kondisi_struktur_atap']) }}">
+															<span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+															<span class="menu-title">Kondisi Struktur Atap</span>
+														</a>
+													</div>
+
+													<div class="menu-item">
+														<a class="menu-link {{ itemActive('a_pondasi') }}"
+														href="{{ route('master.crud',['t'=>'a_pondasi']) }}">
+															<span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+															<span class="menu-title">Pondasi</span>
+														</a>
+													</div>
+
+													<div class="menu-item">
+														<a class="menu-link {{ itemActive('tbl_jenis_pondasi') }}"
+														href="{{ route('master.crud',['t'=>'tbl_jenis_pondasi']) }}">
+															<span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+															<span class="menu-title">Jenis Pondasi</span>
+														</a>
+													</div>
+
+												</div>
+											</div>
+
+											{{-- ========================================================= --}}
+											{{-- ======================== GROUP B ========================= --}}
+											{{-- ========================================================= --}}
+											@php
+												$groupB = [
+													'b_frekuensi_penyedotan','b_jamban','b_kondisi_jamban','b_jendela_lubang_cahaya',
+													'b_kondisi_jendela_lubang_cahaya','b_ventilasi','b_kondisi_ventilasi','b_kamar_mandi',
+													'b_kondisi_kamar_mandi','b_sistem_pembuangan_air_kotor','b_kondisi_sistem_pembuangan_air_kotor',
+													'b_sumber_air_minum','b_kondisi_sumber_air_minum','b_sumber_listrik'
+												];
+											@endphp
+
+											<div data-kt-menu-trigger="click"
+												class="menu-item menu-accordion mb-1 {{ groupActive($groupB) }}">
+
+												<span class="menu-link">
+													<span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+													<span class="menu-title">Sanitasi Rumah</span>
+													<span class="menu-arrow"></span>
+												</span>
+
+												<div class="menu-sub menu-sub-accordion">
+
+													@foreach ($groupB as $key)
+														<div class="menu-item">
+															<a class="menu-link {{ itemActive($key) }}"
+															href="{{ route('master.crud',['t'=>$key]) }}">
+																<span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+																<span class="menu-title">{{ menuName($key) }}</span>
+															</a>
+														</div>
+													@endforeach
+
+												</div>
+											</div>
+
+											{{-- ========================================================= --}}
+											{{-- ======================== GROUP C ========================= --}}
+											{{-- ========================================================= --}}
+											@php
+												$groupC = [
+													'c_fungsi_rumah','c_jenis_fisik_bangunan','c_ruang_keluarga_dan_tidur',
+													'c_status_dtks','c_tipe_rumah'
+												];
+											@endphp
+
+											<div data-kt-menu-trigger="click"
+												class="menu-item menu-accordion mb-1 {{ groupActive($groupC) }}">
+
+												<span class="menu-link">
+													<span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+													<span class="menu-title">Fungsi & Fisik Rumah</span>
+													<span class="menu-arrow"></span>
+												</span>
+
+												<div class="menu-sub menu-sub-accordion">
+													@foreach ($groupC as $key)
+														<div class="menu-item">
+															<a class="menu-link {{ itemActive($key) }}"
+															href="{{ route('master.crud',['t'=>$key]) }}">
+																<span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+																<span class="menu-title">{{ menuName($key) }}</span>
+															</a>
+														</div>
+													@endforeach
+												</div>
+											</div>
+
+											{{-- ========================================================= --}}
+											{{-- ======================== GROUP D ========================= --}}
+											{{-- ========================================================= --}}
+											@php
+												$groupD = [
+													'd_akses_ke_jalan','d_bangunan_berada_limbah','d_bangunan_berada_sungai','d_bangunan_menghadap_jalan',
+													'd_bangunan_menghadap_sungai','d_kondisi_dinding','d_kondisi_lantai','d_kondisi_penutup_atap',
+													'd_material_lantai_terluas','d_material_dinding_terluas','d_material_atap_terluas'
+												];
+											@endphp
+
+											<div data-kt-menu-trigger="click"
+												class="menu-item menu-accordion mb-1 {{ groupActive($groupD) }}">
+
+												<span class="menu-link">
+													<span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+													<span class="menu-title">Kondisi Bangunan</span>
+													<span class="menu-arrow"></span>
+												</span>
+
+												<div class="menu-sub menu-sub-accordion">
+													@foreach ($groupD as $key)
+														<div class="menu-item">
+															<a class="menu-link {{ itemActive($key) }}"
+															href="{{ route('master.crud',['t'=>$key]) }}">
+																<span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+																<span class="menu-title">{{ menuName($key) }}</span>
+															</a>
+														</div>
+													@endforeach
+												</div>
+											</div>
+
+											{{-- ========================================================= --}}
+											{{-- ======================== GROUP I ========================= --}}
+											{{-- ========================================================= --}}
+											@php
+												$groupI = [
+													'i_aset_rumah_tempat_lain','i_aset_rumah_tanah_lain','i_besar_penghasilan','i_besar_pengeluaran',
+													'i_status_kepemilikan_rumah','i_status_kepemilikan_tanah','i_bukti_kepemilikan_tanah',
+													'i_jenis_kawasan_lokasi','i_status_imb','i_kecamatan','i_kelurahan','i_pekerjaan_utama',
+													'i_pendidikan_terakhir','i_jumlah_kk','tbl_jenis_polygon'
+												];
+											@endphp
+
+											<div data-kt-menu-trigger="click"
+												class="menu-item menu-accordion mb-1 {{ groupActive($groupI) }}">
+
+												<span class="menu-link">
+													<span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+													<span class="menu-title">Identitas & Sosial Ekonomi</span>
+													<span class="menu-arrow"></span>
+												</span>
+
+												<div class="menu-sub menu-sub-accordion">
+
+													@foreach ($groupI as $key)
+														<div class="menu-item">
+															<a class="menu-link {{ itemActive($key) }}"
+															href="{{ route('master.crud',['t'=>$key]) }}">
+																<span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+																<span class="menu-title">{{ menuName($key) }}</span>
+															</a>
+														</div>
+													@endforeach
+
+												</div>
+											</div>
+
+										</div>
+										<!--end:Menu sub-->
+									</div>
+
+
 
 
 

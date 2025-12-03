@@ -279,7 +279,7 @@ class Edit extends Component
     public function mount($id)
     {
         $this->id_rumah = $id;
-        $this->is_question = SurveyQuestion::where('is_active', '1')->exists();
+        $this->is_question = SurveyQuestion::where('is_active', '1')->where('module','pertanyaan_lainnya')->exists();
         $this->totalStep = $this->is_question ? 10 : 9;
        $this->question = SurveyQuestion::with('options')
             ->where('is_active', 1)
@@ -1550,16 +1550,27 @@ class Edit extends Component
             foreach ($this->childQuestions as $child) {
 
                 $parentAnswer = $this->questionAnswers[$child->parent_question_id] ?? null;
+
+                //dd($parentAnswer,$child->trigger_option_id);
                 // Child TIDAK AKTIF ketika trigger_option_id tidak sama dengan jawaban induk
                 if ($child->trigger_option_id != $parentAnswer) {
                     $this->skipQuestions[$child->id] = true;
                     Log::info("{$child->id}/{$rumah->id_rumah}");
 
-                    $id_data = SurveyQuestionAnswer::where('rumah_id', $rumah->id_rumah)
-                        ->where('question_id', $child->id)
-                        ->value('id');
+                    // $id_data = SurveyQuestionAnswer::where('rumah_id', $rumah->id_rumah)
+                    //     ->where('question_id', $child->id)
+                    //     ->value('id');
                         
-                    SurveyQuestionAnswer::find($id_data)->delete();
+                    // SurveyQuestionAnswer::find($id_data)->delete();
+
+                     $answer = SurveyQuestionAnswer::where('rumah_id', $rumah->id_rumah)
+                        ->where('question_id', $child->id)
+                        ->first();
+
+                    if ($answer) {
+                        $answer->delete();  // delete aman
+                    }
+
 
                     DB::enableQueryLog();
                   DB::delete("

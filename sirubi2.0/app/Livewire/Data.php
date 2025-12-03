@@ -1166,7 +1166,7 @@ class Data extends Component
         $rumah = Rumah::find($id);
 
         if ($rumah) {
-            //$rumah->delete();
+            $rumah->delete();
             
             $this->dispatch('rumahDeleted', [
                 'message' => "Data rumah ID {$id} berhasil dihapus!"

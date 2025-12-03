@@ -38,6 +38,12 @@ class SurveyQuestion extends Model
         return $this->belongsTo(SurveyQuestion::class, 'parent_question_id');
     }
 
+   public function surveyModule()
+    {
+        return $this->belongsTo(SurveyModule::class, 'module', 'module');
+    }
+
+
     /** opsi pemicu */
     public function triggerOption()
     {

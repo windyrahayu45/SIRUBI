@@ -56,18 +56,45 @@ class Daftar extends Component
      * ==========================================================*/
     public function getData()
     {
-        $query = SurveyQuestion::with('options')
+        $query = SurveyQuestion::with('options','surveyModule')
             ->where('is_active', 1)
             ->orderBy('id', 'desc');
 
         return DataTables::eloquent($query)
             ->addIndexColumn()
+            ->addColumn('module', function($row){
+                return '<span class="badge badge-light-primary">'.$row->surveyModule->label.'</span>' ?? '<span class="badge badge-light-danger">Tidak Ada</span>';
+            })
 
             ->addColumn('required', function ($row) {
                 return $row->is_required
                     ? '<span class="badge badge-light-success">Ya</span>'
                     : '<span class="badge badge-light-danger">Tidak</span>';
             })
+            ->addColumn('kondisi', function ($row) {
+    
+                // Jika tidak punya kondisi
+                if (!$row->parent_question_id || !$row->trigger_option_id) {
+                    return '-';
+                }
+
+                // Ambil parent question
+                $parent = $row->parent; // relasi parent()
+                
+                // Ambil opsi pemicu
+                $option = $row->triggerOption; // relasi triggerOption()
+
+                // Jika datanya tidak lengkap
+                if (!$parent || !$option) {
+                    return '-';
+                }
+
+                return '<span class="badge badge-light-primary">
+                             <b>' . $parent->label . '</b>?  ==  <b>' . $option->label . '</b>
+                        </span>';
+            })
+
+
 
             ->addColumn('options', function ($row) {
                 if ($row->options->count() == 0) {
@@ -123,7 +150,7 @@ class Daftar extends Component
                 return '<div wire:ignore>' . $buttons . '</div>';
             })
 
-            ->rawColumns(['required', 'options', 'action'])
+            ->rawColumns(['required', 'options', 'action','module','kondisi'])
             ->toJson();
     }
 
@@ -138,9 +165,11 @@ class Daftar extends Component
 
       
 
-    $this->availableParents = SurveyQuestion::where('is_active', 1)
+        $this->availableParents = SurveyQuestion::where('is_active', 1)
+        ->whereIn('type', ['select', 'radio', 'checkbox'])
         ->orderBy('order')
         ->get();
+
     }
 
     public function updatedParentQuestionId($value)
@@ -223,7 +252,7 @@ class Daftar extends Component
         $this->validate([
             'label'  => 'required',
             'module' => 'required',
-            'key'    => 'required|unique:survey_questions,key',
+            // 'key'    => 'required|unique:survey_questions,key',
             'type'   => 'required',
         ]);
 
@@ -250,7 +279,7 @@ class Daftar extends Component
 
         $q = SurveyQuestion::create([
                 'label'             => $this->label,
-                'key'               => $this->key,
+                'key'               => Str::slug($this->label),
                 'module'            => $this->module,
                 'type'              => $this->type,
                 'is_required'       => $this->is_required,
@@ -328,7 +357,7 @@ class Daftar extends Component
     {
         $this->validate([
             'label' => 'required',
-            'key'   => 'required|unique:survey_questions,key,' . $this->editId,
+            //'key'   => 'required|unique:survey_questions,key,' . $this->editId,
             'type'  => 'required',
         ]);
 
@@ -338,7 +367,7 @@ class Daftar extends Component
         // UPDATE pertanyaan utama
         $q->update([
             'label'             => $this->label,
-            'key'               => $this->key,
+            'key'               => Str::slug($this->label),
             'type'              => $this->type,
             'is_required'       => $this->is_required,
             'parent_question_id'=> $this->parent_question_id, // 🔥 penting

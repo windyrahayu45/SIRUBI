@@ -269,7 +269,7 @@ class Add extends Component
     {
         // Daftar listener Livewire 3 style
         // $this->on('setStep', fn ($step) => $this->setStep($step));
-        $this->is_question = SurveyQuestion::where('is_active', '1')->exists();
+        $this->is_question = SurveyQuestion::where('is_active', '1')->where('module','pertanyaan_lainnya')->exists();
          $this->totalStep = $this->is_question ? 10 : 9;
         $this->question = SurveyQuestion::with('options')
             ->where('is_active', 1)

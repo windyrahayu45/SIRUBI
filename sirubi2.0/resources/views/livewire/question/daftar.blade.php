@@ -86,7 +86,9 @@
                                     
                                     <th>No</th>
                                     <th>Pertanyaan</th>
-                                    <th>Key</th>
+                                    <th>Module</th>
+                                    <th>Kondisi</th>
+                                    {{-- <th>Key</th> --}}
                                     <th>Tipe</th>
                                     <th>Wajib</th>
                                     <th>Opsi</th>
@@ -111,7 +113,12 @@
     <!-- =============================== -->
     <!-- MODAL TAMBAH PERTANYAAN (AKTIF) -->
     <!-- =============================== -->
-    <div class="modal fade" id="kt_modal_tambah_pertanyaan" tabindex="-1" wire:ignore.self>
+    <div class="modal fade" 
+     id="kt_modal_tambah_pertanyaan" 
+     tabindex="-1" 
+     wire:ignore.self
+     data-bs-backdrop="static"
+     data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered mw-650px">
             <div class="modal-content">
 
@@ -120,7 +127,7 @@
                         {{ $editMode ? 'Edit Pertanyaan' : 'Tambah Pertanyaan' }}
                     </h2>
 
-                    <div class="btn btn-icon btn-sm btn-active-icon-primary" data-bs-dismiss="modal">
+                    <div class="btn btn-icon btn-sm btn-active-icon-primary" data-bs-dismiss="modal"  wire:click="resetForm">
                         <span class="svg-icon svg-icon-1">
                             <svg width="24" height="24" fill="none">
                                 <rect opacity="0.5" x="6" y="17.31" width="16" height="2" rx="1"
@@ -141,10 +148,10 @@
                     </div>
 
                     <!-- KEY -->
-                    <div class="mb-5">
+                    {{-- <div class="mb-5">
                         <label class="form-label">Key</label>
                         <input type="text" class="form-control form-control-solid" wire:model="key" style="border-color: rgb(54 54 96);">
-                    </div>
+                    </div> --}}
 
                     <!-- TIPE INPUT + OPSI -->
                     <div x-data="{ jenis: @entangle('type') }" x-cloak>
@@ -237,7 +244,7 @@
 
                     <!-- BUTTON -->
                     <div class="text-center mt-10">
-                        <button type="button" class="btn btn-light me-3" data-bs-dismiss="modal">Batal</button>
+                        <button type="button" class="btn btn-light me-3" data-bs-dismiss="modal" wire:click="resetForm">Batal</button>
 
                         @if($editMode)
                             <button type="button" class="btn btn-primary" wire:click="update" wire:loading.attr="disabled">
@@ -288,7 +295,9 @@ function initTable() {
            
               { data: 'DT_RowIndex', orderable:false, searchable:false },
     { data: 'label' },
-    { data: 'key' },
+     { data: 'module' },
+      { data: 'kondisi' },
+   
     { data: 'type' },
     { data: 'required' },
     { data: 'options', orderable:false, searchable:false },
@@ -371,6 +380,16 @@ function initTable() {
 </script>
 
 <script>
+document.addEventListener('livewire:load', function () {
+
+    let modalEl = document.getElementById('kt_modal_tambah_pertanyaan');
+
+    modalEl.addEventListener('hidden.bs.modal', function () {
+        Livewire.dispatch('resetForm');
+    });
+
+});
+
 document.addEventListener('DOMContentLoaded', function () {
     
  Livewire.on('closeModalTambahPertanyaan', () => {
