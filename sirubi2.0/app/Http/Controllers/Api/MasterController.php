@@ -626,68 +626,227 @@ class MasterController extends Controller
     }
 
 
-    public function search(Request $request)
-    {
-        // 🔐 Wajib token JWT
-        $user = $request->auth->id_user ?? null;
+    // public function search(Request $request)
+    // {
+    //     // 🔐 Wajib token JWT
+    //     $user = $request->auth->id_user ?? null;
 
-        if (!$user) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Unauthorized'
-            ], 401);
-        }
+    //     if (!$user) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => 'Unauthorized'
+    //         ], 401);
+    //     }
 
-        $keyword = $request->input('q');
+    //     $keyword = $request->input('q');
 
-        if (!$keyword) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Parameter q wajib diisi.'
-            ], 422);
-        }
+    //     if (!$keyword) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => 'Parameter q wajib diisi.'
+    //         ], 422);
+    //     }
 
-        $rumah = Rumah::with([
-                'kepemilikan',
-                'kepalaKeluarga.anggota',
-                'sosialEkonomi'
-            ])
-            ->where(function ($q) use ($keyword) {
+    //     $rumah = Rumah::with([
+    //             'kepemilikan',
+    //             'kepalaKeluarga.anggota',
+    //             'sosialEkonomi'
+    //         ])
+    //         ->where(function ($q) use ($keyword) {
 
-                // 1️⃣ NIK kepemilikan rumah
-                $q->whereHas('kepemilikan', function ($qq) use ($keyword) {
-                    $qq->where('nik_kepemilikan_rumah', 'like', "%{$keyword}%");
-                });
+    //             // 1️⃣ NIK kepemilikan rumah
+    //             $q->whereHas('kepemilikan', function ($qq) use ($keyword) {
+    //                 $qq->where('nik_kepemilikan_rumah', 'like', "%{$keyword}%");
+    //             });
 
-                // 2️⃣ Nomor KK rumah (multi KK)
-                $q->orWhereHas('kepalaKeluarga', function ($qq) use ($keyword) {
-                    $qq->where('no_kk', 'like', "%{$keyword}%");
-                });
+    //             // 2️⃣ Nomor KK rumah (multi KK)
+    //             $q->orWhereHas('kepalaKeluarga', function ($qq) use ($keyword) {
+    //                 $qq->where('no_kk', 'like', "%{$keyword}%");
+    //             });
 
-                // 3️⃣ Nomor KK utama dari sosial ekonomi
-                $q->orWhereHas('sosialEkonomi', function ($qq) use ($keyword) {
-                    $qq->where('no_kk', 'like', "%{$keyword}%");
-                });
+    //             // 3️⃣ Nomor KK utama dari sosial ekonomi
+    //             $q->orWhereHas('sosialEkonomi', function ($qq) use ($keyword) {
+    //                 $qq->where('no_kk', 'like', "%{$keyword}%");
+    //             });
 
-                // 4️⃣ NIK anggota keluarga
-                $q->orWhereHas('kepalaKeluarga.anggota', function ($qq) use ($keyword) {
-                    $qq->where('nik', 'like', "%{$keyword}%");
-                });
+    //             // 4️⃣ NIK anggota keluarga
+    //             $q->orWhereHas('kepalaKeluarga.anggota', function ($qq) use ($keyword) {
+    //                 $qq->where('nik', 'like', "%{$keyword}%");
+    //             });
 
-                // 5️⃣ No KK (anggota keluarga ikut KK kepala keluarga)
-                $q->orWhereHas('kepalaKeluarga.anggota', function ($qq) use ($keyword) {
-                    $qq->where('no_kk', 'like', "%{$keyword}%");
-                });
-            })
-            ->get();
+    //             // 5️⃣ No KK (anggota keluarga ikut KK kepala keluarga)
+    //             $q->orWhereHas('kepalaKeluarga.anggota', function ($qq) use ($keyword) {
+    //                 $qq->where('no_kk', 'like', "%{$keyword}%");
+    //             });
+    //         })
+    //         ->get();
 
+    //     return response()->json([
+    //         'status'  => true,
+    //         'keyword' => $keyword,
+    //         'total'   => $rumah->count(),
+    //         'data'    => $rumah
+    //     ]);
+    // }
+public function search(Request $request)
+{
+    // 🔐 Wajib token JWT
+    $user = $request->auth->id_user ?? null;
+
+    if (!$user) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Unauthorized'
+        ], 401);
+    }
+
+    $keyword = $request->input('q');
+
+    if (!$keyword) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Parameter q wajib diisi.'
+        ], 422);
+    }
+
+    // ===============================================================
+    // 1️⃣ CARI DATA RUMAH BERDASARKAN KEYWORD
+    // ===============================================================
+    $rumah = Rumah::with([
+            'kepemilikan',
+            'kepalaKeluarga.anggota',
+            'sosialEkonomi',
+            'fisik',
+            'sanitasi',
+            'penilaian',
+            'dokumen',
+            'bantuan',
+            'kelurahan.kecamatan'
+        ])
+        ->where(function ($q) use ($keyword) {
+
+            $q->whereHas('kepemilikan', function ($qq) use ($keyword) {
+                $qq->where('nik_kepemilikan_rumah', 'like', "%{$keyword}%");
+            });
+
+            $q->orWhereHas('kepalaKeluarga', function ($qq) use ($keyword) {
+                $qq->where('no_kk', 'like', "%{$keyword}%");
+            });
+
+            $q->orWhereHas('sosialEkonomi', function ($qq) use ($keyword) {
+                $qq->where('no_kk', 'like', "%{$keyword}%");
+            });
+
+            $q->orWhereHas('kepalaKeluarga.anggota', function ($qq) use ($keyword) {
+                $qq->where('nik', 'like', "%{$keyword}%");
+            });
+
+            $q->orWhereHas('kepalaKeluarga.anggota', function ($qq) use ($keyword) {
+                $qq->where('no_kk', 'like', "%{$keyword}%");
+            });
+
+        })
+        ->get();
+
+    if ($rumah->count() == 0) {
         return response()->json([
             'status'  => true,
             'keyword' => $keyword,
-            'total'   => $rumah->count(),
-            'data'    => $rumah
+            'total'   => 0,
+            'data'    => []
         ]);
     }
+
+    // ===============================================================
+    // 2️⃣ AMBIL SEMUA PERTANYAAN DINAMIS
+    // ===============================================================
+    $pertanyaan = SurveyQuestion::with('options')
+        ->where('is_active', 1)
+        ->orderBy('id', 'desc')
+        ->get();
+
+    // ===============================================================
+    // 3️⃣ PROSES MASING-MASING RUMAH → TAMBAHKAN ANSWER & PERBAIKI DOKUMEN
+    // ===============================================================
+    $output = [];
+
+    foreach ($rumah as $r) {
+
+        // -----------------------------------------------
+        // 🔧 PERBAIKI SEMUA PATH DOKUMEN → JADI FULL URL
+        // -----------------------------------------------
+        if ($r->dokumen) {
+            foreach ($r->dokumen->getAttributes() as $key => $value) {
+
+                // Jika kolom berisi path file relatif
+                if ($value && is_string($value) && str_contains($value, '/')) {
+
+                    // Hanya untuk kolom foto/file
+                    if (str_contains($key, 'foto') || str_contains($key, 'file')) {
+                        $r->dokumen->{$key} = asset('storage/' . $value);
+                    }
+
+                }
+            }
+        }
+
+        // -----------------------------------------------
+        // 🔎 Ambil semua jawaban survey
+        // -----------------------------------------------
+        $ansData = SurveyQuestionAnswer::where('rumah_id', $r->id_rumah)->get();
+
+        // -----------------------------------------------
+        // 🔗 Masukkan jawaban ke dalam setiap pertanyaan
+        // -----------------------------------------------
+        $questionsWithAnswer = $pertanyaan->map(function ($q) use ($ansData) {
+
+            $answer = null;
+
+            $ans = $ansData->firstWhere('question_id', $q->id);
+
+            if ($ans) {
+                if ($ans->answer_text !== null) {
+                    $answer = $ans->answer_text;
+                }
+
+                if ($ans->answer_option_id !== null) {
+                    $answer = $ans->answer_option_id;
+                }
+
+                if ($ans->answer_option_ids !== null) {
+                    $answer = $ans->answer_option_ids; // array
+                }
+
+                if ($ans->file_path !== null) {
+                    $answer = asset('storage/' . $ans->file_path);
+                }
+            }
+
+            // tempel answer langsung ke object pertanyaan
+            $q->answer = $answer;
+
+            return $q;
+        });
+
+        // -----------------------------------------------
+        // Masukkan ke output final
+        // -----------------------------------------------
+        $output[] = [
+            'rumah'     => $r,
+            'questions' => $questionsWithAnswer
+        ];
+    }
+
+    // ===============================================================
+    // 4️⃣ RETURN JSON FINAL
+    // ===============================================================
+    return response()->json([
+        'status'  => true,
+        'keyword' => $keyword,
+        'total'   => count($output),
+        'data'    => $output
+    ]);
+}
 
 
     public function deleteRumah(Request $request)

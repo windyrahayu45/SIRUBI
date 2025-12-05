@@ -43,6 +43,10 @@ class ComposerStaticInitc8a7642b6a153c0daf69853b801f52e6
             'Psr\\Container\\' => 14,
             'Psr\\Clock\\' => 10,
         ),
+        'O' => 
+        array (
+            'OpenSpout\\' => 10,
+        ),
         'M' => 
         array (
             'Masterminds\\' => 12,
@@ -125,15 +129,19 @@ class ComposerStaticInitc8a7642b6a153c0daf69853b801f52e6
         array (
             0 => __DIR__ . '/..' . '/psr/clock/src',
         ),
+        'OpenSpout\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/openspout/openspout/src',
+        ),
         'Masterminds\\' => 
         array (
             0 => __DIR__ . '/..' . '/masterminds/html5/src',
         ),
         'Illuminate\\Support\\' => 
         array (
-            0 => __DIR__ . '/..' . '/illuminate/macroable',
+            0 => __DIR__ . '/..' . '/illuminate/collections',
             1 => __DIR__ . '/..' . '/illuminate/conditionable',
-            2 => __DIR__ . '/..' . '/illuminate/collections',
+            2 => __DIR__ . '/..' . '/illuminate/macroable',
             3 => __DIR__ . '/..' . '/illuminate/support',
         ),
         'Illuminate\\Contracts\\' => 

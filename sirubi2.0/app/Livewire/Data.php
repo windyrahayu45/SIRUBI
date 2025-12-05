@@ -17,13 +17,23 @@ use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
 use ZipArchive;
 
+
+use Illuminate\Support\Facades\Hash;
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Writer\XLSX\Writer;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+
+use OpenSpout\Writer\Common\Creator\WriterEntityFactory;
+use OpenSpout\Writer\Common\Creator\Style\StyleBuilder;
+use OpenSpout\Writer\XLSX\Writer as XLSXWriter;
+
 class Data extends Component
 {
-   protected $listeners = ['refreshTable' => '$refresh', 'loadDetailRumah','deleteRumah','checkExportProgress','check-file-ready' => 'checkFile'];
+    protected $listeners = ['refreshTable' => '$refresh', 'loadDetailRumah','deleteRumah','checkExportProgress','check-file-ready' => 'checkFile'];
     
-   public $exportFormat = '';
+    public $exportFormat = '';
 
- public $exporting = false;
+    public $exporting = false;
     public $exportProgress = 0;
     public $exportMessage = '';
     public $exportCompleted = false;
@@ -36,155 +46,6 @@ class Data extends Component
     public $isExporting = false;
 
    
-    
-    // public $progressSteps = [
-    //     'dispatching' => 5,
-    //     'processing_rumah' => 30,
-    //     'processing_kk' => 60,
-    //     'processing_bantuan' => 80,
-    //     'creating_zip' => 95,
-    //     'completed' => 100
-    // ];
-
- 
-
-    // public function exportExcel()
-    // {
-    //     //$this->resetExportState();
-    //     $this->exporting = true;
-    //     $this->exportMessage = 'Memulai proses export...';
-    //     $this->exportProgress = $this->progressSteps['dispatching'];
-
-    //     try {
-    //         $userId = auth()->user()->id;
-    //         $this->timestamp = now()->format('Ymd_His');
-    //         $this->queueId = uniqid();
-
-    //         Log::info("👤 User {$userId} requested export via Livewire - Chunk 1000");
-
-    //         // Dispatch main export job dengan chunk 1000
-    //         ProcessCompleteExportJob::dispatch($userId, null, 'excel', $this->queueId);
-
-    //         $this->exportMessage = 'Proses export sedang berjalan di background...';
-            
-    //         // Mulai polling untuk check progress
-    //         $this->dispatch('start-export-polling');
-
-    //     } catch (\Throwable $e) {
-    //         Log::error('Export dispatch failed: ' . $e->getMessage());
-    //         $this->exportMessage = 'Error: ' . $e->getMessage();
-    //         $this->exporting = false;
-    //     }
-    // }
-
-    // public function checkExportProgress()
-    // {
-    //     if (!$this->exporting) {
-    //         return;
-    //     }
-
-    //     try {
-    //         // Check file progress berdasarkan timestamp
-    //         $zipFilename = "export_complete_{$this->timestamp}.zip";
-    //         $zipPath = storage_path("app/public/{$zipFilename}");
-
-    //         if (file_exists($zipPath)) {
-    //             // Export selesai
-    //             $this->exportCompleted = true;
-    //             $this->exporting = false;
-    //             $this->exportProgress = 100; // Fixed: harus 100, bukan 1000
-    //             $this->exportMessage = 'Export berhasil! File siap didownload.';
-    //             $this->downloadUrl = route('download.export', ['timestamp' => $this->timestamp]);
-                
-    //             $this->dispatch('export-completed');
-    //             return;
-    //         }
-
-    //         // Check progress berdasarkan file temporary yang sudah dibuat
-    //         $this->estimateProgress();
-
-    //     } catch (\Throwable $e) {
-    //         Log::error('Progress check failed: ' . $e->getMessage());
-    //     }
-    // }
-
-    // private function estimateProgress()
-    // {
-    //     $disk = 'public';
-    //     $folder = "exports_{$this->timestamp}";
-
-    //     // Check jika folder exists
-    //     if (!Storage::disk($disk)->exists($folder)) {
-    //         $this->exportProgress = $this->progressSteps['dispatching'];
-    //         $this->exportMessage = 'Mempersiapkan export...';
-    //         return;
-    //     }
-
-    //     // Check existing files untuk estimate progress
-    //     $allFiles = Storage::disk($disk)->files($folder);
-        
-    //     $rumahFiles = array_filter($allFiles, fn($file) => str_contains($file, 'rumah_part_'));
-    //     $kkFiles = array_filter($allFiles, fn($file) => str_contains($file, 'kk_part_'));
-    //     $bantuanExists = in_array("{$folder}/bantuan_data.xlsx", $allFiles);
-        
-    //     $rumahCount = count($rumahFiles);
-    //     $kkCount = count($kkFiles);
-
-    //     // Hitung total chunks yang diharapkan
-    //     $totalData = DB::table('rumah')->count();
-    //     $expectedChunks = ceil($totalData / 1000); // Chunk size 1000
-
-    //     Log::info("Progress Check - Rumah: {$rumahCount}/{$expectedChunks}, KK: {$kkCount}/{$expectedChunks}, Bantuan: " . ($bantuanExists ? 'Yes' : 'No'));
-
-    //     // Estimate progress berdasarkan files yang sudah dibuat
-    //     if ($bantuanExists && $rumahCount >= $expectedChunks && $kkCount >= $expectedChunks) {
-    //         $this->exportProgress = $this->progressSteps['creating_zip'];
-    //         $this->exportMessage = 'Membuat file ZIP...';
-    //     } elseif ($bantuanExists) {
-    //         $this->exportProgress = $this->progressSteps['creating_zip'] - 5;
-    //         $this->exportMessage = 'Menyelesaikan proses data...';
-    //     } elseif ($kkCount > 0) {
-    //         // Progress berdasarkan jumlah KK files yang sudah selesai
-    //         $kkProgress = min(
-    //             $this->progressSteps['processing_bantuan'] - 10,
-    //             $this->progressSteps['processing_kk'] + (($kkCount / $expectedChunks) * 20)
-    //         );
-    //         $this->exportProgress = $kkProgress;
-    //         $this->exportMessage = "Memproses data kepala keluarga... ({$kkCount}/{$expectedChunks} bagian)";
-    //     } elseif ($rumahCount > 0) {
-    //         // Progress berdasarkan jumlah rumah files yang sudah selesai
-    //         $rumahProgress = min(
-    //             $this->progressSteps['processing_kk'] - 10,
-    //             $this->progressSteps['processing_rumah'] + (($rumahCount / $expectedChunks) * 25)
-    //         );
-    //         $this->exportProgress = $rumahProgress;
-    //         $this->exportMessage = "Memproses data rumah... ({$rumahCount}/{$expectedChunks} bagian)";
-    //     } else {
-    //         $this->exportProgress = $this->progressSteps['dispatching'];
-    //         $this->exportMessage = 'Mempersiapkan export...';
-    //     }
-    // }
-
-    // public function downloadExport()
-    // {
-    //     if ($this->downloadUrl) {
-    //         return redirect()->away($this->downloadUrl);
-    //     }
-        
-    //     $this->exportMessage = 'File belum tersedia untuk didownload.';
-    // }
-
-    // private function resetExportState()
-    // {
-    //     $this->exporting = false;
-    //     $this->exportProgress = 0;
-    //     $this->exportMessage = '';
-    //     $this->exportCompleted = false;
-    //     $this->downloadUrl = '';
-    //     $this->timestamp = '';
-    //     $this->queueId = '';
-    // }
-
     public function exportData()
     {
           $this->isExporting = true;
@@ -206,6 +67,339 @@ class Data extends Component
         }
 
          
+    }
+
+    
+    public function exportExcel()
+    {
+        $filePath = storage_path('app/public/rumah_export.xlsx');
+
+        $writer = new XLSXWriter();
+        $writer->openToFile($filePath);
+
+        /**
+         |----------------------------------------------------------------------
+         |  SHEET 1: DATA RUMAH (JOIN BESAR)
+         |----------------------------------------------------------------------
+         */
+        $writer->getCurrentSheet()->setName("Data Rumah");
+
+        $writer->addRow(Row::fromValues([
+            // 'ID Rumah','Alamat','Kelurahan','Kecamatan',
+            // 'Usia','Jenis Kelamin','Pendidikan','Pekerjaan','Penghasilan','Pengeluaran',
+            // 'Status DTKS','Jumlah KK',
+            // 'Status Kep Tanah','Bukti Tanah','Status Rumah','IMB','Aset Rumah TL','Aset Tanah TL','Jenis Kawasan',
+            // 'Pondasi','Jenis Pondasi','Kondisi Pondasi','Kondisi Sloof','Kondisi Kolom','Kondisi Balok',
+            // 'Kondisi Atap','Mat Atap','Kondisi Penutup Atap','Mat Dinding','Kondisi Dinding',
+            // 'Material Lantai','Kondisi Lantai','Akses Jalan','Menghadap Jalan','Menghadap Sungai',
+            // 'Berada Sungai','Berada Limbah',
+            // 'Jendela','Kondisi Jendela','Ventilasi','Kondisi Ventilasi',
+            // 'Kamar Mandi','Kondisi KM','Jamban','Kondisi Jamban',
+            // 'SPAK','Kondisi SAM','Sumber Listrik','Frekuensi Penyedotan',
+            // 'Nilai A','Nilai B','Nilai C','Nilai','Status Rumah','Status Luas'
+            'ID Rumah', 'Alamat', 'Kecamatan', 'Kelurahan', 'Status DTKS', 'Jumlah KK',
+            'Jenis Kelamin', 'Usia', 'Pendidikan Terakhir', 'Pekerjaan Utama',
+            'Besar Penghasilan/Bulan', 'Besar Pengeluaran/Bulan',
+            'Status Kepemilikan Tanah', 'Bukti Kepemilikan Tanah', 'Status Kepemilikan Rumah',
+            'Status IMB', 'Nomor IMB', 'Aset Rumah di Tempat Lain', 'Aset Tanah di Tempat Lain',
+            'Jenis Kawasan Lokasi Rumah', 'NIK Pemilik Rumah', 'Tahun Pembangunan',
+
+            'Pondasi', 'Jenis Pondasi', 'Kondisi Pondasi', 'Kondisi Sloof', 'Kondisi Kolom/Tiang',
+            'Kondisi Balok', 'Kondisi Struktur Atap', 'Nilai Keselamatan (A)',
+
+            'Jendela / Lubang Cahaya', 'Kondisi Jendela / Lubang Cahaya', 'Ventilasi',
+            'Keterangan Ventilasi', 'Kondisi Ventilasi', 'Kamar Mandi', 'Kondisi Kamar Mandi',
+            'Jamban', 'Kondisi Jamban', 'Sistem Pembuangan Air Kotor',
+            'Kondisi Sistem Pembuangan Air Kotor', 'Sumber Air Minum',
+            'Kondisi Sumber Air Minum', 'Sumber Listrik', 'Frekuensi Penyedotan', 'Nilai Kesehatan (B)',
+
+            'Luas Rumah (m²)', 'Tinggi Rata-rata Rumah (m)', 'Jumlah Penghuni Laki-laki',
+            'Jumlah Penghuni Perempuan', 'Jumlah ABK', 'Jumlah Kamar Tidur', 'Luas Rata Kamar Tidur',
+            'Ruang Keluarga & Tidur', 'Jenis Fisik Bangunan', 'Fungsi Rumah',
+            'Tipe Rumah', 'Jumlah Lantai Bangunan', 'Nilai Luas & Ruang (C)',
+
+            'Material Atap Terluas', 'Kondisi Penutup Atap', 'Material Dinding Terluas',
+            'Kondisi Dinding', 'Material Lantai Terluas', 'Kondisi Lantai',
+            'Akses Langsung ke Jalan', 'Bangunan Menghadap Jalan', 'Bangunan Menghadap Sungai',
+            'Bangunan di Atas Sempadan Sungai', 'Bangunan di Area Limbah/Sutet',
+
+            'Nilai Total', 'Status Rumah', 'Status Luas Rumah', 'Backlog'
+        ]));
+
+        DB::table('rumah as r')
+            ->leftJoin('i_kelurahan as kel', 'kel.id_kelurahan', '=', 'r.kelurahan_id')
+            ->leftJoin('i_kecamatan as kec', 'kec.id_kecamatan', '=', 'kel.kecamatan_id')
+
+            ->leftJoin('sosial_ekonomi_rumah as se', 'se.rumah_id', '=', 'r.id_rumah')
+            ->leftJoin('i_jenis_kelamin as jk', 'jk.id_jenis_kelamin', '=', 'se.jenis_kelamin_id')
+            ->leftJoin('i_pendidikan_terakhir as pt', 'pt.id_pendidikan_terakhir', '=', 'se.pendidikan_terakhir_id')
+            ->leftJoin('i_pekerjaan_utama as pu', 'pu.id_pekerjaan_utama', '=', 'se.pekerjaan_utama_id')
+            ->leftJoin('i_besar_penghasilan as bpi', 'bpi.id_besar_penghasilan', '=', 'se.besar_penghasilan_perbulan_id')
+            ->leftJoin('i_besar_pengeluaran as bpe', 'bpe.id_besar_pengeluaran', '=', 'se.besar_pengeluaran_perbulan_id')
+            ->leftJoin('c_status_dtks as sdt', 'sdt.id_status_dtks', '=', 'se.status_dtks_id')
+            ->leftJoin('i_jumlah_kk as jkk', 'jkk.id_jumlah_kk', '=', 'se.jumlah_kk_id')
+
+            ->leftJoin('kepemilikan_rumah as k', 'k.rumah_id', '=', 'r.id_rumah')
+            ->leftJoin('i_status_kepemilikan_tanah as skt', 'skt.id_status_kepemilikan_tanah', '=', 'k.status_kepemilikan_tanah_id')
+            ->leftJoin('i_bukti_kepemilikan_tanah as bkt', 'bkt.id_bukti_kepemilikan_tanah', '=', 'k.bukti_kepemilikan_tanah_id')
+            ->leftJoin('i_status_kepemilikan_rumah as skr', 'skr.id_status_kepemilikan_rumah', '=', 'k.status_kepemilikan_rumah_id')
+            ->leftJoin('i_status_imb as sim', 'sim.id_status_imb', '=', 'k.status_imb_id')
+            ->leftJoin('i_aset_rumah_tempat_lain as ar', 'ar.id_aset_rumah_tempat_lain', '=', 'k.aset_rumah_ditempat_lain_id')
+            ->leftJoin('i_aset_tanah_tempat_lain as at', 'at.id_aset_tanah_tempat_lain', '=', 'k.aset_tanah_ditempat_lain_id')
+            ->leftJoin('i_jenis_kawasan_lokasi as jkl', 'jkl.id_jenis_kawasan_lokasi', '=', 'k.jenis_kawasan_lokasi_rumah_id')
+
+            ->leftJoin('fisik_rumah as f', 'f.rumah_id', '=', 'r.id_rumah')
+            ->leftJoin('a_pondasi as p', 'p.id_pondasi', '=', 'f.pondasi_id')
+            ->leftJoin('c_tipe_rumah as tp', 'tp.id_tipe_rumah', '=', 'f.tipe_rumah_id')
+            ->leftJoin('c_fungsi_rumah as fng', 'fng.id_fungsi_rumah', '=', 'f.fungsi_rumah_id')
+            ->leftJoin('c_jenis_fisik_bangunan as jns', 'jns.id_jenis_fisik_bangunan', '=', 'f.jenis_fisik_bangunan_id')
+            ->leftJoin('c_ruang_keluarga_dan_tidur as rng', 'rng.id_ruang_keluarga_dan_tidur', '=', 'f.ruang_keluarga_dan_ruang_tidur_id')
+            ->leftJoin('tbl_jenis_pondasi as jp', 'jp.id_jenis_pondasi', '=', 'f.jenis_pondasi')
+            ->leftJoin('a_kondisi_pondasi as kp', 'kp.id_kondisi_pondasi', '=', 'f.kondisi_pondasi_id')
+            ->leftJoin('a_kondisi_sloof as ks', 'ks.id_kondisi_sloof', '=', 'f.kondisi_sloof_id')
+            ->leftJoin('a_kondisi_kolom_tiang as kkt', 'kkt.id_kondisi_kolom_tiang', '=', 'f.kondisi_kolom_tiang_id')
+            ->leftJoin('a_kondisi_balok as kb', 'kb.id_kondisi_balok', '=', 'f.kondisi_balok_id')
+            ->leftJoin('a_kondisi_struktur_atap as ksa', 'ksa.id_kondisi_struktur_atap', '=', 'f.kondisi_struktur_atap_id')
+            ->leftJoin('d_material_atap_terluas as mat', 'mat.id_material_atap_terluas', '=', 'f.material_atap_terluas_id')
+            ->leftJoin('d_kondisi_penutup_atap as kpa', 'kpa.id_kondisi_penutup_atap', '=', 'f.kondisi_penutup_atap_id')
+            ->leftJoin('d_material_dinding_terluas as mdt', 'mdt.id_material_dinding_terluas', '=', 'f.material_dinding_terluas_id')
+            ->leftJoin('d_kondisi_dinding as kd', 'kd.id_kondisi_dinding', '=', 'f.kondisi_dinding_id')
+            ->leftJoin('d_material_lantai_terluas as mlt', 'mlt.id_material_lantai_terluas', '=', 'f.material_lantai_terluas_id')
+            ->leftJoin('d_kondisi_lantai as kl', 'kl.id_kondisi_lantai', '=', 'f.kondisi_lantai_id')
+            ->leftJoin('d_akses_ke_jalan as akj', 'akj.id_akses_ke_jalan', '=', 'f.akses_ke_jalan_id')
+            ->leftJoin('d_bangunan_menghadap_jalan as bmj', 'bmj.id_bangunan_menghadap_jalan', '=', 'f.bangunan_menghadap_jalan_id')
+            ->leftJoin('d_bangunan_menghadap_sungai as bms', 'bms.id_bangunan_menghadap_sungai', '=', 'f.bangunan_menghadap_sungai_id')
+            ->leftJoin('d_bangunan_berada_sungai as bbs', 'bbs.id_bangunan_berada_sungai', '=', 'f.bangunan_berada_sungai_id')
+            ->leftJoin('d_bangunan_berada_limbah as bbl', 'bbl.id_bangunan_berada_limbah', '=', 'f.bangunan_berada_limbah_id')
+
+            ->leftJoin('sanitasi_rumah as sn', 'sn.rumah_id', '=', 'r.id_rumah')
+            ->leftJoin('b_jendela_lubang_cahaya as jl', 'jl.id_jendela_lubang_cahaya', '=', 'sn.jendela_lubang_cahaya_id')
+            ->leftJoin('b_kondisi_jendela_lubang_cahaya as kjl', 'kjl.id_kondisi_jendela_lubang_cahaya', '=', 'sn.kondisi_jendela_lubang_cahaya_id')
+            ->leftJoin('b_ventilasi as v', 'v.id_ventilasi', '=', 'sn.ventilasi_id')
+            ->leftJoin('b_kondisi_ventilasi as kv', 'kv.id_kondisi_ventilasi', '=', 'sn.kondisi_ventilasi_id')
+            ->leftJoin('b_kamar_mandi as km', 'km.id_kamar_mandi', '=', 'sn.kamar_mandi_id')
+            ->leftJoin('b_kondisi_kamar_mandi as kkm', 'kkm.id_kondisi_kamar_mandi', '=', 'sn.kondisi_kamar_mandi_id')
+            ->leftJoin('b_jamban as j', 'j.id_jamban', '=', 'sn.jamban_id')
+            ->leftJoin('b_kondisi_jamban as kj', 'kj.id_kondisi_jamban', '=', 'sn.kondisi_jamban_id')
+            ->leftJoin('b_sistem_pembuangan_air_kotor as spak', 'spak.id_sistem_pembuangan_air_kotor', '=', 'sn.sistem_pembuangan_air_kotor_id')
+            ->leftJoin('b_kondisi_sistem_pembuangan_air_kotor as kspak', 'kspak.id_kondisi_sistem_pembuangan_air_kotor', '=', 'sn.kondisi_sistem_pembuangan_air_kotor_id')
+            ->leftJoin('b_sumber_air_minum as sam', 'sam.id_sumber_air_minum', '=', 'sn.sumber_air_minum_id')
+            ->leftJoin('b_kondisi_sumber_air_minum as ksam', 'ksam.id_kondisi_sumber_air_minum', '=', 'sn.kondisi_sumber_air_minum_id')
+            ->leftJoin('b_sumber_listrik as sl', 'sl.id_sumber_listrik', '=', 'sn.sumber_listrik_id')
+            ->leftJoin('b_frekuensi_penyedotan as fps', 'fps.id_frekuensi_penyedotan', '=', 'sn.frekuensi_penyedotan_id')
+
+            ->leftJoin('penilaian_rumah as pr', 'pr.rumah_id', '=', 'r.id_rumah')
+
+            ->selectRaw("
+                r.id_rumah, 
+                r.alamat, 
+                kec.nama_kecamatan, 
+                kel.nama_kelurahan,
+                sdt.status_dtks,
+                jkk.jumlah_kk,
+                jk.jenis_kelamin,
+                se.usia,  
+                pt.pendidikan_terakhir, 
+                pu.pekerjaan_utama,
+                bpi.besar_penghasilan, 
+                bpe.besar_pengeluaran,
+                
+
+                skt.status_kepemilikan_tanah, 
+                bkt.bukti_kepemilikan_tanah,
+                skr.status_kepemilikan_rumah,
+                sim.status_imb,
+                k.nomor_imb,
+                ar.aset_rumah_tempat_lain,
+                at.aset_tanah_tempat_lain,
+                jkl.jenis_kawasan_lokasi,
+                k.nik_kepemilikan_rumah,
+                r.tahun_pembangunan_rumah,
+
+                p.pondasi, 
+                jp.nama_jenis_pondasi, 
+                kp.kondisi_pondasi,
+                ks.kondisi_sloof, 
+                kkt.kondisi_kolom_tiang, 
+                kb.kondisi_balok,
+                ksa.kondisi_struktur_atap,
+                pr.nilai_a, 
+
+                jl.jendela_lubang_cahaya, 
+                kjl.kondisi_jendela_lubang_cahaya,
+                v.ventilasi, 
+                sn.keterangan_ventilasi,
+                kv.kondisi_ventilasi, 
+                km.kamar_mandi,
+                kkm.kondisi_kamar_mandi, 
+                j.jamban, 
+                kj.kondisi_jamban,
+                spak.sistem_pembuangan_air_kotor, 
+                kspak.kondisi_sistem_pembuangan_air_kotor, 
+                sam.sumber_air_minum,
+                ksam.kondisi_sumber_air_minum,
+                sl.sumber_listrik, 
+                fps.frekuensi_penyedotan,
+                pr.nilai_b,
+
+                f.luas_rumah,
+                f.tinggi_rata_rumah ,
+                f.jumlah_penghuni_laki,
+                f.jumlah_penghuni_perempuan,
+                f.jumlah_abk,
+                f.jumlah_kamar_tidur,
+                f.luas_rata_kamar_tidur,
+                rng.ruang_keluarga_dan_tidur ,
+                jns.jenis_fisik_bangunan,
+                fng.fungsi_rumah ,
+                tp.tipe_rumah,
+                f.jumlah_lantai_bangunan ,
+                pr.nilai_c, 
+
+
+                mat.material_atap_terluas,
+                kpa.kondisi_penutup_atap, 
+                mdt.material_dinding_terluas,
+                kd.kondisi_dinding, 
+                mlt.material_lantai_terluas,
+                kl.kondisi_lantai,
+                akj.akses_ke_jalan,
+                bmj.bangunan_menghadap_jalan, 
+                bms.bangunan_menghadap_sungai,
+                bbs.bangunan_berada_sungai, 
+                bbl.bangunan_berada_limbah,
+
+                
+
+               
+                
+                pr.nilai,
+                pr.status_rumah, 
+                 CASE 
+                    WHEN pr.status_luas = 1 THEN 'Cukup'
+                    ELSE 'Kurang'
+                END AS status_luas,
+                CASE 
+                    WHEN jkk.jumlah_kk > 1 THEN 'BACKLOG'
+                    ELSE 'TIDAK BACKLOG'
+                END AS backlog
+            ")
+
+            ->orderBy('r.id_rumah')
+            ->chunk(1000, function ($rows) use ($writer) {
+                foreach ($rows as $row) {
+                    $writer->addRow(Row::fromValues((array)$row));
+                }
+            });
+
+        /**
+         |----------------------------------------------------------------------
+         |  SHEET 2: DATA KEPALA KELUARGA (QUERY BUILDER)
+         |----------------------------------------------------------------------
+         */
+        $writer->addNewSheetAndMakeItCurrent()->setName("Data KK & Anggota");
+
+        $writer->addRow(Row::fromValues([
+            'No', 'ID Rumah', 'No KK', 'NIK', 'Nama Lengkap'
+        ]));
+
+        $no = 1;
+
+        DB::table('kepala_keluarga as kk')
+            ->leftJoin('anggota_keluarga as ak', 'ak.kepala_keluarga_id', '=', 'kk.id')
+            ->leftJoin('rumah as r', 'r.id_rumah', '=', 'kk.rumah_id')
+            ->select('kk.id','kk.no_kk','kk.rumah_id','ak.nik','ak.nama')
+            ->orderBy('kk.id')
+            ->chunk(1000, function($list) use ($writer, &$no) {
+
+                foreach ($list as $row) {
+
+                    $noKK = $row->no_kk ?? '-';
+                    if (is_string($noKK) && stripos($noKK, 'DUMMY') !== false)
+                        $noKK = '-';
+
+                    $writer->addRow(Row::fromValues([
+                        $no++,
+                        $row->rumah_id ?? '-',
+                        $noKK,
+                        $row->nik ?? '-',
+                        $row->nama ?? '-',
+                    ]));
+                }
+            });
+
+        /**
+         |----------------------------------------------------------------------
+         |  SHEET 3: DATA BANTUAN (QUERY BUILDER ONLY)
+         |----------------------------------------------------------------------
+         */
+        $writer->addNewSheetAndMakeItCurrent()->setName("Data Bantuan");
+
+        $writer->addRow(Row::fromValues([
+            'Tipe Data','ID Rumah','Alamat','Kecamatan','Kelurahan',
+            'No KK Penerima','Nama Program Bantuan','Nama Bantuan','Tahun Bantuan',
+            'Nominal Bantuan (Rp)','Pernah Mendapatkan Bantuan'
+        ]));
+
+        // Ambil semua rumah yang punya bantuan
+        DB::table('rumah as r')
+            ->leftJoin('i_kelurahan as kel', 'kel.id_kelurahan', '=', 'r.kelurahan_id')
+            ->leftJoin('i_kecamatan as kec', 'kec.id_kecamatan', '=', 'kel.kecamatan_id')
+            ->leftJoin('bantuan_rumah as br', 'br.rumah_id', '=', 'r.id_rumah')
+            ->where('br.pernah_mendapatkan_bantuan_id', 1)
+            ->select(
+                'r.id_rumah','r.alamat',
+                'kel.nama_kelurahan','kec.nama_kecamatan',
+                'br.no_kk_penerima','br.nama_program_bantuan',
+                'br.nama_bantuan','br.tahun_bantuan','br.nominal_bantuan',
+                'br.pernah_mendapatkan_bantuan_id'
+            )
+            ->orderBy('r.id_rumah')
+            ->chunk(500, function($rows) use ($writer) {
+
+                foreach ($rows as $row) {
+
+                    $writer->addRow(Row::fromValues([
+                        'Bantuan Utama Rumah',
+                        $row->id_rumah,
+                        $row->alamat,
+                        $row->nama_kecamatan,
+                        $row->nama_kelurahan,
+                        $row->no_kk_penerima,
+                        $row->nama_program_bantuan,
+                        $row->nama_bantuan,
+                        $row->tahun_bantuan,
+                        $row->nominal_bantuan,
+                        'Ya'
+                    ]));
+
+                    // RIWAYAT BANTUAN KK (tbl_bantuan)
+                    $riwayat = DB::table('tbl_bantuan')
+                        ->where('kk', $row->no_kk_penerima)
+                        ->orderBy('tahun', 'desc')
+                        ->get();
+
+                    foreach ($riwayat as $r) {
+                        $writer->addRow(Row::fromValues([
+                            'Riwayat Bantuan KK',
+                            $row->id_rumah,
+                            $row->alamat,
+                            $row->nama_kecamatan,
+                            $row->nama_kelurahan,
+                            $r->kk,
+                            $r->nama_program,
+                            $r->nama,
+                            $r->tahun,
+                            $r->nominal,
+                            '-'
+                        ]));
+                    }
+                }
+            });
+
+        $writer->close();
+
+        return response()->download($filePath)->deleteFileAfterSend();
     }
 
     
@@ -569,159 +763,10 @@ class Data extends Component
     //     }
     // }
 
-    public function exportExcelLocal()
-    {
-        try {
-            ini_set('memory_limit', '4096M');
-            ini_set('max_execution_time', '1800');
+  
+  
 
-            $timestamp = now()->format('Ymd_His');
-            $folder = "exports_$timestamp";
-            $disk = 'public';
-
-            // buat folder storage/app/public/exports_xxx
-            $exportPath = storage_path("app/public/$folder");
-            if (!file_exists($exportPath)) mkdir($exportPath, 0777, true);
-
-            // nama file excel final
-            $excelFilename = "data_rumah_semua_sheet.xlsx";
-
-            // query dasar (boleh nanti ditambah filter)
-            $filteredQuery = \App\Models\Rumah::query();
-
-            // Log::info('📌 Export Excel - Query:', [
-            //     'sql' => $filteredQuery->toSql(),
-            //     'bindings' => $filteredQuery->getBindings()
-            // ]);
-
-            // SIMPAN 1 FILE EXCEL MULTI-SHEET
-            \Maatwebsite\Excel\Facades\Excel::store(
-                new \App\Exports\RumahExportAll($filteredQuery),
-                "$folder/$excelFilename",
-                $disk
-            );
-
-            // buat ZIP
-            $zipFilename = "export_data_$timestamp.zip";
-            $zipFile = storage_path("app/public/$zipFilename");
-
-            $zip = new \ZipArchive();
-            if ($zip->open($zipFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE)) {
-
-                $pathExcel = storage_path("app/public/$folder/$excelFilename");
-
-                if (file_exists($pathExcel)) {
-                    $zip->addFile($pathExcel, $excelFilename);
-                }
-
-                $zip->close();
-            }
-
-            // hapus file excel setelah dimasukkan zip
-            $generated = storage_path("app/public/$folder/$excelFilename");
-            if (file_exists($generated)) @unlink($generated);
-
-            // hapus folder
-            if (is_dir($exportPath)) @rmdir($exportPath);
-
-             return response()->download($zipFile)->deleteFileAfterSend(true);
-
-        } catch (\Throwable $e) {
-
-            Log::error('Export Excel gagal: ' . $e->getMessage());
-
-            $this->dispatch('swal:error', [
-                'title' => 'Export Gagal!',
-                'text' => $e->getMessage(),
-            ]);
-        }
-    }
-
-    public function exportExcelProd()
-    {
-        try {
-            // LIMIT hosting agar tidak overload
-            ini_set('memory_limit', '1024M');
-            ini_set('max_execution_time', '600');
-
-            $timestamp = now()->format('Ymd_His');
-            $folder = "exports_$timestamp";
-            $disk = 'public';
-
-            // buat folder storage/app/public/exports_xxx
-            $exportPath = storage_path("app/public/$folder");
-            if (!file_exists($exportPath)) {
-                mkdir($exportPath, 0777, true);
-            }
-
-            // nama file excel final
-            $excelFilename = "data_rumah_semua_sheet.xlsx";
-
-            // query dasar → AMAN karena FAST MODE tidak eagerloading
-            $filteredQuery = \App\Models\Rumah::select('id_rumah');
-
-            /**
-             * ==========================
-             *   EXPORT FAST MODE
-             * ==========================
-             */
-            \Maatwebsite\Excel\Facades\Excel::store(
-                new \App\Exports\ProdExportAll($filteredQuery),
-                "$folder/$excelFilename",
-                $disk
-            );
-
-            /**
-             * ==========================
-             *   ZIP hasil Excel
-             * ==========================
-             */
-            $zipFilename = "export_data_$timestamp.zip";
-            $zipFile = storage_path("app/public/$zipFilename");
-
-            $zip = new \ZipArchive();
-            if ($zip->open($zipFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE)) {
-
-                $pathExcel = storage_path("app/public/$folder/$excelFilename");
-
-                if (file_exists($pathExcel)) {
-                    $zip->addFile($pathExcel, $excelFilename);
-                }
-
-                $zip->close();
-            }
-
-            // Hapus file excel individu setelah masuk ZIP
-            $generated = storage_path("app/public/$folder/$excelFilename");
-            if (file_exists($generated)) @unlink($generated);
-
-            // hapus folder kosong
-            if (is_dir($exportPath)) @rmdir($exportPath);
-
-            return response()->download($zipFile)->deleteFileAfterSend(true);
-
-        } catch (\Throwable $e) {
-
-            Log::error('Export Excel gagal: ' . $e->getMessage());
-
-            $this->dispatch('swal:error', [
-                'title' => 'Export Gagal!',
-                'text' => $e->getMessage(),
-            ]);
-        }
-    }
-
-   public function exportExcel()
-    {
-        $this->isProcessing = true;
-        $timestamp = now()->format('Ymd_His');
-
-        $this->jobFile = "exports/export_rumah_$timestamp.xlsx";
-
-        ExportRumahJob::dispatch($this->jobFile);
-
-        $this->dispatch('start-export-polling');
-    }
+ 
 
 
     public function checkFile()

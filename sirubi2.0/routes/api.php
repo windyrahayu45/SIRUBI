@@ -11,6 +11,9 @@ use App\Http\Controllers\Api\MasterController;
 
 Route::post('auth/login', [AuthController::class, 'login']);
 Route::post('auth/refreshToken', [AuthController::class, 'refreshToken']);
+Route::get('/rumah-export', [AuthController::class, 'export']);
+Route::get('/exportXlsx', [AuthController::class, 'exportXlsx2']);
+
 
 Route::middleware('jwt')->group(function () {
 
