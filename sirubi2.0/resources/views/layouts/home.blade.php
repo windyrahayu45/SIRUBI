@@ -1,5 +1,6 @@
 
-      <!-- Hero section -->
+    <div>
+  <!-- Hero section -->
       <section
         id="home"
         class="relative overflow-hidden bg-primary text-primary-color pt-[120px] md:pt-[130px] lg:pt-[160px]"
@@ -486,7 +487,139 @@
         </div>
     </section>
 
+    <section id="pengaduan" class="section-area" >
+        <div class="container">
+            <div class="row">
 
+                <!-- LEFT INFO BOX (tetap seperti template asli) -->
+                <div class="col-12 xl:col-4">
+                    <div class="row">
+
+                        <div class="col-12 md:col-6 xl:col-12">
+                            <div class="scroll-revealed py-5 px-6 rounded-xl shadow-card-1 bg-body-light-1 dark:bg-primary-dark-2 flex gap-6 hover:shadow-lg">
+                                <div>
+                                    <i class="lni lni-map-marker w-[50px] h-[50px] inline-flex items-center justify-center rounded-lg text-[1.25rem] bg-primary text-primary-color"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-[1.25rem] text-primary mb-3">Alamat Kantor</h4>
+                                    <p class="m-0">Dinas Perumahan & Kawasan Permukiman</p>
+                                    <p class="m-0">Kota  Bukittinggi</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 md:col-6 xl:col-12">
+                            <div class="scroll-revealed py-5 px-6 rounded-xl shadow-card-1 bg-body-light-1 dark:bg-primary-dark-2 flex gap-6 hover:shadow-lg">
+                                <div>
+                                    <i class="lni lni-alarm-clock w-[50px] h-[50px] inline-flex items-center justify-center rounded-lg text-[1.25rem] bg-primary text-primary-color"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-[1.25rem] text-primary mb-3">Jam Layanan</h4>
+                                    <p class="m-0">Senin – Jumat</p>
+                                    <p class="m-0">08:00 – 16:00 WIB</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                
+                <!-- RIGHT FORM -->
+                <div class="col-12 xl:col-8">
+                    <div class="scroll-revealed bg-body-light-1 dark:bg-primary-dark-2 rounded-xl py-8 sm:py-12 px-6 sm:px-10 shadow-card-1 hover:shadow-lg">
+
+                        <!-- TITLE -->
+                        <div class="text-center max-w-[550px] mx-auto mb-12">
+                            <h6 class="mb-2 block text-lg font-semibold text-primary">
+                                Form Pengaduan Masyarakat
+                            </h6>
+                            <h2 class="mb-3">Sampaikan Pengaduan Anda</h2>
+                            <p>
+                                Laporkan kondisi rumah, sanitasi, lingkungan, atau infrastruktur 
+                                yang membutuhkan perhatian pemerintah. Pengaduan Anda membantu 
+                                proses penanganan dan kebijakan pembangunan.
+                            </p>
+                        </div>
+
+                        <!-- FORM -->
+                        <div  class="flex flex-col gap-6">
+
+                            <div class="row">
+
+                                <div class="col-12 md:col-6">
+                                    <input type="text" wire:model="nama" class="block w-full px-5 py-3 rounded-md border" placeholder="Nama Pelapor">
+                                    @error('nama') <small class="text-danger">{{ $message }}</small> @enderror
+                                </div>
+
+                                <div class="col-12 md:col-6">
+                                    <input type="text"
+                                        wire:model="no_hp"
+                                        inputmode="numeric"
+                                        pattern="[0-9]*"
+                                        maxlength="15"
+                                        oninput="
+                                            this.value = this.value.replace(/[^0-9]/g, '');
+                                        "
+                                        class="block w-full px-5 py-3 rounded-md border"
+                                        placeholder="Nomor HP">
+
+                                    @error('no_hp') <small class="text-danger">{{ $message }}</small> @enderror
+                                </div>
+
+                                <div class="col-12">
+                                    <input type="text" wire:model="judul" class="block w-full px-5 py-3 rounded-md border" placeholder="Judul Pengaduan">
+                                    @error('judul') <small class="text-danger">{{ $message }}</small> @enderror
+                                </div>
+
+                                <div class="col-12 md:col-6">
+                                    <select wire:model="kategori" class="block w-full px-5 py-3 rounded-md border">
+                                        <option value="">Pilih Kategori</option>
+                                        <option value="Rumah">Rumah</option>
+                                        <option value="Sanitasi">Sanitasi</option>
+                                        <option value="Lingkungan">Lingkungan</option>
+                                        <option value="Infrastruktur">Infrastruktur</option>
+                                    </select>
+                                    @error('kategori') <small class="text-danger">{{ $message }}</small> @enderror
+                                </div>
+
+                                <div class="col-12 md:col-6">
+                                    <input type="text" wire:model="lokasi" class="block w-full px-5 py-3 rounded-md border" placeholder="Lokasi Pengaduan">
+                                    @error('lokasi') <small class="text-danger">{{ $message }}</small> @enderror
+                                </div>
+
+                                <div class="col-12">
+                                    <textarea wire:model="deskripsi" rows="5" class="block w-full px-5 py-3 rounded-md border" placeholder="Deskripsi Pengaduan"></textarea>
+                                    @error('deskripsi') <small class="text-danger">{{ $message }}</small> @enderror
+                                </div>
+
+                                <div class="col-12">
+                                    <input type="file" wire:model="foto" multiple class="block w-full px-5 py-3 rounded-md border">
+                                    @error('foto.*') <small class="text-danger">{{ $message }}</small> @enderror
+
+                                    <div wire:loading wire:target="foto" class="text-primary text-sm mt-2">
+                                        Mengupload foto...
+                                    </div>
+                                </div>
+
+                                <div class="col-12 text-center">
+                                    <button type="button" wire:click="submitPengaduan"
+                                        class="px-5 py-3 rounded-md bg-primary text-white">
+                                        Kirim Pengaduan
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div >
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    </div>
     
  @push('styles')
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -939,6 +1072,20 @@ document.addEventListener('livewire:init', () => {
 
         // scroll halus agar user langsung melihat tabel
         section.scrollIntoView({ behavior: 'smooth' });
+    });
+});
+</script>
+
+<script>
+document.addEventListener('livewire:init', () => {
+    Livewire.on('pengaduanSuccess', () => {
+        Swal.fire({
+            icon: 'success',
+            title: 'Pengaduan Berhasil Dikirim!',
+            text: 'Terima kasih, laporan Anda sudah kami terima.',
+            timer: 2000,
+            showConfirmButton: false
+        });
     });
 });
 </script>

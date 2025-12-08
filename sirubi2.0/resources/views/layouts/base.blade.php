@@ -257,6 +257,16 @@
                     >
                   </li>
 
+                  <li class="group relative">
+                    <a
+                      href="#pengaduan"
+                      class="ic-page-scroll mx-8 flex py-2 text-base font-medium text-body-light-12 group-hover:text-primary dark:text-body-dark-12 lg:mr-0 lg:inline-flex lg:px-0 lg:py-6 lg:text-primary-color lg:dark:text-primary-color lg:group-hover:text-primary-color lg:group-hover:opacity-70"
+                      role="menuitem"
+                      >Pengaduan</a
+                    >
+                  </li>
+
+
                   {{-- <li class="group relative">
                     <a
                       href="#team"
@@ -336,7 +346,7 @@
           <div class="w-full md:w-1/2">
             <div class="my-1 flex justify-center md:justify-end">
               <p class="text-body-dark-11">
-                Dinas Perumahan Dan Permukiman Kota <a href=https://www.bukittinggikota.go.id/" target="_blank">Bukittinggi</a>
+                Dinas Perumahan Dan Permukiman Kota <a href="https://www.bukittinggikota.go.id/" target="_blank">Bukittinggi</a>
               </p>
             </div>
           </div>

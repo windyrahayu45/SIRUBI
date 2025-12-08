@@ -3,12 +3,14 @@
 namespace App\Livewire;
 
 use App\Models\IKecamatan;
+use App\Models\Pengaduan;
+use App\Models\PengaduanPhoto;
 use App\Models\Rumah;
 use App\Models\TblJenisPolygon;
 use App\Models\TblPolygonKelurahan;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
-
+use Livewire\WithFileUploads;
 
 class Home extends Component
 {
@@ -18,6 +20,60 @@ class Home extends Component
     public $penduduk = [];
     public $kawasan = [];
     public $kecamatan;
+    public $nama;
+    public $no_hp;
+    public $judul;
+    public $kategori;
+    public $lokasi;
+    public $deskripsi;
+    public $foto = [];
+
+    protected $rules = [
+        'nama' => 'required|string|max:255',
+        'no_hp' => 'required|regex:/^[0-9]{8,15}$/',
+
+        'judul' => 'required|string|max:255',
+        'kategori' => 'required|string',
+        'lokasi' => 'required|string',
+        'deskripsi' => 'required|string',
+        'foto.*' => 'nullable|image|max:2048'
+    ];
+
+     use WithFileUploads;
+
+    public function submitPengaduan()
+    {
+        $this->validate();
+
+        // simpan pengaduan
+        $p = Pengaduan::create([
+            'judul'     => $this->judul,
+            'deskripsi' => $this->deskripsi,
+            'kategori'  => $this->kategori,
+            'lokasi'    => $this->lokasi,
+            'user_id'   => null,
+            'nama_pelapor' => $this->nama,
+            'no_hp'         => $this->no_hp,
+        ]);
+
+        // simpan foto
+        if ($this->foto) {
+            foreach ($this->foto as $img) {
+                $path = $img->store("pengaduan/{$p->id}", 'public');
+
+                PengaduanPhoto::create([
+                    'pengaduan_id' => $p->id,
+                    'file_path'    => $path,
+                ]);
+            }
+        }
+
+        // reset setelah submit
+        $this->reset(['nama','no_hp','judul','kategori','lokasi','deskripsi','foto']);
+
+        // trigger JS notifikasi
+        $this->dispatch('pengaduanSuccess');
+    }
 
     public function mount()
     {
