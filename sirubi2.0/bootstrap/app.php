@@ -14,7 +14,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'jwt' => \App\Http\Middleware\JwtMiddleware::class,
+            'log.visitor' => \App\Http\Middleware\LogVisitor::class,
         ]);
+         // middleware global (semua request)
+        //  $middleware->group('web', [
+        //     \App\Http\Middleware\LogVisitor::class,
+        // ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RekapExportController;
 use App\Livewire\Admin\Pengaduan as AdminPengaduan;
 use App\Livewire\Bantuan;
+use App\Livewire\Bantuan\Show as BantuanShow;
 use App\Livewire\Dashboard;
 use App\Livewire\Data;
 use App\Livewire\Dokumentasi;
@@ -26,7 +27,7 @@ use App\Models\Rumah;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', Home::class)->name('home');
+
 // Route::get('/', function () {
 //     return redirect()->route('login');
 // });
@@ -36,11 +37,9 @@ Route::post('/logout', function () {
     return redirect()->route('login');
 })->name('logout');
 
-// Route::view('dashboard', 'dashboard')
-//     ->middleware(['auth', 'verified'])
-//     ->name('dashboard');
-Route::get('/test', function() {
-    return 'Route OK';
+Route::middleware('log.visitor')->group(function () {
+   Route::get('/', Home::class)->name('home');
+    // route lain yang ingin dicatat visitor
 });
 
 Route::get('/download-export/{timestamp}', function ($timestamp) {
@@ -91,7 +90,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('datatable.rumah.detail');
 
     Route::get('/rumah/{id}', Show::class)->name('rumah.show');
-
+    Route::get('/bantuan/{id}', BantuanShow::class)->name('bantuan.show');
 // halaman edit rumah
     Route::get('/rumah/{id}/edit', Edit::class)->name('rumah.edit');
 

@@ -75,19 +75,37 @@ class Pengaduan extends Component
         $this->dispatch('swal:success', message: "Pengaduan berhasil dihapus.");
     }
 
+    // public function render()
+    // {
+    //     return view('livewire.pengaduan', [
+    //        'items' => ModelPengaduan::when($this->search, function ($q) {
+    //             $q->where('judul', 'like', "%{$this->search}%")
+    //               ->orWhere('nama_pelapor', 'like', "%{$this->search}%")
+    //               ->orWhere('no_hp', 'like', "%{$this->search}%")
+    //               ->orWhere('kategori', 'like', "%{$this->search}%");
+    //         })
+    //         ->latest()
+    //         ->paginate(10)
+
+    //     ])->extends('layouts.master')
+    //         ->section('content');
+    // }
+
     public function render()
     {
         return view('livewire.pengaduan', [
-           'items' => ModelPengaduan::when($this->search, function ($q) {
-                $q->where('judul', 'like', "%{$this->search}%")
-                  ->orWhere('nama_pelapor', 'like', "%{$this->search}%")
-                  ->orWhere('no_hp', 'like', "%{$this->search}%")
-                  ->orWhere('kategori', 'like', "%{$this->search}%");
+            'items' => ModelPengaduan::when($this->search, function ($q) {
+                $q->where(function ($query) {
+                    $query->where('judul', 'like', "%{$this->search}%")
+                        ->orWhere('nama_pelapor', 'like', "%{$this->search}%")
+                        ->orWhere('no_hp', 'like', "%{$this->search}%")
+                        ->orWhere('kategori', 'like', "%{$this->search}%");
+                });
             })
             ->latest()
             ->paginate(10)
-
         ])->extends('layouts.master')
-            ->section('content');
+        ->section('content');
     }
+
 }

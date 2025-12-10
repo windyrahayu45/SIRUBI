@@ -61,6 +61,30 @@
                             <!--begin::Toolbar-->
                             <div class="d-flex justify-content-end" data-kt-user-table-toolbar="base">
                                 <!--begin::Filter-->
+
+                                <button type="button" class="btn btn-light-primary me-3" data-bs-toggle="modal" data-bs-target="#modalIntegrasiDokumen">
+                                    <!--begin::Svg Icon | path: icons/duotune/arrows/arr078.svg-->
+                                    <span class="svg-icon svg-icon-2">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+
+                                            <!-- Left block -->
+                                            <rect opacity="0.3" x="3" y="4" width="7" height="6" rx="1.5" fill="currentColor"/>
+
+                                            <!-- Right block -->
+                                            <rect opacity="0.3" x="14" y="14" width="7" height="6" rx="1.5" fill="currentColor"/>
+
+                                            <!-- Arrow down-right -->
+                                            <path d="M10 9L14 13M14 13H11M14 13V10" stroke="currentColor" stroke-width="1.8"
+                                                stroke-linecap="round" stroke-linejoin="round"/>
+
+                                            <!-- Arrow up-left -->
+                                            <path d="M14 11L10 15M10 15H13M10 15V12" stroke="currentColor" stroke-width="1.8"
+                                                stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+
+                                    </span>
+                                    <!--end::Svg Icon-->Integrasi Dokumen</button>
                                 
                                 <!--begin::Menu 1-->
                                 
@@ -140,6 +164,95 @@
                                 </div>
                             </div>
 
+                        <div class="modal fade" id="modalIntegrasiDokumen" tabindex="-1" aria-hidden="true" wire:ignore.self>
+                            <div class="modal-dialog modal-dialog-centered mw-650px">
+                                <div class="modal-content">
+
+                                    <!-- HEADER -->
+                                    <div class="modal-header">
+                                        <h2 class="fw-bold">Integrasi Dokumen Bantuan</h2>
+
+                                        <button type="button" class="btn btn-icon btn-sm btn-active-icon-primary" data-bs-dismiss="modal">
+                                            <span class="svg-icon svg-icon-1">
+                                                <svg width="24" height="24" fill="none">
+                                                    <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1"
+                                                        transform="rotate(-45 6 17.3137)" fill="currentColor" />
+                                                    <rect x="7.41422" y="6" width="16" height="2" rx="1"
+                                                        transform="rotate(45 7.41422 6)" fill="currentColor" />
+                                                </svg>
+                                            </span>
+                                        </button>
+                                    </div>
+
+                                    <!-- BODY -->
+                                    <div class="modal-body scroll-y mx-5 mx-xl-15 my-7">
+
+                                        <!-- Nama Bantuan -->
+                                        <div class="fv-row mb-7">
+                                            <label class="fw-semibold fs-6 mb-2">Nama Bantuan</label>
+                                            <input type="text"
+                                                class="form-control form-control-solid"
+                                                placeholder="Masukkan nama bantuan"
+                                                wire:model="nama_bantuan_input">
+                                        </div>
+
+                                        <!-- Nama Program -->
+                                        <div class="fv-row mb-7">
+                                            <label class="fw-semibold fs-6 mb-2">Nama Program</label>
+                                            <input type="text"
+                                                class="form-control form-control-solid"
+                                                placeholder="Masukkan nama program"
+                                                wire:model="nama_program_input">
+                                        </div>
+
+                                        <!-- Tahun Bantuan -->
+                                        <div class="fv-row mb-7">
+                                            <label class="fw-semibold fs-6 mb-2">Tahun Bantuan</label>
+                                            <input type="number"
+                                                class="form-control form-control-solid"
+                                                placeholder="Contoh: 2024"
+                                                wire:model="tahun_bantuan_input">
+                                        </div>
+
+                                        <!-- Dokumen Select -->
+                                        <div class="fv-row mb-7" wire:ignore>
+                                            <label class="required fs-6 fw-semibold mb-2">Pilih Dokumen</label>
+                                            <select class="form-select" 
+                                                    id="dokumen_input"
+                                                    data-control="select2"
+                                                    data-placeholder="Pilih dokumen"
+                                                    data-name="dokumen_input">
+                                                <option value="">-- Pilih Dokumen --</option>
+                                                @foreach($dokumens as $item)
+                                                    <option value="{{ $item->id_dokumen }}">{{ $item->nama_dokumen }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+
+                                        <!-- BUTTONS -->
+                                        <div class="text-center mt-10">
+                                            <button type="button"
+                                                    class="btn btn-primary"
+                                                       wire:click="submitIntegrasi"
+                                                    wire:loading.attr="disabled">
+
+                                                <span class="indicator-label" wire:loading.remove wire:target="submitIntegrasi">
+                                                    Simpan
+                                                </span>
+
+                                                <span class="indicator-progress" wire:loading wire:target="submitIntegrasi">
+                                                    Mohon Tunggu...
+                                                    <span class="spinner-border spinner-border-sm ms-2"></span>
+                                                </span>
+                                            </button>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
 
                             
                         </div>
@@ -155,11 +268,13 @@
                                 <tr class="text-start text-gray-400 fw-bold fs-7 text-uppercase gs-0">
                                     
                                     <th width="10">No</th>
-                                    <th class="min-w-150px">No KK</th>
+                                    <th class="min-w-150px">No KK / NIK</th>
                                     <th class="min-w-150px">Nama Bantuan</th>
                                     <th class="min-w-125px">Program Bantuan</th>
                                     <th class="min-w-125px">Nominal</th>
                                     <th class="min-w-125px">Tahun</th>
+                                    <th class="min-w-125px">Dokumen</th>
+                                    <th class="min-w-125px">Status Data</th>
                                     <th class="text-end min-w-100px">Aksi</th>
                                 </tr>
                             </thead>
@@ -238,6 +353,22 @@
                             <label class="required fw-semibold fs-6 mb-2">Tahun Bantuan</label>
                             <input type="number" class="form-control form-control-solid"
                                 wire:model="form.tahun" />
+                        </div>
+
+
+                        <div class="col-md-6 fv-row" wire:ignore>
+                            <label class="required fs-5 fw-semibold mb-2">Dokumen</label>
+                            <select class="form-select" 
+                                    data-control="select2"
+                                    data-placeholder="Pilih Dokumen"
+                                    data-name="id_dokumen"
+                                    id="id_dokumen"
+                                    required>
+                                <option value="">-- Pilih Dokumen --</option>
+                                @foreach($dokumens ?? [] as $item)
+                                    <option value="{{ $item->id_dokumen }}">{{ $item->nama_dokumen }}</option>
+                                @endforeach
+                            </select>
                         </div>
 
                     </div>
@@ -338,6 +469,9 @@ function initTable() {
             { data: 'nama_program' },
             { data: 'nominal' },
             { data: 'tahun' },
+             { data: 'dokumen' },
+             {data : 'status_kk'},
+            
             
             { data: 'action', orderable: false, searchable: false }
         ],
@@ -462,6 +596,15 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+     Livewire.on('hideIntegrasiModal', () => {
+        let modalEl = document.getElementById('modalIntegrasiDokumen');
+        let modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+         if (window.bantuanTable) {
+            window.bantuanTable.ajax.reload(null, false);
+        }
+    });
+
      Livewire.on('hideImportModal', () => {
         let modalEl = document.getElementById('kt_modal_import_data');
         let modal = bootstrap.Modal.getInstance(modalEl);
@@ -478,6 +621,58 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 });
+
+
+document.addEventListener("DOMContentLoaded", () => {
+    initSelect2();
+});
+// Tambahkan hook ini ‼️
+
+function initSelect2() {
+    console.log("✅ Init Select2 triggered");
+
+    $('[data-control="select2"]').each(function() {
+        const el = $(this);
+
+        //Pastikan tidak diinisialisasi dua kali
+        // if (el.data('select2')) {
+        //     el.select2('destroy');
+        // }
+        // console.log(el.data('placeholder'))
+        // el.select2({
+          
+        //     width: '100%',
+        //     placeholder: el.data('placeholder') ?? '',
+          
+        // });
+        if (!el.data('select2')) {
+            el.select2({
+                width: '100%',
+                placeholder: el.data('placeholder') ?? '',
+            });
+        }
+       
+
+
+        // Saat value diubah, kirim ke Livewire
+        el.on('change', function () {
+            const value = $(this).val();
+            const name = el.data('name');
+           // alert(value)
+             const componentId = el.closest('[wire\\:id]').attr('wire:id');
+
+    if (componentId) {
+        const component = Livewire.find(componentId);
+        if (component) {
+            console.log('✅ Dispatch ke komponen:', component.name);
+            component.call('select2Changed', { name, value });
+        }
+    } else {
+        console.warn('⚠️ Tidak menemukan komponen Livewire untuk select2');
+    }
+        });
+    });
+}
 </script>
 
 @endpush

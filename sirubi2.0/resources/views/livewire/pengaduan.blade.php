@@ -52,6 +52,7 @@
                                 <tr class="text-gray-400 fw-bold fs-7 text-uppercase gs-0">
                                     <th>No</th>
                                     <th>Judul</th>
+                                    <th>Tgl Pengaduan</th>
                                     <th>Pelapor</th>
                                     <th>No HP</th>
                                     <th>Kategori</th>
@@ -65,6 +66,7 @@
                                 <tr>
                                     <td>{{ $items->firstItem() + $i }}</td>
                                     <td>{{ $row->judul }}</td>
+                                       <td>{{ $row->created_at->format('d/m/Y H:i') }}</td>
                                     <td>{{ $row->nama_pelapor }}</td>
                                     <td>{{ $row->no_hp }}</td>
                                     <td><span class="badge badge-light-primary">{{ $row->kategori }}</span></td>

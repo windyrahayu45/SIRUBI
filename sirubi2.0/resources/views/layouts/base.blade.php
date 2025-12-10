@@ -315,7 +315,121 @@
 
     <!-- Footer -->
     <footer class="bg-primary-dark-2 text-white">
-      
+      <div class="container py-20 lg:py-[100px]">
+        <div class="row">
+          <div class="col-12 order-first lg:col-4">
+            <div class="w-full">
+              <a href="/" class="inline-block mb-5">
+    <span class="text-3xl font-extrabold tracking-wide text-primary-light-10" style="font-weight: 900">
+        SIRUBI
+    </span>
+</a>
+
+
+               <p class="mb-8 text-body-dark-11 leading-relaxed">
+                  Sistem Informasi Perumahan 
+                  <br>Kota Bukittinggi
+              </p>
+
+              <div class="-mx-3 flex items-center">
+                <a href="javascript:void(0)" class="px-3 text-body-dark-11 hover:text-primary text-[22px] leading-none">
+                  <i class="lni lni-facebook-fill"></i>
+                </a>
+
+                <a href="javascript:void(0)" class="px-3 text-body-dark-11 hover:text-primary text-[22px] leading-none">
+                  <i class="lni lni-twitter-original"></i>
+                </a>
+
+                <a href="javascript:void(0)" class="px-3 text-body-dark-11 hover:text-primary text-[22px] leading-none">
+                  <i class="lni lni-instagram-original"></i>
+                </a>
+
+                <a href="javascript:void(0)" class="px-3 text-body-dark-11 hover:text-primary text-[22px] leading-none">
+                  <i class="lni lni-linkedin-original"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+          {{-- <div class="col-6 lg:col-2">
+            <div class="w-full">
+              <h4 class="mb-9 text-lg font-semibold text-inherit">Solutions</h4>
+              <ul>
+                <li>
+                  <a href="javascript:void(0)" class="mb-3 inline-block text-body-dark-11 hover:text-primary">Marketing</a>
+                </li>
+                <li>
+                  <a href="javascript:void(0)" class="mb-3 inline-block text-body-dark-11 hover:text-primary">Analytics</a>
+                </li>
+                <li>
+                  <a href="javascript:void(0)" class="mb-3 inline-block text-body-dark-11 hover:text-primary">Commerce</a>
+                </li>
+                <li>
+                  <a href="javascript:void(0)" class="mb-3 inline-block text-body-dark-11 hover:text-primary">Insights</a>
+                </li>
+              </ul>
+            </div>
+          </div> --}}
+         <div class="col-6 lg:col-2">
+    <div class="w-full">
+        <h4 class="mb-9 text-lg font-semibold text-inherit">Visitor Stats</h4>
+        <ul>
+            <li>
+                <span class="mb-3 inline-block text-body-dark-11">
+                    <i class="ti ti-point-filled text-green-400 mr-1"></i>
+                    Online: <strong class="text-white">{{ $visitorStats['online'] ?? 0 }} Pengunjung</strong>
+                </span>
+            </li>
+
+            <li>
+                <span class="mb-3 inline-block text-body-dark-11">
+                    <i class="ti ti-calendar-check text-blue-300 mr-1"></i>
+                    Hari Ini: <strong class="text-white">{{ $visitorStats['today'] ?? 0 }} Pengunjung</strong>
+                </span>
+            </li>
+
+            <li>
+                <span class="mb-3 inline-block text-body-dark-11">
+                    <i class="ti ti-calendar-week text-yellow-300 mr-1"></i>
+                    Minggu Ini: <strong class="text-white">{{ $visitorStats['week'] ?? 0 }} Pengunjung</strong>
+                </span>
+            </li>
+
+            <li>
+                <span class="mb-3 inline-block text-body-dark-11">
+                    <i class="ti ti-calendar-month text-indigo-300 mr-1"></i>
+                    Bulan Ini: <strong class="text-white">{{ $visitorStats['month'] ?? 0 }} Pengunjung</strong>
+                </span>
+            </li>
+
+            <li>
+                <span class="mb-3 inline-block text-body-dark-11">
+                    <i class="ti ti-chart-bar text-pink-300 mr-1"></i>
+                    Tahun Ini: <strong class="text-white">{{ $visitorStats['year'] ?? 0 }} Pengunjung</strong>
+                </span>
+            </li>
+        </ul>
+    </div>
+</div>
+
+          {{-- <div class="col-12 -order-3 lg:col-4 lg:order-1">
+            <div class="w-full">
+              <h4 class="mb-9 text-lg font-semibold text-inherit">Subscribe</h4>
+
+              <p class="text-body-dark-11">
+                Subscribe to our newsletter for the latest updates
+              </p>
+
+              <form action="#" method="POST" target="_blank" class="mt-8 flex">
+                <input type="email" name="email" class="inline-block flex-grow px-5 py-3 rounded-md rounded-e-none border border-solid border-alpha-dark text-inherit text-base focus:border-primary" placeholder="Email address" required="">
+
+                <button type="submit" class="inline-block py-3 w-[50px] rounded-md rounded-s-none text-center text-lg/none bg-primary text-primary-color hover:bg-primary-light-10 dark:hover:bg-primary-dark-10 focus:bg-primary-light-10 dark:focus:bg-primary-dark-10">
+                  <i class="lni lni-envelope"></i>
+                </button>
+              </form>
+            </div>
+          </div> --}}
+        </div>
+      </div>
       <div class="w-full border-t border-solid border-alpha-dark"></div>
       <div class="container py-8">
         <div class="flex flex-wrap">

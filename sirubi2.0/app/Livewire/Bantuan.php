@@ -3,7 +3,10 @@
 namespace App\Livewire;
 
 use App\Imports\BantuanImport;
+use App\Models\KepalaKeluarga;
 use App\Models\TblBantuan;
+use App\Models\TblDokumen;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Yajra\DataTables\Facades\DataTables;
@@ -16,7 +19,32 @@ class Bantuan extends Component
   
   public $selectedId;
   public $form = [];
+  public $dokumens = [];
+  public $id_dokumen;
   public $file_import;
+
+  public $nama_bantuan_input;
+    public $nama_program_input;
+    public $tahun_bantuan_input;
+    public $dokumen_input;
+
+  public function mount(){
+    $this->dokumens = TblDokumen::all();
+  }
+
+
+   #[On('select2Changed')]
+    public function select2Changed($data)
+    {
+        $name = $data['name'] ?? null;
+        $value = $data['value'] ?? null;
+
+        if ($name && property_exists($this, $name)) {
+            $this->$name = $value;
+            logger("✅ Livewire menerima {$name} = {$value}");
+        }
+
+    }
 
     public function openEditModal($id)
     {
@@ -24,6 +52,7 @@ class Bantuan extends Component
 
         $data = TblBantuan::where('id_bantuan', $id)
                     ->first();
+        
 
         if (!$data) {
             $this->dispatch('showAlert', [
@@ -39,6 +68,7 @@ class Bantuan extends Component
             'program_bantuan' => $data->nama_program,
             'nominal'         => $data->nominal,
             'tahun'           => $data->tahun,
+            'id_dokumen'       => $data->id_dokumen,
         ];
 
         $this->dispatch('showEditModal');
@@ -51,12 +81,35 @@ class Bantuan extends Component
             'form.program_bantuan' => 'required|string|max:255',
             'form.nominal'         => 'required|numeric',
             'form.tahun'           => 'required|digits:4',
+            'id_dokumen'       => 'required',
         ];
     }
 
   public function updateData()
   {
-      $this->validate();
+     try {
+            $this->validate([
+                 'form.nama_bantuan'    => 'required|string|max:255',
+                'form.program_bantuan' => 'required|string|max:255',
+                'form.nominal'         => 'required|numeric',
+                'form.tahun'           => 'required|digits:4',
+                'id_dokumen'       => 'required',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+
+            // Ambil pesan error pertama
+            $message = collect($e->errors())->first()[0] ?? "Harap lengkapi semua field wajib.";
+
+            // Tampilkan SweetAlert
+            $this->dispatch('showAlert', [
+                'type'    => 'error',
+                'message' => $message
+            ]);
+
+            return;
+        }
+
+    
 
       TblBantuan::where('id_bantuan', $this->selectedId)
           ->update([
@@ -64,6 +117,7 @@ class Bantuan extends Component
               'nama_program' => $this->form['program_bantuan'],
               'nominal'         => $this->form['nominal'],
               'tahun'           => $this->form['tahun'],
+              'id_dokumen'       => $this->id_dokumen,
           ]);
 
       // tutup modal
@@ -77,6 +131,51 @@ class Bantuan extends Component
           'message' => 'Data Bantuan berhasil diperbarui!'
       ]);
   }
+
+    public function submitIntegrasi()
+    {
+        try {
+            $this->validate([
+                'nama_bantuan_input'    => 'required|string|max:255',
+                'nama_program_input'    => 'required|string|max:255',
+                'tahun_bantuan_input'   => 'required|numeric',
+                'dokumen_input'         => 'required',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+
+            $message = collect($e->errors())->first()[0] ?? "Harap lengkapi semua field wajib.";
+
+            $this->dispatch('showAlert', [
+                'type'    => 'error',
+                'message' => $message
+            ]);
+
+            return;
+        }
+
+        // -------------------------
+        // 🔥 UPDATE LOGIC BARU 🔥
+        // -------------------------
+        TblBantuan::where('nama', $this->nama_bantuan_input)
+            ->where('nama_program', $this->nama_program_input)
+            ->where('tahun', $this->tahun_bantuan_input)
+            ->update([
+                'id_dokumen' => $this->dokumen_input
+            ]);
+
+        // 🔥 Reset input setelah update
+        $this->reset(['nama_bantuan_input', 'nama_program_input', 'tahun_bantuan_input', 'dokumen_input']);
+
+        // 🔥 Tutup modal
+        $this->dispatch('hideIntegrasiModal'); // atau 'hide-modal-integrasi' sesuai JS kamu
+
+        // 🔥 Notifikasi sukses
+        $this->dispatch('showAlert', [
+            'type'    => 'success',
+            'message' => 'Integrasi dokumen berhasil diperbarui!'
+        ]);
+    }
+
 
 
    public function importData()
@@ -126,7 +225,7 @@ class Bantuan extends Component
     {
         $request = request();
 
-        $query = TblBantuan::orderBy('id_bantuan', 'desc');
+        $query = TblBantuan::with('dokumen')->orderBy('id_bantuan', 'desc');
 
         return DataTables::eloquent($query)
             ->addIndexColumn()
@@ -148,6 +247,26 @@ class Bantuan extends Component
                   return 'Rp ' . number_format((float)$numeric, 0, ',', '.');
               })
 
+               ->addColumn('dokumen', function ($r) {
+                    if (!$r->dokumen) {
+                        return '<span class="badge bg-secondary">Tidak Ada</span>';
+                    }
+
+                    return $r->dokumen->nama_dokumen;
+                })
+
+                ->addColumn('status_kk', function ($r) {
+
+                    // cek apakah ada data kepala keluarga
+                    $exists = KepalaKeluarga::where('no_kk', $r->kk)->exists();
+
+                    if ($exists) {
+                        return '<span class="badge bg-success">Telah Terdata</span>';
+                    }
+
+                    return '<span class="badge bg-danger">Rumah Belum Ada</span>';
+                })
+
               ->addColumn('action', function ($r) {
                   $buttons = '
                       <a href="#" 
@@ -163,6 +282,13 @@ class Bantuan extends Component
                       <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded 
                                   menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 
                                   w-150px py-4" data-kt-menu="true">
+
+                         <div class="menu-item px-3">
+                            <a href="#" class="menu-link px-3 " 
+                            wire:click.prevent="goToDetail(' . $r->kk . ')">
+                            View
+                            </a>
+                        </div>
 
                           <div class="menu-item px-3">
                               <a href="javascript:void(0)" 
@@ -186,8 +312,14 @@ class Bantuan extends Component
                   return '<div wire:ignore>' . $buttons . '</div>';
               })
 
-            ->rawColumns(['action','nominal'])
+            ->rawColumns(['action','nominal','dokumen','status_kk'])
             ->toJson();
+    }
+
+     public function goToDetail($id)
+    {
+        // Langsung redirect ke halaman detail rumah
+        return redirect()->route('bantuan.show', ['id' => $id]);
     }
 
     public function deleteRumah($payload = [])

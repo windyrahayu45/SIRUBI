@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class TblBantuan extends Model
 {
     protected $table = 'tbl_bantuan';
-    protected $fillable = ['id_bantuan', 'kk', 'tahun', 'nama', 'nama_program', 'nominal', 'create_at', 'update_at'];
+    protected $fillable = ['id_bantuan', 'kk', 'tahun', 'nama', 'nama_program', 'nominal','nik' ,'create_at', 'update_at'];
     public $timestamps = false;
 
    
@@ -15,6 +15,14 @@ class TblBantuan extends Model
     {
         return $this->belongsTo(KepalaKeluarga::class, 'kk', 'no_kk');
     }
+    
+    public function dokumen()
+    {
+        return $this->belongsTo(TblDokumen::class, 'id_dokumen', 'id_dokumen');
+    }
+
+
+
 
 
 }
