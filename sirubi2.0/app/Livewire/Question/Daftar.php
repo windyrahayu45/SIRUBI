@@ -418,7 +418,7 @@ class Daftar extends Component
 
         $this->editId      = $id;
         $this->editMode    = true;
-
+        $this->module      = $q->module;
         $this->label       = $q->label;
         $this->key         = $q->key;
         $this->type        = $q->type;

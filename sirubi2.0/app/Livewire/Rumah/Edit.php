@@ -283,7 +283,7 @@ class Edit extends Component
         $this->totalStep = $this->is_question ? 10 : 9;
        $this->question = SurveyQuestion::with('options')
             ->where('is_active', 1)
-            ->whereNull('parent_question_id')
+            ->whereNull('trigger_option_id')
             ->orderBy('id', 'desc')
             ->get(); 
 
@@ -303,6 +303,7 @@ class Edit extends Component
         $this->childQuestions = SurveyQuestion::with('options')
             ->where('is_active', 1)
             ->whereNotNull('parent_question_id')
+             ->whereNotNull('trigger_option_id')
             ->get();
 
 

@@ -270,10 +270,10 @@ class Add extends Component
         // Daftar listener Livewire 3 style
         // $this->on('setStep', fn ($step) => $this->setStep($step));
         $this->is_question = SurveyQuestion::where('is_active', '1')->where('module','pertanyaan_lainnya')->exists();
-         $this->totalStep = $this->is_question ? 10 : 9;
+        $this->totalStep = $this->is_question ? 10 : 9;
         $this->question = SurveyQuestion::with('options')
             ->where('is_active', 1)
-            ->whereNull('parent_question_id')
+            ->whereNull('trigger_option_id')
             ->orderBy('id', 'desc')
             ->get(); 
 
@@ -289,10 +289,13 @@ class Add extends Component
         $this->pertanyaanDokumentasi   = $this->question->where('module', 'foto_dokumentasi');
         $this->pertanyaanLainnya       = $this->question->where('module', 'pertanyaan_lainnya');
 
+      // dd( $this->pertanyaanIdentitas );
+
         $this->allQuestions = SurveyQuestion::with('options')->where('is_active', 1)->orderBy('id', 'desc')->get();
         $this->childQuestions = SurveyQuestion::with('options')
             ->where('is_active', 1)
             ->whereNotNull('parent_question_id')
+             ->whereNotNull('trigger_option_id')
             ->get();
              $this->lastStep = $this->is_question ? 8 : 7;
         $this->iJumlahKK = IJumlahKk::all(['id_jumlah_kk', 'jumlah_kk']);
@@ -493,41 +496,103 @@ class Add extends Component
         }
 
         if ($this->currentStep === 2 && $step > 2) {
-            // if (count($this->kks) < 1) {
-            //     $this->dispatch('swal:error', [
-            //         'title' => 'Data Belum Lengkap',
-            //         'text'  => 'Harus menambahkan minimal 1 KK sebelum melanjutkan.',
-            //     ]);
-            //     return;
-            // }
+          
+            
+            // Cek apakah semua KK benar-benar kosong (tidak ada nomor KK & anggota)
+            $allEmpty = true;
+            foreach ($this->kks as $kk) {
+                if (!empty($kk['no_kk']) || !empty($kk['anggota'])) {
+                    $allEmpty = false;
+                    break;
+                }
+            }
 
-            // foreach ($this->kks as $kkIndex => $kk) {
-            //     if (empty($kk['no_kk'])) {
-            //         $this->dispatch('swal:error', [
-            //             'title' => 'Nomor KK Belum Diisi',
-            //             'text'  => 'Nomor KK ke-' . ($kkIndex + 1) . ' wajib diisi.',
-            //         ]);
-            //         return;
-            //     }
+            // Jika semua kosong → lewati validasi
+            if ($allEmpty) {
+               
+            }
+            else{
 
-            //     if (count($kk['anggota']) < 1) {
-            //         $this->dispatch('swal:error', [
-            //             'title' => 'Anggota Belum Ada',
-            //             'text'  => 'KK ke-' . ($kkIndex + 1) . ' harus memiliki minimal 1 anggota.',
-            //         ]);
-            //         return;
-            //     }
+                // Jika mulai ada isi → lakukan validasi ketat
+                foreach ($this->kks as $kkIndex => $kk) {
 
-            //     foreach ($kk['anggota'] as $anggotaIndex => $anggota) {
-            //         if (empty($anggota['nama']) || empty($anggota['nik'])) {
-            //             $this->dispatch('swal:error', [
-            //                 'title' => 'Data Anggota Belum Lengkap',
-            //                 'text'  => 'Nama dan NIK anggota pada KK ke-' . ($kkIndex + 1) . ' wajib diisi.',
-            //             ]);
-            //             return;
-            //         }
-            //     }
-            // }
+                    // VALIDASI NOMOR KK
+                    if (!empty($kk['no_kk'])) {
+
+                        // Harus angka
+                        if (!ctype_digit($kk['no_kk'])) {
+                            $this->dispatch('swal:error', [
+                                'title' => 'Format Nomor KK Salah',
+                                'text'  => 'Nomor KK ke-' . ($kkIndex + 1) . ' harus berupa angka.',
+                            ]);
+                            return;
+                        }
+
+                        // Harus 16 digit
+                        if (strlen($kk['no_kk']) !== 16) {
+                            $this->dispatch('swal:error', [
+                                'title' => 'Nomor KK Tidak Valid',
+                                'text'  => 'Nomor KK ke-' . ($kkIndex + 1) . ' harus 16 digit.',
+                            ]);
+                            return;
+                        }
+                    }
+
+                    // Jika KK sudah terisi, wajib ada minimal 1 anggota
+                    if (!empty($kk['no_kk']) && count($kk['anggota']) < 1) {
+                        $this->dispatch('swal:error', [
+                            'title' => 'Anggota Belum Ada',
+                            'text'  => 'KK ke-' . ($kkIndex + 1) . ' harus memiliki minimal 1 anggota.',
+                        ]);
+                        return;
+                    }
+
+                    // VALIDASI ANGGOTA
+                    foreach ($kk['anggota'] as $anggotaIndex => $anggota) {
+
+                        // Jika semua field anggota kosong → skip (tidak dipaksa)
+                        if (empty($anggota['nama']) && empty($anggota['nik'])) {
+                            continue;
+                        }
+
+                        // Nama wajib jika ada isi
+                        if (empty($anggota['nama'])) {
+                            $this->dispatch('swal:error', [
+                                'title' => 'Nama Belum Diisi',
+                                'text'  => 'Nama anggota pada KK ke-' . ($kkIndex + 1) . ' wajib diisi.',
+                            ]);
+                            return;
+                        }
+
+                        // NIK wajib jika ada isi
+                        if (empty($anggota['nik'])) {
+                            $this->dispatch('swal:error', [
+                                'title' => 'NIK Belum Diisi',
+                                'text'  => 'NIK anggota pada KK ke-' . ($kkIndex + 1) . ' wajib diisi.',
+                            ]);
+                            return;
+                        }
+
+                        // NIK harus angka
+                        if (!ctype_digit($anggota['nik'])) {
+                            $this->dispatch('swal:error', [
+                                'title' => 'Format NIK Salah',
+                                'text'  => 'NIK anggota pada KK ke-' . ($kkIndex + 1) . ' harus angka.',
+                            ]);
+                            return;
+                        }
+
+                        // NIK harus 16 digit
+                        if (strlen($anggota['nik']) !== 16) {
+                            $this->dispatch('swal:error', [
+                                'title' => 'NIK Tidak Valid',
+                                'text'  => 'NIK anggota pada KK ke-' . ($kkIndex + 1) . ' harus 16 digit.',
+                            ]);
+                            return;
+                        }
+                    }
+                }
+            }
 
             foreach ($this->pertanyaanKk as $q) {
 
@@ -607,6 +672,29 @@ class Add extends Component
                     return;
                 }
             }
+
+           // Cek hanya jika ada isi
+            if (!empty($this->nik_kepemilikan_rumah)) {
+
+                // Harus angka
+                if (!ctype_digit($this->nik_kepemilikan_rumah)) {
+                    $this->dispatch('swal:error', [
+                        'title' => 'Format NIK Tidak Valid',
+                        'text'  => 'NIK Kepemilikan Rumah harus berupa angka.',
+                    ]);
+                    return;
+                }
+
+                // Harus 16 digit
+                if (strlen($this->nik_kepemilikan_rumah) !== 16) {
+                    $this->dispatch('swal:error', [
+                        'title' => 'Nomor NIK Kepemilikan Rumah Tidak Valid',
+                        'text'  => 'Nomor NIK Kepemilikan Rumah harus 16 digit.',
+                    ]);
+                    return;
+                }
+            }
+
 
             // 🔹 Jika pernah mendapatkan bantuan = 1, wajib isi komponen tambahannya
             if ($this->pernah_mendapatkan_bantuan_id == 1) {
