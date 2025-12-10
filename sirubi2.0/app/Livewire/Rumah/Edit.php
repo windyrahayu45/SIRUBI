@@ -268,12 +268,7 @@ class Edit extends Component
     public  $pertanyaanBahanBangunan = [];
     public $pertanyaanDokumentasi = [];
     public $pertanyaanLainnya = [];
-     public $childQuestions = [];
-
-
-
-
-  
+    public $childQuestions = [];
 
 
     public function mount($id)
