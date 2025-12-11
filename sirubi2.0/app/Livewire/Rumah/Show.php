@@ -165,14 +165,67 @@ class Show extends Component
                 ->implode(', ');
         }
 
-        if ($q->type === 'file') {
-            if (!$answer) return '-';
+        // if ($q->type === 'file') {
+        //     if (!$answer) return '-';
 
-            if (file_exists(storage_path('app/public/'.$answer))) {
-                return '[Gambar tersedia]';
-            }
-            return '[File] ' . $answer;
-        }
+        //     if (file_exists(storage_path('app/public/'.$answer))) {
+        //         return '[Gambar tersedia]';
+        //     }
+        //     return '[File] ' . $answer;
+        // }
+
+        if ($q->type === 'file') {
+    if (!$answer) return '-';
+
+    $path = $answer;
+    $fullPath = storage_path('app/public/' . $path);
+    $url = asset('storage/' . $path);
+
+    if (!file_exists($fullPath)) {
+        return '<span class="text-danger">File tidak ditemukan</span>';
+    }
+
+    $ext = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+
+    // ==========================
+    // 1️⃣ PREVIEW IMAGE (JPG/PNG/WEBP)
+    // ==========================
+    if (in_array($ext, ['jpg','jpeg','png','gif','webp'])) {
+        return '
+            <img src="'. $url .'"
+                class="img-fluid w-100 h-250px object-fit-cover rounded-top preview-foto"
+                style="max-height: 200px; object-fit: cover; cursor: pointer;"
+                data-bs-toggle="modal"
+                data-bs-target="#previewModal"
+                data-src="'. $url .'">
+        ';
+    }
+
+    // ==========================
+    // 2️⃣ PREVIEW PDF (IFRAME)
+    // ==========================
+    if ($ext === 'pdf') {
+        return '
+            <div class="border rounded" style="overflow: hidden; width:100%; max-width:450px; height:300px;">
+                <iframe src="'. $url .'" width="100%" height="100%" style="border:0;"></iframe>
+            </div>
+            <a href="'. $url .'" target="_blank" class="btn btn-sm btn-primary mt-2">
+                Buka PDF
+            </a>
+        ';
+    }
+
+    // ==========================
+    // 3️⃣ FILE LAIN: DOCX, XLSX, ZIP, DLL
+    // ==========================
+    return '
+        <a href="'. $url .'" target="_blank" class="d-flex align-items-center">
+            <i class="bi bi-file-earmark-text fs-2 me-2"></i>
+            '. strtoupper($ext) .' File (klik untuk buka)
+        </a>
+    ';
+}
+
 
 
         // TEXT, TEXTAREA, NUMBER, DATE

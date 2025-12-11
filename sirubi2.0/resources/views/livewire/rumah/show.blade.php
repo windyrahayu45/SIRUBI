@@ -1542,7 +1542,7 @@
 
                                                 <!-- Jawaban -->
                                                 <td class="text-gray-800">
-                                                    {{ $this->displayAnswer($q) }}
+                                                    {!! $this->displayAnswer($q) !!}
                                                 </td>
                                             </tr>
 
@@ -1564,7 +1564,7 @@
 
                                                         <!-- Jawaban Child -->
                                                         <td class="text-gray-700">
-                                                            {{ $this->displayAnswer($child) }}
+                                                            {!! $this->displayAnswer($child) !!}
                                                         </td>
                                                     </tr>
                                                 @endif
