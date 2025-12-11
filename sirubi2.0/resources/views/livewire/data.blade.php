@@ -87,7 +87,7 @@
                                     </svg>
                                 </span>
                                 <!--end::Svg Icon-->Export</button>
-                                
+                                 @if (auth()->user()->level != 3)
                                 <div class="d-flex align-items-center gap-2 gap-lg-3">
                                     <a href="{{ route('rumah.add') }}" class="btn btn-primary">  <span class="svg-icon svg-icon-2">
                                                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -96,6 +96,7 @@
                                                     </svg>
                                                 </span>Tambah Rumah</a>
                                 </div>
+                                @endif
                                 <!--end::Add user-->
                             </div>
                             <!--end::Toolbar-->

@@ -167,6 +167,7 @@
                                                             <option value="">Pilih Level</option>
                                                             <option value="1">Admin Staff</option>
                                                             <option value="2">Staff</option>
+                                                            <option value="3">Operator</option>
                                                             
                                                         </select>
                                                     </div>

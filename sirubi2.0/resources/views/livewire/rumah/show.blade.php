@@ -47,21 +47,26 @@
                         <!--begin::Menu-->
                         <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-125px py-4" data-kt-menu="true" data-popper-placement="bottom-end" style="z-index: 107; position: fixed; inset: 0px 0px auto auto; margin: 0px; transform: translate(-219px, 443px);">
                             <!--begin::Menu item-->
-                            <div class="menu-item px-3">
-                                <a href="#" class="menu-link px-3"
-                                wire:click.prevent="goToEdit({{ $rumah->id_rumah }})">
-                                    <i class="ki-duotone ki-pencil fs-5 text-success me-2"></i>
-                                    Edit
-                                </a>
-                            </div>
+                            @if (auth()->user()->level != 3)
+    <!-- Edit -->
+                        <div class="menu-item px-3">
+                            <a href="#" class="menu-link px-3"
+                            wire:click.prevent="goToEdit({{ $rumah->id_rumah }})">
+                                <i class="ki-duotone ki-pencil fs-5 text-success me-2"></i>
+                                Edit
+                            </a>
+                        </div>
 
-                            <div class="menu-item px-3">
-                                <a href="#" class="menu-link px-3 text-danger"
-                                onclick="confirmDelete({{ $rumah->id_rumah }})">
-                                    <i class="ki-duotone ki-trash fs-5 text-danger me-2"></i>
-                                    Hapus
-                                </a>
-                            </div>
+                        <!-- Hapus -->
+                        <div class="menu-item px-3">
+                            <a href="#" class="menu-link px-3 text-danger"
+                            onclick="confirmDelete({{ $rumah->id_rumah }})">
+                                <i class="ki-duotone ki-trash fs-5 text-danger me-2"></i>
+                                Hapus
+                            </a>
+                        </div>
+                    @endif
+
 
                            <div class="menu-item px-3">
                                 <a href="#" class="menu-link px-3 text-primary" id="btnCetakPdf">

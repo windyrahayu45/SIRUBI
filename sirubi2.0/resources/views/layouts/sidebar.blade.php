@@ -205,7 +205,7 @@
 										<!--end:Menu link-->
 									</div>
 
-
+									@if (auth()->user()->level != 3)
 									<div class="menu-item">
 										<!--begin:Menu link-->
 										<a class="menu-link {{ request()->routeIs('users*') ? 'active' : '' }} " href="{{ url('users') }}">
@@ -544,6 +544,7 @@
 										<!--end:Menu sub-->
 									</div>
 
+									@endif
 
 
 

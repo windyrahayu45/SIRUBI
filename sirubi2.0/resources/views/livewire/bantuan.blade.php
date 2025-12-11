@@ -62,6 +62,7 @@
                             <div class="d-flex justify-content-end" data-kt-user-table-toolbar="base">
                                 <!--begin::Filter-->
 
+                                 @if (auth()->user()->level != 3)
                                 <button type="button" class="btn btn-light-primary me-3" data-bs-toggle="modal" data-bs-target="#modalIntegrasiDokumen">
                                     <!--begin::Svg Icon | path: icons/duotune/arrows/arr078.svg-->
                                     <span class="svg-icon svg-icon-2">
@@ -101,6 +102,8 @@
                                     </svg>
                                 </span>
                                 <!--end::Svg Icon-->Import</button>
+
+                                @endif
                                 
                                 
                             </div>

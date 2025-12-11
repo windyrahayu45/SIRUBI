@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\MasterController;
+use App\Http\Controllers\Api\PengaduanController;
 
 /*
 
@@ -13,7 +14,8 @@ Route::post('auth/login', [AuthController::class, 'login']);
 Route::post('auth/refreshToken', [AuthController::class, 'refreshToken']);
 Route::get('/rumah-export', [AuthController::class, 'export']);
 Route::get('/exportXlsx', [AuthController::class, 'exportXlsx2']);
-
+Route::get('/pengaduan/check', [PengaduanController::class, 'check']);
+    Route::post('/pengaduan/submit', [PengaduanController::class, 'store']);
 
 Route::middleware('jwt')->group(function () {
 
@@ -27,5 +29,7 @@ Route::middleware('jwt')->group(function () {
     Route::get('data/search', [MasterController::class, 'search']);
     Route::get('data/pertanyaan', [MasterController::class, 'pertanyaan']);
     Route::post('data/rumah/{id}', [MasterController::class, 'updateRumah']);
+    
+
 
 });

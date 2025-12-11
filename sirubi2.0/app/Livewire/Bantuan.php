@@ -267,50 +267,65 @@ class Bantuan extends Component
                     return '<span class="badge bg-danger">Rumah Belum Ada</span>';
                 })
 
-              ->addColumn('action', function ($r) {
-                  $buttons = '
-                      <a href="#" 
-                          class="btn btn-sm btn-light btn-active-light-primary" 
-                          data-kt-menu-trigger="click" 
-                          data-kt-menu-placement="bottom-end">
-                          Actions
-                          <span class="svg-icon svg-icon-5 m-0">
-                              <svg width="24" height="24" ...></svg>
-                          </span>
-                      </a>
+           ->addColumn('action', function ($r) {
 
-                      <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded 
-                                  menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 
-                                  w-150px py-4" data-kt-menu="true">
+                // User level 3 tidak boleh edit / hapus
+                $canEditDelete = auth()->user()->level != 3;
 
-                         <div class="menu-item px-3">
-                            <a href="#" class="menu-link px-3 " 
+                $buttons = '
+                    <a href="#" 
+                        class="btn btn-sm btn-light btn-active-light-primary" 
+                        data-kt-menu-trigger="click" 
+                        data-kt-menu-placement="bottom-end">
+                        Actions
+                        <span class="svg-icon svg-icon-5 m-0">
+                            <svg width="24" height="24" ...></svg>
+                        </span>
+                    </a>
+
+                    <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded 
+                                menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 
+                                w-150px py-4" data-kt-menu="true">
+                                
+                        <div class="menu-item px-3">
+                            <a href="#" class="menu-link px-3"
                             wire:click.prevent="goToDetail(' . $r->kk . ')">
-                            View
+                                View
                             </a>
                         </div>
+                ';
 
-                          <div class="menu-item px-3">
-                              <a href="javascript:void(0)" 
-                                  class="menu-link px-3"
-                                  wire:click.prevent="openEditModal(' . $r->id_bantuan . ')">
-                                  Edit
-                              </a>
-                          </div>
+                // ⭐ Jika level bukan 3 → boleh Edit
+                if ($canEditDelete) {
+                    $buttons .= '
+                        <div class="menu-item px-3">
+                            <a href="javascript:void(0)" 
+                                class="menu-link px-3"
+                                wire:click.prevent="openEditModal(' . $r->id_bantuan . ')">
+                                Edit
+                            </a>
+                        </div>
+                    ';
+                }
 
-                          <div class="menu-item px-3">
-                              <a href="javascript:void(0)" 
-                                  class="menu-link px-3" 
-                                  onclick="confirmDelete(' . $r->id_bantuan . ')">
-                                  Hapus
-                              </a>
-                          </div>
+                // ⭐ Jika level bukan 3 → boleh Hapus
+                if ($canEditDelete) {
+                    $buttons .= '
+                        <div class="menu-item px-3">
+                            <a href="javascript:void(0)" 
+                                class="menu-link px-3 text-danger"
+                                onclick="confirmDelete(' . $r->id_bantuan . ')">
+                                Hapus
+                            </a>
+                        </div>
+                    ';
+                }
 
-                      </div>
-                  ';
+                $buttons .= '</div>';
 
-                  return '<div wire:ignore>' . $buttons . '</div>';
-              })
+                return '<div wire:ignore>' . $buttons . '</div>';
+            })
+
 
             ->rawColumns(['action','nominal','dokumen','status_kk'])
             ->toJson();

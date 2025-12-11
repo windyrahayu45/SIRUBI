@@ -118,7 +118,7 @@ class Users extends Component
         'instansi'     => 'nullable|string|max:255',
         'no_hp'        => 'nullable|string|max:14',
         'alamat_user'  => 'nullable|string',
-        'level'        => 'required|in:1,2',
+        'level'        => 'required|in:1,2,3',
         'password'     => $this->edit_id ? 'nullable|string|min:5' : 'required|string|min:5',
     ];
 }

@@ -1108,6 +1108,9 @@ class Data extends Component
                     : '<span class="badge badge-light-primary fw-bold px-3 py-2">TIDAK BACKLOG</span>'
             )
             ->addColumn('action', function ($r) {
+                 $userLevel = auth()->user()->level ?? null;
+
+
                 $buttons = '
                     <a href="#" 
                     class="btn btn-sm btn-light btn-active-light-primary" 
@@ -1139,21 +1142,28 @@ class Data extends Component
                             </a>
                         </div>
 
+                        
+                ';
+                   if ($userLevel != 3) {
+                    $buttons .= '
                         <div class="menu-item px-3">
-                            <a href="#" class="menu-link px-3 " 
-                           wire:click.prevent="goToEdit(' . $r->id_rumah . ')">
+                            <a href="#" class="menu-link px-3" 
+                            wire:click.prevent="goToEdit(' . $r->id_rumah . ')">
                             Edit
                             </a>
                         </div>
 
                         <div class="menu-item px-3">
-                            <a href="#" class="menu-link px-3 " 
+                            <a href="#" class="menu-link px-3" 
                             onclick="confirmDelete(' . $r->id_rumah . ')">
                             Hapus
                             </a>
                         </div>
-                    </div>
-                ';
+                    ';
+                }
+
+                // Tutup menu
+                $buttons .= '</div>';
 
                  return '<div wire:ignore.self>' . $buttons . '</div>';
             })

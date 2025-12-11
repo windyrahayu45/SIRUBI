@@ -5,7 +5,10 @@ namespace App\Livewire;
 use App\Models\BantuanRumah;
 use App\Models\Rumah;
 use App\Models\TblBantuan;
+use App\Models\VisitorLog;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class Dashboard extends Component
@@ -56,6 +59,11 @@ class Dashboard extends Component
         'series' => [],
     ];
 
+    public $startDate;
+    public $endDate;
+    public $labels = [];
+    public $data = [];
+
     public function mount()
     {
         $this->loadRumahChart();
@@ -66,8 +74,38 @@ class Dashboard extends Component
         $this->loadPieDtks();
         $this->loadTopKelurahan();
          $this->loadTopKelurahanBantuan();
+        $this->startDate = Carbon::today()->format('Y-m-d');
+        $this->endDate = Carbon::today()->format('Y-m-d');
+
+        $this->loadData();
     }
 
+        
+    #[On('updateRange')]
+   public function updateRange($start, $end)
+{
+    $this->startDate = $start;
+    $this->endDate = $end;
+
+    $this->loadData();
+}
+
+    private function loadData()
+    {
+        $rows = VisitorLog::selectRaw("DATE(visited_at) as label, COUNT(*) as total")
+            ->whereBetween('visited_at', [
+                Carbon::parse($this->startDate)->startOfDay(),
+                Carbon::parse($this->endDate)->endOfDay()
+            ])
+            ->groupBy('label')
+            ->orderBy('label')
+            ->get();
+
+        $this->labels = $rows->pluck('label');
+        $this->data = $rows->pluck('total');
+
+        $this->dispatch('updateChart', labels: $this->labels, data: $this->data);
+    }
     public function loadTopKelurahanBantuan()
     {
         /* --------------------------------------------------------
