@@ -72,8 +72,10 @@ use Illuminate\Support\Facades\DB;
 use Livewire\WithFileUploads;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use App\Traits\LogsRumahHistory;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class Edit extends Component
 {
@@ -244,13 +246,25 @@ class Edit extends Component
     public $dBangunanMenghadapSungai;
     public $dBangunanBeradaLimbah;
     public $dBangunanBeradaSungai;
+    public $dokumen;
+ 
+   public $foto_kk;
+public $foto_kk_old;
 
-    public $foto_kk;
-    public $foto_ktp;
-    public $foto_rumah_satu;
-    public $foto_rumah_dua;
-    public $foto_rumah_tiga;
-    public $foto_imb;
+public $foto_ktp;
+public $foto_ktp_old;
+
+public $foto_rumah_satu;
+public $foto_rumah_satu_old;
+
+public $foto_rumah_dua;
+public $foto_rumah_dua_old;
+
+public $foto_rumah_tiga;
+public $foto_rumah_tiga_old;
+
+public $foto_imb;
+public $foto_imb_old;
      public $is_question = false;
     public $question = [];
     public $questionAnswers = []; 
@@ -301,7 +315,7 @@ class Edit extends Component
              ->whereNotNull('trigger_option_id')
             ->get();
 
-
+       
         $existingAnswers = SurveyQuestionAnswer::where('rumah_id', $id)->get();
 
         foreach ($existingAnswers as $ans) {
@@ -317,8 +331,17 @@ class Edit extends Component
             }
 
             // CHECKBOX (multi select)
-            if ($ans->answer_option_ids !== null) {
-                $this->questionAnswers[$ans->question_id] = $ans->answer_option_ids; // array
+             if ($ans->answer_option_ids !== null) {
+
+                // SOLUSI: decode JSON menjadi array
+                // $arrayValue = json_decode($ans->answer_option_ids, true);
+
+                // // fallback jika gagal decode
+                // if (!is_array($arrayValue)) {
+                //     $arrayValue = [];
+                // }
+
+                $this->questionAnswers[$ans->question_id] = $this->normalizeAnswerOptionIds($ans->answer_option_ids);
             }
 
             // FILE (kalau ada)
@@ -392,6 +415,44 @@ class Edit extends Component
         $this->dBangunanBeradaLimbah = DBangunanBeradaLimbah::where('is_active',1)->get();
         $this->dBangunanBeradaSungai = DBangunanBeradaSungai::where('is_active',1)->get();
     }
+
+    private function normalizeAnswerOptionIds($value)
+{
+    // CASE 1: sudah array → langsung kembalikan
+    if (is_array($value)) {
+        return $value;
+    }
+
+    // CASE 2: null → balikan array kosong
+    if ($value === null) {
+        return [];
+    }
+
+    // CASE 3: string JSON valid → decode
+    if ($this->isJson($value)) {
+        $decoded = json_decode($value, true);
+
+        // Jika decode gagal → fallback
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    // CASE 4: string CSV, contoh: "28,29"
+    if (is_string($value) && str_contains($value, ',')) {
+        return array_map('trim', explode(',', $value));
+    }
+
+    // CASE 5: string tunggal, contoh: "28"
+    return [$value];
+}
+
+private function isJson($string)
+{
+    if (!is_string($string)) return false;
+
+    json_decode($string);
+    return json_last_error() === JSON_ERROR_NONE;
+}
+
 
     public function loadRumah($id)
     {
@@ -519,12 +580,12 @@ class Edit extends Component
         // 📷 Dokumen
         if ($rumah->dokumen) {
             $d = $rumah->dokumen;
-            $this->foto_kk = $d->foto_kk;
-            $this->foto_ktp = $d->foto_ktp;
-            $this->foto_rumah_satu = $d->foto_rumah_satu;
-            $this->foto_rumah_dua = $d->foto_rumah_dua;
-            $this->foto_rumah_tiga = $d->foto_rumah_tiga;
-            $this->foto_imb = $d->foto_imb;
+             $this->foto_kk_old = $d->foto_kk;
+            $this->foto_ktp_old = $d->foto_ktp;
+            $this->foto_rumah_satu_old = $d->foto_rumah_satu;
+            $this->foto_rumah_dua_old = $d->foto_rumah_dua;
+            $this->foto_rumah_tiga_old = $d->foto_rumah_tiga;
+            $this->foto_imb_old = $d->foto_imb;
         }
 
         // 👨‍👩 Kepala & Anggota Keluarga
@@ -562,35 +623,103 @@ class Edit extends Component
         }
     }
 
+    // #[On('select2Changed')]
+    // public function select2Changed($data)
+    // {
+    //     $name = $data['name'] ?? null;
+    //     $value = $data['value'] ?? null;
+
+    //     if ($name && property_exists($this, $name)) {
+    //         $this->$name = $value;
+    //         logger("✅ Livewire menerima {$name} = {$value}");
+    //     }
+
+    //      if (str_starts_with($name, 'questionAnswers.')) {
+
+    //         // Contoh name: questionAnswers.6
+    //         Arr::set($this->questionAnswers, str_replace('questionAnswers.', '', $name), $value);
+
+    //         logger("Updated $name = $value");
+    //     }
+
+
+    //     // 🔹 Jika kecamatan berubah, filter kelurahan
+    //     if ($name === 'kecamatan_id') {
+    //         $this->filterKelurahan();
+    //     }
+
+    //     if ($name === 'pernah_mendapatkan_bantuan_id') {
+    //         $this->updatedPernahMendapatkanBantuanId($value);
+    //     }
+    // }
+
     #[On('select2Changed')]
-    public function select2Changed($data)
-    {
-        $name = $data['name'] ?? null;
-        $value = $data['value'] ?? null;
+public function select2Changed($data)
+{
+    $name  = $data['name'] ?? null;
+    $value = $data['value'] ?? null;
+   
+    if (!$name) return;
 
-        if ($name && property_exists($this, $name)) {
-            $this->$name = $value;
-            logger("✅ Livewire menerima {$name} = {$value}");
-        }
+    // ============================================================
+    // 1️⃣  SPECIAL: QUESTION ANSWERS (selalu array / multiple)
+    // ============================================================
+    if (str_starts_with($name, 'questionAnswers.')) {
 
-         if (str_starts_with($name, 'questionAnswers.')) {
-
-            // Contoh name: questionAnswers.6
-            Arr::set($this->questionAnswers, str_replace('questionAnswers.', '', $name), $value);
-
-            logger("Updated $name = $value");
-        }
-
-
-        // 🔹 Jika kecamatan berubah, filter kelurahan
-        if ($name === 'kecamatan_id') {
-            $this->filterKelurahan();
-        }
-
-        if ($name === 'pernah_mendapatkan_bantuan_id') {
-            $this->updatedPernahMendapatkanBantuanId($value);
-        }
+        $key = str_replace('questionAnswers.', '', $name);
+  $question = SurveyQuestion::find($key);
+        
+         // 🔹 RADIO → single value
+    if ($question && $question->type === 'radio') {
+        $this->questionAnswers[$key] = (int) $value;
+        return;
     }
+
+    // 🔹 SELECT → single value
+    if ($question && $question->type === 'select') {
+        $this->questionAnswers[$key] = (int) $value;
+        return;
+    }
+
+        // Value harus array
+        if (!is_array($value)) {
+            $value = [$value];
+        }
+
+        Arr::set($this->questionAnswers, $key, $value);
+
+        logger("Updated questionAnswers[$key] = " . json_encode($value));
+        return;
+    }
+
+    // ============================================================
+    // 2️⃣  UNTUK PROPERTY BIASA
+    // ============================================================
+    if (property_exists($this, $name)) {
+
+        // JIKA VALUE ARRAY, TAPI PROPERTYNYA BUKAN ARRAY → SKIP
+        if (is_array($value) && !is_array($this->$name)) {
+            logger("⚠️ Skip set $name karena menerima array.");
+            return;
+        }
+
+        $this->$name = $value;
+
+        logger("Updated $name = " . json_encode($value));
+    }
+
+    // ============================================================
+    // 3️⃣  TRIGGER EVENT INTERNAL
+    // ============================================================
+    if ($name === 'kecamatan_id') {
+        $this->filterKelurahan();
+    }
+
+    if ($name === 'pernah_mendapatkan_bantuan_id') {
+        $this->updatedPernahMendapatkanBantuanId($value);
+    }
+}
+
 
     public function updatedPernahMendapatkanBantuanId($value)
     {
@@ -1160,15 +1289,20 @@ class Edit extends Component
                 //'foto_imb'         => 'Foto IMB',
             ];
 
-            foreach ($requiredPhotos as $field => $label) {
-                if (empty($this->$field)) {
-                    $this->dispatch('swal:error', [
-                        'title' => 'Data Belum Lengkap',
-                        'text'  => "Kolom {$label} wajib diisi sebelum melanjutkan ke tahap berikutnya.",
-                    ]);
-                    return;
-                }
+           foreach ($requiredPhotos as $field => $label) {
+
+            $baru = $this->$field;                    // file baru jika upload
+            $lama = $this->{$field . '_old'} ?? null; // file lama dari database
+
+            if (empty($baru) && empty($lama)) {
+                $this->dispatch('swal:error', [
+                    'title' => 'Data Belum Lengkap',
+                    'text'  => "Kolom {$label} wajib diisi sebelum melanjutkan ke tahap berikutnya.",
+                ]);
+                return;
             }
+        }
+
 
             foreach ($this->pertanyaanDokumentasi as $q) {
 
@@ -1617,21 +1751,36 @@ class Edit extends Component
                 }
 
                 // --- SELECT & RADIO ---
-                elseif (in_array($q->type, ['select','radio'])) {
+                elseif (in_array($q->type, ['select', 'radio'])) {
 
+                    // Normalisasi nilai agar pasti single value
+                    $optionValue = $answer;
+
+                    // Jika value berbentuk array (misalnya ["31"])
+                    if (is_array($answer)) {
+                        $optionValue = $answer[0] ?? null;
+                    }
+
+                    // Casting optional (recommended)
+                    if ($optionValue !== null) {
+                        $optionValue = (int) $optionValue;
+                    }
+
+                    // Simpan/update data
                     SurveyQuestionAnswer::updateOrCreate(
                         [
                             'rumah_id'    => $rumah->id_rumah,
                             'question_id' => $q->id,
                         ],
                         [
-                            'answer_option_id'  => $answer,
-                            'answer_text'       => null,
-                            'answer_option_ids' => null,
-                            'file_path'         => null,
+                            'answer_option_id'  => $optionValue,
+                            'answer_option_ids' => null,   // clear multi-answer
+                            'answer_text'       => null,   // clear text answer
+                            'file_path'         => null,   // clear file if existed
                         ]
                     );
                 }
+
 
                 // --- CHECKBOX (multi select) ---
                 elseif ($q->type === 'checkbox') {
@@ -1652,23 +1801,45 @@ class Edit extends Component
 
 
                 // --- FILE ---
-                elseif ($q->type === 'file' && $answer) {
+           elseif ($q->type === 'file') {
 
-                    $filePath = $answer->store('survey_answers', 'public');
+    $existing = SurveyQuestionAnswer::where('rumah_id', $rumah->id_rumah)
+                                    ->where('question_id', $q->id)
+                                    ->first();
 
-                    SurveyQuestionAnswer::updateOrCreate(
-                        [
-                            'rumah_id'    => $rumah->id_rumah,
-                            'question_id' => $q->id,
-                        ],
-                        [
-                            'file_path'         => $filePath,
-                            'answer_text'       => null,
-                            'answer_option_id'  => null,
-                            'answer_option_ids' => null,
-                        ]
-                    );
-                }
+    // Jika user upload file baru (file asli, bukan string path)
+    if ($answer instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile) {
+
+        $filePath = $answer->store('survey_answers', 'public');
+
+        // Update jika edit
+        if ($existing) {
+
+            if ($existing->file_path && Storage::disk('public')->exists($existing->file_path)) {
+                Storage::disk('public')->delete($existing->file_path);
+            }
+
+            $existing->update([
+                'file_path' => $filePath
+            ]);
+
+        } else {
+
+            // Add baru
+            SurveyQuestionAnswer::create([
+                'rumah_id'    => $rumah->id_rumah,
+                'question_id' => $q->id,
+                'file_path'   => $filePath,
+            ]);
+        }
+    }
+
+    // Jika tidak upload baru → jangan lakukan apa-apa
+    continue;
+}
+
+
+
             }
 
             $newAnswers = SurveyQuestionAnswer::where('rumah_id', $rumah->id_rumah)
@@ -1863,26 +2034,70 @@ class Edit extends Component
 
             $changed = []; // untuk menampung perubahan foto
 
-            foreach (array_keys($requiredPhotos) as $field) {
+        //    foreach (array_keys($wajibFoto) as $field) {
 
-                // Jika upload baru
-                if ($this->$field instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile) {
+        //         // if ($this->$field instanceof TemporaryUploadedFile || 
+        //         //     $this->$field instanceof UploadedFile) {
 
-                    $path = $this->$field->storeAs(
+        //         //     $path = $this->$field->storeAs(
+        //         //         "rumah/{$rumah->id_rumah}",
+        //         //         "{$field}.jpg",
+        //         //         'public'
+        //         //     );
+
+        //         //     $dokumen->$field = $path;
+
+        //         //     $changed[$field] = [
+        //         //         'old' => $oldDokumen[$field] ?? null,
+        //         //         'new' => $path
+        //         //     ];
+        //         // }
+
+        //         if (!empty($this->$field)) {
+        //             $path = $this->$field->storeAs("rumah/{$rumah->id_rumah}", "{$field}.jpg");
+        //             $dokumen->$field = "rumah/{$rumah->id_rumah}/{$field}.jpg";
+        //              $changed[$field] = [
+        //                 'old' => $oldDokumen[$field] ?? null,
+        //                 'new' => $path
+        //             ];
+        //         }
+        //     }
+           foreach (array_keys($wajibFoto) as $field) {
+
+                $baru = $this->$field;                    // file baru (TemporaryUploadedFile)
+                $lama = $this->{$field . '_old'} ?? null; // file lama string
+                    
+
+                //dd($baru);
+                // Jika ada file baru → simpan
+                if ($baru instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile) {
+
+                    if ($lama && Storage::disk('public')->exists($lama)) {
+                        Storage::disk('public')->delete($lama);
+                    }
+
+                    $path = $baru->storeAs(
                         "rumah/{$rumah->id_rumah}",
-                        "{$field}.jpg"
+                        "{$field}_edit.jpg",
+                        'public'
                     );
 
-                    // Simpan path baru
-                    $dokumen->$field = "rumah/{$rumah->id_rumah}/{$field}.jpg";
+                // dd($path);
 
-                    // Catat perubahan history
+                    $dokumen->$field = "rumah/{$rumah->id_rumah}/{$field}_edit.jpg";
+
                     $changed[$field] = [
                         'old' => $oldDokumen[$field] ?? null,
                         'new' => $dokumen->$field
                     ];
                 }
+
+                // Tidak ada file baru → tetap pakai file lama
+                else {
+                    $dokumen->$field = $lama;
+                }
             }
+
             $dokumen->uploaded_by = auth()->user()->id;
             $dokumen->uploaded_at = now();
             $dokumen->save();

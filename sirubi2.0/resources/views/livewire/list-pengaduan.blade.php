@@ -44,10 +44,10 @@
                             <!--begin::Search-->
                             <div class="d-flex align-items-center position-relative my-1">
                                 <span class="svg-icon svg-icon-1 position-absolute ms-6">
-                                    <svg width="24" height="24" viewBox="0 0 24 24">
+                                    {{-- <svg width="24" height="24" viewBox="0 0 24 24">
                                         <rect opacity="0.5" x="17" y="15" width="8" height="2" transform="rotate(45)" />
                                         <path d="M11 19C6.5 19 3 15.4 3 11S6.5 3 11 3s8 3.6 8 8-3.5 8-8 8z" />
-                                    </svg>
+                                    </svg> --}}
                                 </span>
 
                                 <input type="text" id="searchPengaduan"

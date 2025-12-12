@@ -42,8 +42,8 @@ class ListPengaduan extends Component
 
             // Kolom Kecamatan / Kelurahan
             ->addColumn('wilayah', function ($r) {
-                return ($r->kelurahan->nama_kelurahan ?? '-') . "<br>" .
-                       ($r->kecamatan->nama_kecamatan ?? '-');
+                return "Kec. ".($r->kelurahan->nama_kelurahan ?? '-') . "<br>" .
+                       "Kel. ".($r->kecamatan->nama_kecamatan ?? '-');
             })
 
             // Kolom Status

@@ -16,25 +16,24 @@ trait LogsRumahHistory
 {
 
      protected function getUserId()
-    {
-        // 1. JWT user (via middleware)
-        if (request()->has('auth')) {
-            return request()->auth->id_user
-                ?? request()->auth->id
-                ?? null;
-        }
-        else{
+{
+    $auth = request()->auth ?? null;
 
-            return auth()->user()->if;
-        }
-
-        // // 2. Livewire / Laravel default guard
-        // if (auth()->check()) {
-        //     return auth()->id();
-        // }
-
-        return null;
+    // Jika auth dari API (middleware)
+    if ($auth !== null && is_object($auth)) {
+        return $auth->id_user
+            ?? $auth->id
+            ?? null;
     }
+
+    // Jika pakai auth web / livewire
+    if (auth()->check()) {
+        return auth()->user()->id();
+    }
+
+    // Fallback terakhir
+    return null;
+}
     /**
      * Mencatat perubahan pada data rumah (single field)
      */
@@ -107,87 +106,263 @@ public function translateValue($kategori, $field, $value)
 
     $masterMap = [
 
-        // WILAYAH
-        'kecamatan_id' => \App\Models\IKecamatan::class,
-        'kelurahan_id' => \App\Models\IKelurahan::class,
+    // ===========================
+    // WILAYAH (punya kolom 'nama')
+    // ===========================
+    'kecamatan_id' => [
+        'model'  => \App\Models\IKecamatan::class,
+        'column' => 'nama_kecamatan'
+    ],
+    'kelurahan_id' => [
+        'model'  => \App\Models\IKelurahan::class,
+        'column' => 'nama_kelurahan'
+    ],
 
-        // SOSIAL EKONOMI
-        'jenis_kelamin_id' => IJenisKelamin::class,
-        'pendidikan_terakhir_id' => IPendidikanTerakhir::class,
-        'pekerjaan_utama_id' =>IPekerjaanUtama::class,
-        'jumlah_kk_id' => \App\Models\IJumlahKk::class,
-        'besar_penghasilan_perbulan_id' => \App\Models\IBesarPenghasilan::class,
-        'besar_pengeluaran_perbulan_id' => \App\Models\IBesarPengeluaran::class,
-        'status_dtks_id' => \App\Models\CStatusDtks::class,
+    // ===========================
+    // SOSIAL EKONOMI
+    // ===========================
+    'jenis_kelamin_id' => [
+        'model'  => IJenisKelamin::class,
+        'column' => 'jenis_kelamin'
+    ],
+    'pendidikan_terakhir_id' => [
+        'model'  => IPendidikanTerakhir::class,
+        'column' => 'pendidikan_terakhir'
+    ],
+    'pekerjaan_utama_id' => [
+        'model'  => IPekerjaanUtama::class,
+        'column' => 'pekerjaan_utama'
+    ],
+    'jumlah_kk_id' => [
+        'model'  => \App\Models\IJumlahKk::class,
+        'column' => 'jumlah_kk'
+    ],
+    'besar_penghasilan_perbulan_id' => [
+        'model'  => \App\Models\IBesarPenghasilan::class,
+        'column' => 'besar_penghasilan'
+    ],
+    'besar_pengeluaran_perbulan_id' => [
+        'model'  => \App\Models\IBesarPengeluaran::class,
+        'column' => 'besar_pengeluaran'
+    ],
+    'status_dtks_id' => [
+        'model'  => \App\Models\CStatusDtks::class,
+        'column' => 'status_dtks'
+    ],
 
-        'status_kepemilikan_tanah_id' => \App\Models\IStatusKepemilikanTanah::class,
-        'bukti_kepemilikan_tanah_id' => \App\Models\IBuktiKepemilikanTanah::class,
-        'status_kepemilikan_rumah_id' => \App\Models\IStatusKepemilikanRumah::class,
-        'status_imb_id' => \App\Models\IStatusIMB::class,
-        'aset_rumah_ditempat_lain_id' => \App\Models\IAsetRumahTempatLain::class,
-        'aset_tanah_ditempat_lain_id' => \App\Models\IAsetTanahTempatLain::class,
-        'jenis_kawasan_lokasi_rumah_id' => \App\Models\IJenisKawasanLokasi::class,
-        'pernah_mendapatkan_bantuan_id' => \App\Models\IPernahMendapatkanBantuan::class,
+    'status_kepemilikan_tanah_id' => [
+        'model'  => \App\Models\IStatusKepemilikanTanah::class,
+        'column' => 'status_kepemilikan_tanah'
+    ],
+    'bukti_kepemilikan_tanah_id' => [
+        'model'  => \App\Models\IBuktiKepemilikanTanah::class,
+        'column' => 'bukti_kepemilikan_tanah'
+    ],
+    'status_kepemilikan_rumah_id' => [
+        'model'  => \App\Models\IStatusKepemilikanRumah::class,
+        'column' => 'status_kepemilikan_rumah'
+    ],
+    'status_imb_id' => [
+        'model'  => \App\Models\IStatusIMB::class,
+        'column' => 'status_imb'
+    ],
 
-        // BANGUNAN
-        'pondasi_id' => APondasi::class,
-        'kondisi_pondasi_id' =>AKondisiPondasi::class,
-        'jenis_pondasi' => TblJenisPondasi::class,
-        'kondisi_sloof_id' => \App\Models\AKondisiSloof::class,
-        'kondisi_kolom_tiang_id' => \App\Models\AKondisiKolomTiang::class,
-        'kondisi_balok_id' => \App\Models\AKondisiBalok::class,
-        'kondisi_struktur_atap_id' => \App\Models\AKondisiStrukturAtap::class,
-        'material_atap_terluas_id' => \App\Models\DMaterialAtapTerluas::class,
-        'kondisi_penutup_atap_id' => \App\Models\DKondisiPenutupAtap::class,
-        'material_dinding_terluas_id' => \App\Models\DMaterialDindingTerluas::class,
-        'kondisi_dinding_id' => \App\Models\DKondisiDinding::class,
-        'material_lantai_terluas_id' => \App\Models\DMaterialLantaiTerluas::class,
-        'kondisi_lantai_id' => \App\Models\DKondisiLantai::class,
-        'akses_ke_jalan_id' => \App\Models\DAksesKeJalan::class,
-        'bangunan_menghadap_jalan_id' => \App\Models\DBangunanMenghadapJalan::class,
-        'bangunan_menghadap_sungai_id' => \App\Models\DBangunanMenghadapSungai::class,
-        'bangunan_berada_limbah_id' => \App\Models\DBangunanBeradaLimbah::class,
-        'bangunan_berada_sungai_id' => \App\Models\DBangunanBeradaSungai::class,
-        'ruang_keluarga_dan_ruang_tidur_id' => \App\Models\CRuangKeluargaDanTidur::class,
-        'jenis_fisik_bangunan_id' => \App\Models\CJenisFisikBangunan::class,
-        'fungsi_rumah_id' => \App\Models\CFungsiRumah::class,
-        'tipe_rumah_id' => \App\Models\CTipeRumah::class,
+    // ===========================
+    // CONTOH MASTER TANPA 'nama'
+    // ===========================
+    'aset_rumah_ditempat_lain_id' => [
+        'model'  => \App\Models\IAsetRumahTempatLain::class,
+        'column' => 'aset_rumah_tempat_lain'
+    ],
+    'aset_tanah_ditempat_lain_id' => [
+        'model'  => \App\Models\IAsetTanahTempatLain::class,
+        'column' => 'aset_tanah_tempat_lain'
+    ],
+    'jenis_kawasan_lokasi_rumah_id' => [
+        'model'  => \App\Models\IJenisKawasanLokasi::class,
+        'column' => 'jenis_kawasan_lokasi'
+    ],
+    'pernah_mendapatkan_bantuan_id' => [
+        'model'  => \App\Models\IPernahMendapatkanBantuan::class,
+        'column' => 'pernah_mendapatkan_bantuan'
+    ],
 
+    // ===========================
+    // BANGUNAN
+    // ===========================
+    'pondasi_id' => [
+        'model'  => APondasi::class,
+        'column' => 'pondasi'
+    ],
+    'kondisi_pondasi_id' => [
+        'model'  => AKondisiPondasi::class,
+        'column' => 'kondisi_pondasi'
+    ],
+    'jenis_pondasi' => [
+        'model'  => TblJenisPondasi::class,
+        'column' => 'jenis_pondasi'
+    ],
+    'kondisi_sloof_id' => [
+        'model'  => \App\Models\AKondisiSloof::class,
+        'column' => 'kondisi_sloof'
+    ],
+    'kondisi_kolom_tiang_id' => [
+        'model'  => \App\Models\AKondisiKolomTiang::class,
+        'column' => 'kondisi_kolom_tiang'
+    ],
+    'kondisi_balok_id' => [
+        'model'  => \App\Models\AKondisiBalok::class,
+        'column' => 'kondisi_balok'
+    ],
+    'kondisi_struktur_atap_id' => [
+        'model'  => \App\Models\AKondisiStrukturAtap::class,
+        'column' => 'kondisi_struktur_atap'
+    ],
 
-        // SANITASI
-        'jendela_lubang_cahaya_id' => \App\Models\BJendelaLubangCahaya::class,
-        'kondisi_jendela_lubang_cahaya_id' => \App\Models\BKondisiJendelaLubangCahaya::class,
-        'ventilasi_id' => \App\Models\BVentilasi::class,
-        'kondisi_ventilasi_id' => \App\Models\BKondisiVentilasi::class,
-        'kamar_mandi_id' => \App\Models\BKamarMandi::class,
-        'kondisi_kamar_mandi_id' => \App\Models\BKondisiKamarMandi::class,
-        'jamban_id' => \App\Models\BJamban::class,
-        'kondisi_jamban_id' => \App\Models\BKondisiJamban::class,
-        'sistem_pembuangan_air_kotor_id' => \App\Models\BSistemPembuanganAirKotor::class,
-        'kondisi_sistem_pembuangan_air_kotor_id' => \App\Models\BKondisiSistemPembuanganAirKotor::class,
-        'frekuensi_penyedotan_id' => \App\Models\BFrekuensiPenyedotan::class,
-        'sumber_air_minum_id' => \App\Models\BSumberAirMinum::class,
-        'kondisi_sumber_air_minum_id' => \App\Models\BKondisiSumberAirMinum::class,
-        'sumber_listrik_id' => \App\Models\BSumberListrik::class,
+    'material_atap_terluas_id' => [
+        'model'  => \App\Models\DMaterialAtapTerluas::class,
+        'column' => 'material_atap_terluas'
+    ],
+    'kondisi_penutup_atap_id' => [
+        'model'  => \App\Models\DKondisiPenutupAtap::class,
+        'column' => 'kondisi_penutup_atap'
+    ],
+    'material_dinding_terluas_id' => [
+        'model'  => \App\Models\DMaterialDindingTerluas::class,
+        'column' => 'material_dinding_terluas'
+    ],
+    'kondisi_dinding_id' => [
+        'model'  => \App\Models\DKondisiDinding::class,
+        'column' => 'kondisi_dinding'
+    ],
+    'material_lantai_terluas_id' => [
+        'model'  => \App\Models\DMaterialLantaiTerluas::class,
+        'column' => 'material_lantai_terluas'
+    ],
+    'kondisi_lantai_id' => [
+        'model'  => \App\Models\DKondisiLantai::class,
+        'column' => 'kondisi_lantai'
+    ],
+    'akses_ke_jalan_id' => [
+        'model'  => \App\Models\DAksesKeJalan::class,
+        'column' => 'akses_ke_jalan'
+    ],
+    'bangunan_menghadap_jalan_id' => [
+        'model'  => \App\Models\DBangunanMenghadapJalan::class,
+        'column' => 'bangunan_menghadap_jalan'
+    ],
+    'bangunan_menghadap_sungai_id' => [
+        'model'  => \App\Models\DBangunanMenghadapSungai::class,
+        'column' => 'bangunan_menghadap_sungai'
+    ],
+    'bangunan_berada_limbah_id' => [
+        'model'  => \App\Models\DBangunanBeradaLimbah::class,
+        'column' => 'bangunan_berada_limbah'
+    ],
+    'bangunan_berada_sungai_id' => [
+        'model'  => \App\Models\DBangunanBeradaSungai::class,
+        'column' => 'bangunan_berada_sungai'
+    ],
 
-        
-    ];
+    'ruang_keluarga_dan_ruang_tidur_id' => [
+        'model'  => \App\Models\CRuangKeluargaDanTidur::class,
+        'column' => 'ruang_keluarga_dan_tidur'
+    ],
+    'jenis_fisik_bangunan_id' => [
+        'model'  => \App\Models\CJenisFisikBangunan::class,
+        'column' => 'jenis_fisik_bangunan'
+    ],
+    'fungsi_rumah_id' => [
+        'model'  => \App\Models\CFungsiRumah::class,
+        'column' => 'fungsi_rumah'
+    ],
+    'tipe_rumah_id' => [
+        'model'  => \App\Models\CTipeRumah::class,
+        'column' => 'tipe_rumah'
+    ],
+
+    // ===========================
+    // SANITASI
+    // ===========================
+    'jendela_lubang_cahaya_id' => [
+        'model'  => \App\Models\BJendelaLubangCahaya::class,
+        'column' => 'jendela_lubang_cahaya'
+    ],
+    'kondisi_jendela_lubang_cahaya_id' => [
+        'model'  => \App\Models\BKondisiJendelaLubangCahaya::class,
+        'column' => 'kondisi_jendela_lubang_cahaya'
+    ],
+    'ventilasi_id' => [
+        'model'  => \App\Models\BVentilasi::class,
+        'column' => 'ventilasi'
+    ],
+    'kondisi_ventilasi_id' => [
+        'model'  => \App\Models\BKondisiVentilasi::class,
+        'column' => 'kondisi_ventilasi'
+    ],
+    'kamar_mandi_id' => [
+        'model'  => \App\Models\BKamarMandi::class,
+        'column' => 'kamar_mandi'
+    ],
+    'kondisi_kamar_mandi_id' => [
+        'model'  => \App\Models\BKondisiKamarMandi::class,
+        'column' => 'kondisi_kamar_mandi'
+    ],
+    'jamban_id' => [
+        'model'  => \App\Models\BJamban::class,
+        'column' => 'jamban'
+    ],
+    'kondisi_jamban_id' => [
+        'model'  => \App\Models\BKondisiJamban::class,
+        'column' => 'kondisi_jamban'
+    ],
+    'sistem_pembuangan_air_kotor_id' => [
+        'model'  => \App\Models\BSistemPembuanganAirKotor::class,
+        'column' => 'sistem_pembuangan_air_kotor'
+    ],
+    'kondisi_sistem_pembuangan_air_kotor_id' => [
+        'model'  => \App\Models\BKondisiSistemPembuanganAirKotor::class,
+        'column' => 'kondisi_sistem_pembuangan_air_kotor'
+    ],
+    'frekuensi_penyedotan_id' => [
+        'model'  => \App\Models\BFrekuensiPenyedotan::class,
+        'column' => 'frekuensi_penyedotan'
+    ],
+    'sumber_air_minum_id' => [
+        'model'  => \App\Models\BSumberAirMinum::class,
+        'column' => 'sumber_air_minum'
+    ],
+    'kondisi_sumber_air_minum_id' => [
+        'model'  => \App\Models\BKondisiSumberAirMinum::class,
+        'column' => 'kondisi_sumber_air_minum'
+    ],
+    'sumber_listrik_id' => [
+        'model'  => \App\Models\BSumberListrik::class,
+        'column' => 'sumber_listrik'
+    ],
+];
+
 
     // Jika field ada di mapping
-    if (array_key_exists($field, $masterMap)) {
+   if (array_key_exists($field, $masterMap)) {
 
-        $model = $masterMap[$field];
+    $conf = $masterMap[$field];
+    $model = $conf['model'];
+    $column = $conf['column'] ?? 'nama';
 
-        // ARRAY → berarti checkbox multi
-        if (is_array($value)) {
-            return collect($value)->map(function ($id) use ($model) {
-                return optional($model::find($id))->nama ?? $id;
-            })->join(', ');
-        }
-
-        // SINGLE OPTION
-        return optional($model::find($value))->nama ?? $value;
+    // MULTI (checkbox)
+    if (is_array($value)) {
+        return collect($value)->map(function ($id) use ($model, $column) {
+            $row = $model::find($id);
+            return $row ? ($row->$column ?? $id) : $id;
+        })->join(', ');
     }
+
+    // SINGLE
+    $row = $model::find($value);
+    return $row ? ($row->$column ?? $value) : $value;
+}
+
 
 
     /*

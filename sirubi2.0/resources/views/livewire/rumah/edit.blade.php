@@ -47,48 +47,48 @@
                                                 <!--begin::Nav-->
                                                 <div class="stepper-nav justify-content-center py-2">
                                                     <!--begin::Step 1-->
-                                                    <div id="step-header-1" class="stepper-item me-5 me-md-15 {{ $currentStep === 1 ? 'current' : ($currentStep > 1 ? 'completed' : '') }}" data-kt-stepper-element="nav">
+                                                    <div id="step-header-1" class="stepper-item me-5 me-md-15 {{ $currentStep === 1 ? 'current' : ($currentStep > 1 ? 'completed' : '') }}" data-kt-stepper-element="nav" wire:click="setStep(1)" style="cursor:pointer">
                                                         <h3 class="stepper-title">Lokasi</h3>
                                                     </div>
                                                     <!--end::Step 1-->
                                                     <!--begin::Step 2-->
-                                                    <div  id="step-header-2" class="stepper-item me-5 me-md-15 {{ $currentStep === 2 ? 'current' : ($currentStep > 2 ? 'completed' : '') }}" data-kt-stepper-element="nav">
+                                                    <div  id="step-header-2" class="stepper-item me-5 me-md-15 {{ $currentStep === 2 ? 'current' : ($currentStep > 2 ? 'completed' : '') }}" data-kt-stepper-element="nav" wire:click="setStep(2)" style="cursor:pointer">
                                                         <h3 class="stepper-title">Penghuni Rumah</h3>
                                                     </div>
 
-                                                     <div  id="step-header-2" class="stepper-item me-5 me-md-15 {{ $currentStep === 3 ? 'current' : ($currentStep > 3 ? 'completed' : '') }}" data-kt-stepper-element="nav">
+                                                     <div  id="step-header-2" class="stepper-item me-5 me-md-15 {{ $currentStep === 3 ? 'current' : ($currentStep > 3 ? 'completed' : '') }}" data-kt-stepper-element="nav" wire:click="setStep(3)" style="cursor:pointer">
                                                         <h3 class="stepper-title">Identitas Rumah</h3>
                                                     </div>
                                                     <!--end::Step 2-->
                                                     <!--begin::Step 3-->
-                                                    <div id="step-header-3" class="stepper-item me-5 me-md-15 {{ $currentStep === 4 ? 'current' : ($currentStep > 4 ? 'completed' : '') }}" data-kt-stepper-element="nav">
+                                                    <div id="step-header-3" class="stepper-item me-5 me-md-15 {{ $currentStep === 4 ? 'current' : ($currentStep > 4 ? 'completed' : '') }}" data-kt-stepper-element="nav" wire:click="setStep(4)" style="cursor:pointer">
                                                         <h3 class="stepper-title">Aspek Keselamatan</h3>
                                                     </div>
                                                     <!--end::Step 3-->
                                                     <!--begin::Step 4-->
-                                                    <div id="step-header-4" class="stepper-item me-5 me-md-15 {{ $currentStep === 5 ? 'current' : ($currentStep > 5 ? 'completed' : '') }}" data-kt-stepper-element="nav">
+                                                    <div id="step-header-4" class="stepper-item me-5 me-md-15 {{ $currentStep === 5 ? 'current' : ($currentStep > 5 ? 'completed' : '') }}" data-kt-stepper-element="nav" wire:click="setStep(5)" style="cursor:pointer">
                                                         <h3 class="stepper-title">Aspek Kesehatan</h3>
                                                     </div>
 
                                                    
 
-                                                    <div id="step-header-7" class="stepper-item me-5 me-md-15 {{ $currentStep === 6 ? 'current' : ($currentStep > 6 ? 'completed' : '') }}" data-kt-stepper-element="nav">
+                                                    <div id="step-header-7" class="stepper-item me-5 me-md-15 {{ $currentStep === 6 ? 'current' : ($currentStep > 6 ? 'completed' : '') }}" data-kt-stepper-element="nav" wire:click="setStep(6)" style="cursor:pointer">
                                                         <h3 class="stepper-title"> Aspek Persyaratan Luas Dan Kebutuhan Ruang</h3>
                                                     </div>
 
-                                                     <div id="step-header-8" class="stepper-item me-5 me-md-15 {{ $currentStep === 7 ? 'current' : ($currentStep > 7 ? 'completed' : '') }}" data-kt-stepper-element="nav">
+                                                     <div id="step-header-8" class="stepper-item me-5 me-md-15 {{ $currentStep === 7 ? 'current' : ($currentStep > 7 ? 'completed' : '') }}" data-kt-stepper-element="nav" wire:click="setStep(7)" style="cursor:pointer">
                                                         <h3 class="stepper-title"> Aspek Komponen Bahan Bangunan</h3>
                                                     </div>
                                                     
                                                     <!--end::Step 4-->
                                                     <!--begin::Step 5-->
-                                                    <div class="stepper-item {{ $currentStep === 8 ? 'current' : ($currentStep > 8 ? 'completed' : '') }}" data-kt-stepper-element="nav">
+                                                    <div class="stepper-item {{ $currentStep === 8 ? 'current' : ($currentStep > 8 ? 'completed' : '') }}" data-kt-stepper-element="nav" wire:click="setStep(8)" style="cursor:pointer">
                                                         <h3 class="stepper-title">Foto/Dokumentasi</h3>
                                                     </div>
 
                                                     @if($is_question)
                                                     
-                                                     <div id="step-header-9" class="stepper-item me-5 me-md-15 {{ $currentStep === 9 ? 'current' : ($currentStep > 9 ? 'completed' : '') }}" data-kt-stepper-element="nav">
+                                                     <div id="step-header-9" class="stepper-item me-5 me-md-15 {{ $currentStep === 9 ? 'current' : ($currentStep > 9 ? 'completed' : '') }}" data-kt-stepper-element="nav" wire:click="setStep(9)" style="cursor:pointer">
                                                         <h3 class="stepper-title"> Pertanyaan Lainnya</h3>
                                                     </div>
                                                     @endif
@@ -491,7 +491,7 @@
                                                                                     <input class="form-check-input"
                                                                                         type="radio"
                                                                                         value="{{ $option->id }}"
-                                                                                        wire:model="questionAnswers.{{ $q->id }}"  data-name="questionAnswers.{{ $q->id }}">
+                                                                                        wire:model="questionAnswers.{{ $q->id }}"  data-radio="questionAnswers.{{ $q->id }}">
                                                                                     <span class="form-check-label">{{ $option->label }}</span>
                                                                                 </label>
                                                                             @endforeach
@@ -505,7 +505,7 @@
                                                                                     <input class="form-check-input"
                                                                                         type="checkbox"
                                                                                         value="{{ $option->id }}"
-                                                                                        wire:model="questionAnswers.{{ $q->id }}"  data-name="questionAnswers.{{ $q->id }}">
+                                                                                        wire:model="questionAnswers.{{ $q->id }}" data-name="questionAnswers.{{ $q->id }}">
                                                                                     <span class="form-check-label">{{ $option->label }}</span>
                                                                                 </label>
                                                                             @endforeach
@@ -2598,78 +2598,84 @@
                                                             <!--begin::Actions-->
 
                                                            <div class="row g-6">
-                                                                @foreach([
-                                                                    ['label' => 'Kartu Keluarga (KK)', 'id' => 'foto_kk'],
-                                                                    ['label' => 'Kartu Tanda Penduduk (KTP)', 'id' => 'foto_ktp'],
-                                                                    ['label' => 'Foto Rumah 1', 'id' => 'foto_rumah_satu'],
-                                                                    ['label' => 'Foto Rumah 2', 'id' => 'foto_rumah_dua'],
-                                                                    ['label' => 'Foto Rumah 3', 'id' => 'foto_rumah_tiga'],
-                                                                    ['label' => 'Foto IMB', 'id' => 'foto_imb'],
-                                                                ] as $item)
-                                                                    <div class="col-md-6 fv-row" wire:ignore.self>
-                                                                        <label class="fs-5 fw-semibold mb-2">{{ $item['label'] }}</label>
+    @foreach([
+        ['label' => 'Kartu Keluarga (KK)', 'id' => 'foto_kk'],
+        ['label' => 'Kartu Tanda Penduduk (KTP)', 'id' => 'foto_ktp'],
+        ['label' => 'Foto Rumah 1', 'id' => 'foto_rumah_satu'],
+        ['label' => 'Foto Rumah 2', 'id' => 'foto_rumah_dua'],
+        ['label' => 'Foto Rumah 3', 'id' => 'foto_rumah_tiga'],
+        ['label' => 'Foto IMB', 'id' => 'foto_imb'],
+    ] as $item)
 
-                                                                        <!--begin::Dropzone-->
-                                                                        <div class="dropzone border border-dashed border-primary rounded-3 position-relative text-center p-5"
-                                                                            onclick="document.getElementById('{{ $item['id'] }}').click()"
-                                                                            style="cursor:pointer;">
+        @php
+            $baru = $this->{$item['id']};                 // file baru (TemporaryUploadedFile)
+            $lama = $this->{$item['id'].'_old'} ?? null;  // file lama (string path)
+        @endphp
 
-                                                                            @php
-                                                                                $file = $this->{$item['id']};
-                                                                            @endphp
+        <div class="col-md-6 fv-row" wire:ignore.self>
+            <label class="fs-5 fw-semibold mb-2">{{ $item['label'] }}</label>
 
-                                                                            @if ($file)
-                                                                                @if (is_string($file))
-                                                                                    <!-- 🖼️ Gambar lama dari storage -->
-                                                                                    <div class="position-relative d-inline-block">
-                                                                                        <img src="{{ asset('storage/' . $file) }}" class="img-fluid rounded" style="max-height: 180px;">
-                                                                                        <button type="button"
-                                                                                                class="btn btn-icon btn-sm btn-danger position-absolute top-0 end-0 translate-middle"
-                                                                                                wire:click="removePhoto('{{ $item['id'] }}')"
-                                                                                                style="margin-top:-10px;margin-right:-10px;">
-                                                                                            <i class="fa fa-times"></i>
-                                                                                        </button>
-                                                                                    </div>
-                                                                                @else
-                                                                                    <!-- 🆕 Gambar baru yang baru di-upload -->
-                                                                                    <div class="position-relative d-inline-block">
-                                                                                        <img src="{{ $file->temporaryUrl() }}" class="img-fluid rounded" style="max-height: 180px;">
-                                                                                        <button type="button"
-                                                                                                class="btn btn-icon btn-sm btn-danger position-absolute top-0 end-0 translate-middle"
-                                                                                                wire:click="removePhoto('{{ $item['id'] }}')"
-                                                                                                style="margin-top:-10px;margin-right:-10px;">
-                                                                                            <i class="fa fa-times"></i>
-                                                                                        </button>
-                                                                                    </div>
+            <!--begin::Dropzone-->
+            <div class="dropzone border border-dashed border-primary rounded-3 position-relative text-center p-5"
+                onclick="document.getElementById('{{ $item['id'] }}').click()"
+                style="cursor:pointer;">
 
-                                                                                    <div class="progress mt-3 h-5px">
-                                                                                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" style="width: 100%"></div>
-                                                                                    </div>
-                                                                                @endif
-                                                                            @else
-                                                                                <!-- 🧩 Default Dropzone -->
-                                                                                <div class="dz-message needsclick py-6">
-                                                                                    <i class="fa-solid fa-cloud-arrow-up fs-2x text-primary mb-3"></i>
-                                                                                    <div>
-                                                                                        <h3 class="fs-6 fw-bold text-gray-800 mb-1">Klik atau Drop file di sini</h3>
-                                                                                        <span class="fw-semibold fs-7 text-muted">Format: JPG, PNG. Maks 4MB</span>
-                                                                                    </div>
-                                                                                </div>
-                                                                            @endif
-                                                                        </div>
+                {{-- PRIORITAS: FILE BARU > FILE LAMA > DEFAULT --}}
+                @if ($baru)
+                    {{-- 🆕 Tampilkan gambar baru --}}
+                    <div class="position-relative d-inline-block">
+                        <img src="{{ $baru->temporaryUrl() }}" class="img-fluid rounded" style="max-height: 180px;">
+                        <button type="button"
+                            class="btn btn-icon btn-sm btn-danger position-absolute top-0 end-0 translate-middle"
+                            wire:click="removePhoto('{{ $item['id'] }}')"
+                            style="margin-top:-10px;margin-right:-10px;">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
 
-                                                                        <!--end::Dropzone-->
+                    {{-- Animasi upload --}}
+                    <div class="progress mt-3 h-5px">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" style="width: 100%"></div>
+                    </div>
 
-                                                                        <input type="file" id="{{ $item['id'] }}"
-                                                                            wire:model="{{ $item['id'] }}" accept="image/*"
-                                                                            class="d-none">
+                @elseif ($lama)
+                    {{-- 🖼️ Tampilkan gambar lama --}}
+                    <div class="position-relative d-inline-block">
+                        <img src="{{ asset('storage/' . $lama) }}" class="img-fluid rounded" style="max-height: 180px;">
+                        <button type="button"
+                            class="btn btn-icon btn-sm btn-danger position-absolute top-0 end-0 translate-middle"
+                            wire:click="removePhoto('{{ $item['id'] }}')"
+                            style="margin-top:-10px;margin-right:-10px;">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
 
-                                                                        @error($item['id'])
-                                                                            <div class="text-danger small mt-1">{{ $message }}</div>
-                                                                        @enderror
-                                                                    </div>
-                                                                @endforeach
-                                                            </div>
+                @else
+                    {{-- 🧩 Dropzone default --}}
+                    <div class="dz-message needsclick py-6">
+                        <i class="fa-solid fa-cloud-arrow-up fs-2x text-primary mb-3"></i>
+                        <div>
+                            <h3 class="fs-6 fw-bold text-gray-800 mb-1">Klik atau Drop file di sini</h3>
+                            <span class="fw-semibold fs-7 text-muted">Format: JPG, PNG. Maks 4MB</span>
+                        </div>
+                    </div>
+                @endif
+
+            </div>
+            <!--end::Dropzone-->
+
+            <input type="file" id="{{ $item['id'] }}"
+                wire:model="{{ $item['id'] }}"
+                accept="image/*"
+                class="d-none">
+
+            @error($item['id'])
+                <div class="text-danger small mt-1">{{ $message }}</div>
+            @enderror
+        </div>
+    @endforeach
+</div>
+
                                                             <div class="mt-10" >
 
                                                             @foreach($pertanyaanDokumentasi as $q)
@@ -3431,21 +3437,40 @@ function initSelect2() {
 function initDynamicInputs() {
 
     // === RADIO HANDLER ===
-    $('input[type=radio][data-name]').off().on('change', function () {
-        const name = $(this).data('name');
-        const value = $(this).val();
-        const componentId = $(this).closest('[wire\\:id]').attr('wire:id');
+    $('input[type=radio][data-radio]').off().on('change', function () {
+    const name = $(this).data('radio');  // ← GANTI INI
+    const value = $(this).val();
+    const componentId = $(this).closest('[wire\\:id]').attr('wire:id');
 
-        if (componentId) {
-            Livewire.find(componentId).call('select2Changed', { name, value });
-        }
-    });
+    if (componentId) {
+        Livewire.find(componentId).call('select2Changed', { name, value });
+    }
+});
+
 
     // === CHECKBOX HANDLER ===
+    // $('input[type=checkbox][data-name]').off().on('change', function () {
+    //     const name = $(this).data('name');
+
+    //     // ambil semua checkbox yg ceklis untuk name yg sama
+    //     const group = $(`input[type=checkbox][data-name="${name}"]:checked`)
+    //         .map(function () {
+    //             return $(this).val();
+    //         }).get();
+
+    //     const componentId = $(this).closest('[wire\\:id]').attr('wire:id');
+
+    //     if (componentId) {
+    //         Livewire.find(componentId).call('select2Changed', {
+    //             name,
+    //             value: group // array value
+    //         });
+    //     }
+    // });
+
     $('input[type=checkbox][data-name]').off().on('change', function () {
         const name = $(this).data('name');
 
-        // ambil semua checkbox yg ceklis untuk name yg sama
         const group = $(`input[type=checkbox][data-name="${name}"]:checked`)
             .map(function () {
                 return $(this).val();
@@ -3460,6 +3485,7 @@ function initDynamicInputs() {
             });
         }
     });
+
 }
 
 </script>

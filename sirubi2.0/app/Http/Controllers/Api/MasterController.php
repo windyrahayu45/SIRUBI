@@ -164,14 +164,44 @@ class MasterController extends Controller
 
     public function store(Request $request)
     {
+       
         // Convert string JSON menjadi array jika yang dikirim form-data
-        if ($request->has('pertanyaan') && is_string($request->pertanyaan)) {
-            $decoded = json_decode($request->pertanyaan, true);
-            $request->merge(['pertanyaan' => $decoded]);
+        if ($request->has('pertanyaan')) {
+
+            $raw = $request->pertanyaan;
+
+            // Jika pertanyaan dikirim sebagai STRING JSON
+            if (is_string($raw)) {
+
+                // Bersihkan karakter buruk supaya JSON lebih stabil
+                $clean = trim($raw);
+                $clean = str_replace(["\n", "\r"], '', $clean);
+
+                // Perbaiki kutip tidak lengkap seperti ["29","30]
+                if (preg_match('/\[(.*?)\]/', $clean)) {
+                    $clean = preg_replace('/"(\d+)]/', '"$1"]', $clean);
+                }
+
+                // Decode JSON
+                $decoded = json_decode($clean, true);
+
+                // Jika JSON tidak valid → tetap merge NULL supaya tidak crash
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    // tidak return error — biarkan validasi menangani
+                    $decoded = null;
+                }
+
+                // Pastikan berbentuk array atau null
+                if (!is_array($decoded)) {
+                    $decoded = null;
+                }
+
+                // Masukkan kembali ke request
+                $request->merge(['pertanyaan' => $decoded]);
+            }
         }
-        // ======================
-        // VALIDASI DASAR
-        // ======================
+
+    
         $validator = Validator::make($request->all(), [
             'latitude'       => 'required|numeric',
             'longitude'      => 'required|numeric',
@@ -238,11 +268,8 @@ class MasterController extends Controller
             'status_dtks_id'                => 'required|integer',
             'tahun_pembangunan_rumah'       => 'required|integer',
 
-            // foto wajib
-            'foto_rumah_satu'   => 'required|file|mimes:jpg,jpeg,png',
+            'foto_rumah_satu' => 'required|file|mimes:jpg,jpeg,png',
 
-            
-            // pertanyaan dinamis
             'pertanyaan' => 'nullable|array',
             'pertanyaan.*.question_id' => 'required_with:pertanyaan',
             'pertanyaan.*.answer'      => 'nullable'
@@ -255,50 +282,60 @@ class MasterController extends Controller
                 'errors'  => $validator->errors(),
             ], 422);
         }
-
         // ============================================
         // VALIDASI PERTANYAAN DINAMIS
         // ============================================
-        if ($request->filled('pertanyaan')) {
+        if ($request->has('pertanyaan') && is_array($request->pertanyaan)) {
 
-            $all = SurveyQuestion::active()->get();
+            $all = SurveyQuestion::where('is_active', '1')->get();
 
             foreach ($all as $q) {
 
                 $row = collect($request->pertanyaan)
                     ->firstWhere('question_id', $q->id);
 
+            
+                if ($q->is_required && !$row) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => "Pertanyaan '{$q->label}' wajib diisi.",
+                    ], 422);
+                }
+
+                // kalau pertanyaan tidak dikirim dan tidak required → skip
                 if (!$row) continue;
 
                 $answer = $row['answer'] ?? null;
 
-                if (!$q->is_required) continue;
+                if ($q->is_required) {
 
-                if (in_array($q->type, ['text','textarea','number','date'])
-                    && empty($answer)) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => "Pertanyaan '{$q->label}' wajib diisi."
-                    ], 422);
-                }
+                    if (in_array($q->type, ['text','textarea','number','date'])
+                        && empty($answer)) {
+                        return response()->json([
+                            'status' => false,
+                            'message' => "Pertanyaan '{$q->label}' wajib diisi.",
+                        ], 422);
+                    }
 
-                if (in_array($q->type, ['select','radio'])
-                    && empty($answer)) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => "Pertanyaan '{$q->label}' wajib dipilih."
-                    ], 422);
-                }
+                    if (in_array($q->type, ['select','radio'])
+                        && empty($answer)) {
+                        return response()->json([
+                            'status' => false,
+                            'message' => "Pertanyaan '{$q->label}' wajib dipilih.",
+                        ], 422);
+                    }
 
-                if ($q->type === 'checkbox'
-                    && (empty($answer) || count($answer) === 0)) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => "Pertanyaan '{$q->label}' wajib pilih minimal 1."
-                    ], 422);
+                    if ($q->type === 'checkbox'
+                        && (empty($answer) || count($answer) === 0)) {
+                        return response()->json([
+                            'status' => false,
+                            'message' => "Pertanyaan '{$q->label}' wajib pilih minimal 1.",
+                        ], 422);
+                    }
                 }
             }
         }
+
 
         try {
             DB::beginTransaction();
@@ -323,7 +360,7 @@ class MasterController extends Controller
             // ====================================================
             // SIMPAN PERTANYAAN DINAMIS (TIDAK ADA HISTORY)
             // ====================================================
-            if ($request->filled('pertanyaan')) {
+            if ($request->has('pertanyaan')) {
 
                 foreach ($request->pertanyaan as $item) {
 
@@ -688,165 +725,165 @@ class MasterController extends Controller
     //         'data'    => $rumah
     //     ]);
     // }
-public function search(Request $request)
-{
-    // 🔐 Wajib token JWT
-    $user = $request->auth->id_user ?? null;
+    public function search(Request $request)
+    {
+        // 🔐 Wajib token JWT
+        $user = $request->auth->id_user ?? null;
 
-    if (!$user) {
-        return response()->json([
-            'status' => false,
-            'message' => 'Unauthorized'
-        ], 401);
-    }
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthorized'
+            ], 401);
+        }
 
-    $keyword = $request->input('q');
+        $keyword = $request->input('q');
 
-    if (!$keyword) {
-        return response()->json([
-            'status' => false,
-            'message' => 'Parameter q wajib diisi.'
-        ], 422);
-    }
+        if (!$keyword) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Parameter q wajib diisi.'
+            ], 422);
+        }
 
-    // ===============================================================
-    // 1️⃣ CARI DATA RUMAH BERDASARKAN KEYWORD
-    // ===============================================================
-    $rumah = Rumah::with([
-            'kepemilikan',
-            'kepalaKeluarga.anggota',
-            'sosialEkonomi',
-            'fisik',
-            'sanitasi',
-            'penilaian',
-            'dokumen',
-            'bantuan',
-            'kelurahan.kecamatan'
-        ])
-        ->where(function ($q) use ($keyword) {
+        // ===============================================================
+        // 1️⃣ CARI DATA RUMAH BERDASARKAN KEYWORD
+        // ===============================================================
+        $rumah = Rumah::with([
+                'kepemilikan',
+                'kepalaKeluarga.anggota',
+                'sosialEkonomi',
+                'fisik',
+                'sanitasi',
+                'penilaian',
+                'dokumen',
+                'bantuan',
+                'kelurahan.kecamatan'
+            ])
+            ->where(function ($q) use ($keyword) {
 
-            $q->whereHas('kepemilikan', function ($qq) use ($keyword) {
-                $qq->where('nik_kepemilikan_rumah', 'like', "%{$keyword}%");
+                $q->whereHas('kepemilikan', function ($qq) use ($keyword) {
+                    $qq->where('nik_kepemilikan_rumah', 'like', "%{$keyword}%");
+                });
+
+                $q->orWhereHas('kepalaKeluarga', function ($qq) use ($keyword) {
+                    $qq->where('no_kk', 'like', "%{$keyword}%");
+                });
+
+                $q->orWhereHas('sosialEkonomi', function ($qq) use ($keyword) {
+                    $qq->where('no_kk', 'like', "%{$keyword}%");
+                });
+
+                $q->orWhereHas('kepalaKeluarga.anggota', function ($qq) use ($keyword) {
+                    $qq->where('nik', 'like', "%{$keyword}%");
+                });
+
+                $q->orWhereHas('kepalaKeluarga.anggota', function ($qq) use ($keyword) {
+                    $qq->where('no_kk', 'like', "%{$keyword}%");
+                });
+
+            })
+            ->get();
+
+        if ($rumah->count() == 0) {
+            return response()->json([
+                'status'  => true,
+                'keyword' => $keyword,
+                'total'   => 0,
+                'data'    => []
+            ]);
+        }
+
+        // ===============================================================
+        // 2️⃣ AMBIL SEMUA PERTANYAAN DINAMIS
+        // ===============================================================
+        $pertanyaan = SurveyQuestion::with('options')
+            ->where('is_active', 1)
+            ->orderBy('id', 'desc')
+            ->get();
+
+        // ===============================================================
+        // 3️⃣ PROSES MASING-MASING RUMAH → TAMBAHKAN ANSWER & PERBAIKI DOKUMEN
+        // ===============================================================
+        $output = [];
+
+        foreach ($rumah as $r) {
+
+            // -----------------------------------------------
+            // 🔧 PERBAIKI SEMUA PATH DOKUMEN → JADI FULL URL
+            // -----------------------------------------------
+            if ($r->dokumen) {
+                foreach ($r->dokumen->getAttributes() as $key => $value) {
+
+                    // Jika kolom berisi path file relatif
+                    if ($value && is_string($value) && str_contains($value, '/')) {
+
+                        // Hanya untuk kolom foto/file
+                        if (str_contains($key, 'foto') || str_contains($key, 'file')) {
+                            $r->dokumen->{$key} = asset('storage/' . $value);
+                        }
+
+                    }
+                }
+            }
+
+            // -----------------------------------------------
+            // 🔎 Ambil semua jawaban survey
+            // -----------------------------------------------
+            $ansData = SurveyQuestionAnswer::where('rumah_id', $r->id_rumah)->get();
+
+            // -----------------------------------------------
+            // 🔗 Masukkan jawaban ke dalam setiap pertanyaan
+            // -----------------------------------------------
+            $questionsWithAnswer = $pertanyaan->map(function ($q) use ($ansData) {
+
+                $answer = null;
+
+                $ans = $ansData->firstWhere('question_id', $q->id);
+
+                if ($ans) {
+                    if ($ans->answer_text !== null) {
+                        $answer = $ans->answer_text;
+                    }
+
+                    if ($ans->answer_option_id !== null) {
+                        $answer = $ans->answer_option_id;
+                    }
+
+                    if ($ans->answer_option_ids !== null) {
+                        $answer = $ans->answer_option_ids; // array
+                    }
+
+                    if ($ans->file_path !== null) {
+                        $answer = asset('storage/' . $ans->file_path);
+                    }
+                }
+
+                // tempel answer langsung ke object pertanyaan
+                $q->answer = $answer;
+
+                return $q;
             });
 
-            $q->orWhereHas('kepalaKeluarga', function ($qq) use ($keyword) {
-                $qq->where('no_kk', 'like', "%{$keyword}%");
-            });
+            // -----------------------------------------------
+            // Masukkan ke output final
+            // -----------------------------------------------
+            $output[] = [
+                'rumah'     => $r,
+                'questions' => $questionsWithAnswer
+            ];
+        }
 
-            $q->orWhereHas('sosialEkonomi', function ($qq) use ($keyword) {
-                $qq->where('no_kk', 'like', "%{$keyword}%");
-            });
-
-            $q->orWhereHas('kepalaKeluarga.anggota', function ($qq) use ($keyword) {
-                $qq->where('nik', 'like', "%{$keyword}%");
-            });
-
-            $q->orWhereHas('kepalaKeluarga.anggota', function ($qq) use ($keyword) {
-                $qq->where('no_kk', 'like', "%{$keyword}%");
-            });
-
-        })
-        ->get();
-
-    if ($rumah->count() == 0) {
+        // ===============================================================
+        // 4️⃣ RETURN JSON FINAL
+        // ===============================================================
         return response()->json([
             'status'  => true,
             'keyword' => $keyword,
-            'total'   => 0,
-            'data'    => []
+            'total'   => count($output),
+            'data'    => $output
         ]);
     }
-
-    // ===============================================================
-    // 2️⃣ AMBIL SEMUA PERTANYAAN DINAMIS
-    // ===============================================================
-    $pertanyaan = SurveyQuestion::with('options')
-        ->where('is_active', 1)
-        ->orderBy('id', 'desc')
-        ->get();
-
-    // ===============================================================
-    // 3️⃣ PROSES MASING-MASING RUMAH → TAMBAHKAN ANSWER & PERBAIKI DOKUMEN
-    // ===============================================================
-    $output = [];
-
-    foreach ($rumah as $r) {
-
-        // -----------------------------------------------
-        // 🔧 PERBAIKI SEMUA PATH DOKUMEN → JADI FULL URL
-        // -----------------------------------------------
-        if ($r->dokumen) {
-            foreach ($r->dokumen->getAttributes() as $key => $value) {
-
-                // Jika kolom berisi path file relatif
-                if ($value && is_string($value) && str_contains($value, '/')) {
-
-                    // Hanya untuk kolom foto/file
-                    if (str_contains($key, 'foto') || str_contains($key, 'file')) {
-                        $r->dokumen->{$key} = asset('storage/' . $value);
-                    }
-
-                }
-            }
-        }
-
-        // -----------------------------------------------
-        // 🔎 Ambil semua jawaban survey
-        // -----------------------------------------------
-        $ansData = SurveyQuestionAnswer::where('rumah_id', $r->id_rumah)->get();
-
-        // -----------------------------------------------
-        // 🔗 Masukkan jawaban ke dalam setiap pertanyaan
-        // -----------------------------------------------
-        $questionsWithAnswer = $pertanyaan->map(function ($q) use ($ansData) {
-
-            $answer = null;
-
-            $ans = $ansData->firstWhere('question_id', $q->id);
-
-            if ($ans) {
-                if ($ans->answer_text !== null) {
-                    $answer = $ans->answer_text;
-                }
-
-                if ($ans->answer_option_id !== null) {
-                    $answer = $ans->answer_option_id;
-                }
-
-                if ($ans->answer_option_ids !== null) {
-                    $answer = $ans->answer_option_ids; // array
-                }
-
-                if ($ans->file_path !== null) {
-                    $answer = asset('storage/' . $ans->file_path);
-                }
-            }
-
-            // tempel answer langsung ke object pertanyaan
-            $q->answer = $answer;
-
-            return $q;
-        });
-
-        // -----------------------------------------------
-        // Masukkan ke output final
-        // -----------------------------------------------
-        $output[] = [
-            'rumah'     => $r,
-            'questions' => $questionsWithAnswer
-        ];
-    }
-
-    // ===============================================================
-    // 4️⃣ RETURN JSON FINAL
-    // ===============================================================
-    return response()->json([
-        'status'  => true,
-        'keyword' => $keyword,
-        'total'   => count($output),
-        'data'    => $output
-    ]);
-}
 
 
     public function deleteRumah(Request $request)
@@ -963,208 +1000,696 @@ public function search(Request $request)
         ], 200);
     }
 
-    public function updateRumah(Request $request, $id)
-    {
+    // public function updateRumah(Request $request, $id)
+    // {
 
         
-        // FIX auth hilang saat method spoofing (_method=PUT)
-        $user = $request->auth;
-       // dd($request->auth);
-        if (!$user) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Unauthorized (user not detected)'
-            ], 401);
+    //     // FIX auth hilang saat method spoofing (_method=PUT)
+    //     $user = $request->auth;
+    //    // dd($request->auth);
+    //     if (!$user) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => 'Unauthorized (user not detected)'
+    //         ], 401);
+    //     }
+
+    //     // Pastikan object auth dipasang ke request
+    //     //$request->merge(['auth' => $user]);
+
+    //     //dd($request->all());
+    //     // ======================================================
+    //     // JSON decode untuk form-data
+    //     // ======================================================
+    //     if ($request->has('pertanyaan') && is_string($request->pertanyaan)) {
+    //         $request->merge(['pertanyaan' => json_decode($request->pertanyaan, true)]);
+    //     }
+
+    //     if ($request->has('kks') && is_string($request->kks)) {
+    //         $request->merge(['kks' => json_decode($request->kks, true)]);
+    //     }
+
+
+    //     // ======================================================
+    //     // VALIDASI — IDENTIK DENGAN STORE
+    //     // ======================================================
+    //     $validator = Validator::make($request->all(), [
+    //         'latitude'       => 'required|numeric',
+    //         'longitude'      => 'required|numeric',
+    //         'alamat'         => 'required|string',
+    //         'rt'             => 'required|string',
+    //         'rw'             => 'required|string',
+    //         'kecamatan_id'   => 'required|integer',
+    //         'kelurahan_id'   => 'required|integer',
+
+    //         // sosial ekonomi
+    //         'jenis_kelamin_id'          => 'required|integer',
+    //         'usia'                      => 'required|integer',
+    //         'pendidikan_terakhir_id'    => 'required|integer',
+    //         'pekerjaan_utama_id'        => 'required|integer',
+    //         'besar_penghasilan_id'      => 'required|integer',
+    //         'besar_pengeluaran_id'      => 'required|integer',
+
+    //         // kepemilikan
+    //         'nik_kepemilikan_rumah'     => 'nullable',
+    //         'status_kepemilikan_tanah_id'   => 'required|integer',
+    //         'bukti_kepemilikan_tanah_id'    => 'required|integer',
+    //         'status_kepemilikan_rumah_id'   => 'required|integer',
+    //         'status_imb_id'                 => 'required|integer',
+    //         'jenis_kawasan_lokasi_rumah_id' => 'required|integer',
+    //         'aset_rumah_ditempat_lain_id'   => 'required|integer',
+    //         'aset_tanah_ditempat_lain_id'   => 'required|integer',
+    //         'pernah_mendapatkan_bantuan_id' => 'required|integer',
+
+    //         // fisik
+    //         'pondasi_id'                    => 'required|integer',
+    //         'jenis_pondasi_id'              => 'required|integer',
+    //         'kondisi_pondasi_id'            => 'required|integer',
+    //         'kondisi_sloof_id'              => 'required|integer',
+    //         'kondisi_kolom_tiang_id'        => 'required|integer',
+    //         'kondisi_balok_id'              => 'required|integer',
+    //         'kondisi_struktur_atap_id'      => 'required|integer',
+
+    //         'jendela_lubang_cahaya_id'      => 'required|integer',
+    //         'kondisi_jendela_lubang_cahaya_id' => 'required|integer',
+    //         'ventilasi_id'                  => 'required|integer',
+    //         'kondisi_ventilasi_id'          => 'required|integer',
+    //         'kamar_mandi_id'                => 'required|integer',
+    //         'kondisi_kamar_mandi_id'        => 'required|integer',
+    //         'jamban_id'                     => 'required|integer',
+    //         'kondisi_jamban_id'             => 'required|integer',
+    //         'sistem_pembuangan_air_kotor_id'=> 'required|integer',
+    //         'kondisi_sistem_pembuangan_air_kotor_id'=> 'required|integer',
+    //         'frekuensi_penyedotan_id'       => 'required|integer',
+    //         'sumber_air_minum_id'           => 'required|integer',
+    //         'kondisi_sumber_air_minum_id'   => 'required|integer',
+    //         'sumber_listrik_id'             => 'required|integer',
+
+    //         'luas_rumah'                    => 'required|numeric',
+    //         'jumlah_penghuni_laki'          => 'required|integer',
+    //         'jumlah_penghuni_perempuan'     => 'required|integer',
+    //         'tinggi_rata_rumah'             => 'required|numeric',
+    //         'ruang_keluarga_dan_tidur_id'   => 'required|integer',
+    //         'jumlah_kamar_tidur'            => 'required|integer',
+    //         'luas_rata_kamar_tidur'         => 'required|numeric',
+    //         'jenis_fisik_bangunan_id'       => 'required|integer',
+    //         'jumlah_lantai_bangunan'        => 'required|integer',
+    //         'fungsi_rumah_id'               => 'required|integer',
+    //         'tipe_rumah_id'                 => 'required|integer',
+    //         'status_dtks_id'                => 'required|integer',
+    //         'tahun_pembangunan_rumah'       => 'required|integer',
+
+    //         'foto_rumah_satu' => 'nullable|file|mimes:jpg,jpeg,png',
+
+    //         'pertanyaan' => 'nullable|array',
+    //         'pertanyaan.*.question_id' => 'required_with:pertanyaan',
+    //         'pertanyaan.*.answer'      => 'nullable'
+    //     ]);
+
+    //     if ($validator->fails()) {
+    //         return response()->json([
+    //             'status'=>false,
+    //             'message'=>'Validasi gagal',
+    //             'errors'=>$validator->errors()
+    //         ],422);
+    //     }
+
+
+    //     // ============================
+    //     // VALIDASI PERTANYAAN DINAMIS
+    //     // ============================
+    //     if ($request->filled('pertanyaan')) {
+
+    //         $all = SurveyQuestion::active()->get();
+
+    //         foreach ($all as $q) {
+
+    //             $row = collect($request->pertanyaan)
+    //                 ->firstWhere('question_id', $q->id);
+
+    //             if (!$row) continue;
+
+    //             $answer = $row['answer'] ?? null;
+
+    //             if (!$q->is_required) continue;
+
+    //             if (in_array($q->type,['text','textarea','number','date'])
+    //                 && empty($answer)) {
+    //                 return response()->json([
+    //                     'status'=>false,
+    //                     'message'=>"Pertanyaan '{$q->label}' wajib diisi."
+    //                 ],422);
+    //             }
+
+    //             if (in_array($q->type,['select','radio'])
+    //                 && empty($answer)) {
+    //                 return response()->json([
+    //                     'status'=>false,
+    //                     'message'=>"Pertanyaan '{$q->label}' wajib dipilih."
+    //                 ],422);
+    //             }
+
+    //             if ($q->type==='checkbox'
+    //                 && (empty($answer) || count($answer)==0)) {
+    //                 return response()->json([
+    //                     'status'=>false,
+    //                     'message'=>"Pertanyaan '{$q->label}' minimal pilih 1."
+    //                 ],422);
+    //             }
+    //         }
+    //     }
+
+
+    //     try {
+
+    //         DB::beginTransaction();
+
+    //         // ======================================================
+    //         // GET RUMAH + OLD VALUE
+    //         // ======================================================
+    //         $rumah = Rumah::with([
+    //             'dokumen',
+    //             'kepalaKeluarga.anggota'
+    //         ])->findOrFail($id);
+
+    //         $oldRumah = $rumah->only([
+    //             'alamat','latitude','longitude','rt','rw',
+    //             'kecamatan_id','kelurahan_id','tahun_pembangunan_rumah'
+    //         ]);
+
+
+    //         // ======================================================
+    //         // UPDATE RUMAH
+    //         // ======================================================
+    //         $newRumah = [
+    //             'alamat'=>$request->alamat,
+    //             'latitude'=>$request->latitude,
+    //             'longitude'=>$request->longitude,
+    //             'rt'=>$request->rt,
+    //             'rw'=>$request->rw,
+    //             'kecamatan_id'=>$request->kecamatan_id,
+    //             'kelurahan_id'=>$request->kelurahan_id,
+    //             'tahun_pembangunan_rumah'=>$request->tahun_pembangunan_rumah,
+    //         ];
+
+    //         $rumah->update($newRumah);
+
+    //         // 🔥 HISTORY (trait)
+    //         $this->logMultiple($rumah->id_rumah,'rumah',$oldRumah,$newRumah);
+
+
+    //         // ======================================================
+    //         // UPDATE KK + ANGGOTA + HISTORY
+    //         // ======================================================
+    //         $oldKK = $rumah->kepalaKeluarga->map(function($kk){
+    //             return [
+    //                 'kode_kk'=>$kk->kode_kk,
+    //                 'no_kk'=>$kk->no_kk,
+    //                 'anggota'=>$kk->anggota->map(fn($a)=>[
+    //                     'kode_anggota'=>$a->kode_anggota,
+    //                     'nik'=>$a->nik,
+    //                     'nama'=>$a->nama
+    //                 ])
+    //             ];
+    //         })->toArray();
+
+    //         if (!empty($request->kks)) {
+
+    //             $kkCodes = [];
+
+    //             foreach ($request->kks as $i=>$kk) {
+
+    //                 $kodeKK = chr(65+$i);
+    //                 $kkCodes[] = $kodeKK;
+
+    //                 $kepala = KepalaKeluarga::updateOrCreate(
+    //                     ['rumah_id'=>$rumah->id_rumah,'kode_kk'=>$kodeKK],
+    //                     ['no_kk'=>$kk['no_kk'] ?? null]
+    //                 );
+
+    //                 $anggotaCodes = [];
+
+    //                 if (!empty($kk['anggota'])) {
+
+    //                     foreach ($kk['anggota'] as $j=>$a) {
+
+    //                         $kodeAng = strtolower($kodeKK).chr(97+$j);
+    //                         $anggotaCodes[] = $kodeAng;
+
+    //                         AnggotaKeluarga::updateOrCreate(
+    //                             ['kepala_keluarga_id'=>$kepala->id,'kode_anggota'=>$kodeAng],
+    //                             ['nik'=>$a['nik'] ?? null,'nama'=>$a['nama'] ?? null]
+    //                         );
+    //                     }
+    //                 }
+
+    //                 $kepala->anggota()
+    //                     ->whereNotIn('kode_anggota',$anggotaCodes)
+    //                     ->delete();
+    //             }
+
+    //             KepalaKeluarga::where('rumah_id',$rumah->id_rumah)
+    //                 ->whereNotIn('kode_kk',$kkCodes)
+    //                 ->delete();
+    //         }
+
+    //         $newKK = KepalaKeluarga::with('anggota')
+    //             ->where('rumah_id',$rumah->id_rumah)
+    //             ->get()
+    //             ->map(function($kk){
+    //                 return [
+    //                     'kode_kk'=>$kk->kode_kk,
+    //                     'no_kk'=>$kk->no_kk,
+    //                     'anggota'=>$kk->anggota->map(fn($a)=>[
+    //                         'kode_anggota'=>$a->kode_anggota,
+    //                         'nik'=>$a->nik,
+    //                         'nama'=>$a->nama
+    //                     ])
+    //                 ];
+    //             })->toArray();
+
+    //         // 🔥 HISTORY (trait)
+    //         $this->logKKChange($rumah->id_rumah,$oldKK,$newKK);
+
+
+    //         // ======================================================
+    //         // UPDATE PERTANYAAN DINAMIS
+    //         // ======================================================
+    //         $oldAns = SurveyQuestionAnswer::where('rumah_id',$rumah->id_rumah)
+    //             ->get()
+    //             ->mapWithKeys(fn($a)=>[
+    //                 $a->question_id=>[
+    //                     'answer_text'=>$a->answer_text,
+    //                     'answer_option_id'=>$a->answer_option_id,
+    //                     'answer_option_ids'=>$a->answer_option_ids,
+    //                     'file_path'=>$a->file_path,
+    //                 ]
+    //             ])->toArray();
+
+    //         // ======================================================
+    //         // HAPUS CHILD YANG TIDAK LAGI MEMENUHI TRIGGER (WAJIB)
+    //         // ======================================================
+    //         $inputById = collect($request->pertanyaan ?? [])
+    //             ->mapWithKeys(fn($r) => [$r['question_id'] => $r['answer']]);
+
+    //         $allQuestions = \App\Models\SurveyQuestion::all();
+
+    //         foreach ($allQuestions as $q) {
+
+    //             if (!$q->parent_question_id) continue; // hanya child
+
+    //             $parentId = $q->parent_question_id;
+    //             $trigger  = $q->trigger_option_id;
+
+    //             $parentAnswer = $inputById[$parentId] ?? null;
+
+    //             // JIKA PARENT TIDAK MATCH TRIGGER → hapus CHILD
+    //             if ($parentAnswer != $trigger) {
+    //                 SurveyQuestionAnswer::where('rumah_id', $rumah->id_rumah)
+    //                     ->where('question_id', $q->id)
+    //                     ->delete();
+    //             }
+    //         }
+
+
+    //         $input = collect($request->pertanyaan ?? []);
+
+    //         foreach ($input as $pq) {
+
+    //             $q = SurveyQuestion::find($pq['question_id']);
+    //             if (!$q) continue;
+
+    //             $answer = $pq['answer'];
+
+                
+
+    //             // ---- CHILD SKIP ----
+    //             if ($q->parent_question_id) {
+
+    //                 $parentAns =
+    //                     $input->firstWhere('question_id',$q->parent_question_id)['answer'] ?? null;
+
+    //                 if ($q->trigger_option_id != $parentAns) {
+
+    //                     SurveyQuestionAnswer::where('rumah_id',$rumah->id_rumah)
+    //                         ->where('question_id',$q->id)
+    //                         ->delete();
+
+    //                     continue;
+    //                 }
+    //             }
+
+    //             // ---- SAVE ----
+    //             if (in_array($q->type,['text','textarea','number','date'])) {
+
+    //                 SurveyQuestionAnswer::updateOrCreate(
+    //                     ['rumah_id'=>$rumah->id_rumah,'question_id'=>$q->id],
+    //                     ['answer_text'=>$answer,'answer_option_id'=>null,'answer_option_ids'=>null]
+    //                 );
+    //             }
+
+    //             elseif (in_array($q->type,['select','radio'])) {
+
+    //                 SurveyQuestionAnswer::updateOrCreate(
+    //                     ['rumah_id'=>$rumah->id_rumah,'question_id'=>$q->id],
+    //                     ['answer_option_id'=>$answer,'answer_text'=>null,'answer_option_ids'=>null]
+    //                 );
+    //             }
+
+    //             elseif ($q->type==='checkbox') {
+
+    //                 SurveyQuestionAnswer::updateOrCreate(
+    //                     ['rumah_id'=>$rumah->id_rumah,'question_id'=>$q->id],
+    //                     ['answer_option_ids'=>$answer,'answer_text'=>null,'answer_option_id'=>null]
+    //                 );
+    //             }
+    //         }
+
+    //         $newAns = SurveyQuestionAnswer::where('rumah_id',$rumah->id_rumah)
+    //             ->get()
+    //             ->mapWithKeys(fn($a)=>[
+    //                 $a->question_id=>[
+    //                     'answer_text'=>$a->answer_text,
+    //                     'answer_option_id'=>$a->answer_option_id,
+    //                     'answer_option_ids'=>$a->answer_option_ids,
+    //                     'file_path'=>$a->file_path,
+    //                 ]
+    //             ])->toArray();
+
+    //         // 🔥 HISTORY
+    //         $this->logArrayChanges($rumah->id_rumah,'survey_answers',$oldAns,$newAns);
+
+
+    //         // ======================================================
+    //         // UPDATE FOTO + HISTORY
+    //         // ======================================================
+    //         $oldDok = $rumah->dokumen ? $rumah->dokumen->toArray() : [];
+    //         $dok = $rumah->dokumen ?? new DokumenRumah(['rumah_id'=>$rumah->id_rumah]);
+
+    //         $foto = ['foto_kk','foto_ktp','foto_rumah_satu','foto_rumah_dua','foto_rumah_tiga','foto_imb'];
+
+    //         $changed = [];
+
+    //         foreach ($foto as $f) {
+
+    //             if ($request->hasFile($f)) {
+
+    //                 if (!empty($dok->$f) && Storage::disk('public')->exists($dok->$f)) {
+    //                     Storage::disk('public')->delete($dok->$f);
+    //                 }
+
+    //                 $path = $request->file($f)->storeAs(
+    //                     "rumah/{$rumah->id_rumah}",
+    //                     "{$f}.jpg",
+    //                     'public'
+    //                 );
+
+    //                 $dok->$f = $path;
+
+    //                 $changed[$f] = [
+    //                     'old'=>$oldDok[$f] ?? null,
+    //                     'new'=>$path
+    //                 ];
+    //             }
+    //         }
+
+    //         $dok->uploaded_by = $request->auth->id_user;
+    //         $dok->uploaded_at = now();
+    //         $dok->save();
+
+    //         if (!empty($changed)) {
+
+    //             $this->logArrayChanges(
+    //                 $rumah->id_rumah,
+    //                 'dokumen_rumah',
+    //                 $oldDok,
+    //                 array_merge($oldDok,array_map(fn($c)=>$c['new'],$changed))
+    //             );
+    //         }
+
+
+    //         // ======================================================
+    //         // HITUNG PENILAIAN RTLH (versi API)
+    //         // ======================================================
+    //         $this->hitungDanSimpanPenilaianAPI($rumah->id_rumah,$request);
+
+
+    //         // ======================================================
+    //         // SUCCESS
+    //         // ======================================================
+    //         DB::commit();
+
+    //         return response()->json([
+    //             'status'=>true,
+    //             'message'=>'Data rumah berhasil diperbarui',
+    //             'id_rumah'=>$rumah->id_rumah
+    //         ]);
+
+    //     } catch (\Exception $e) {
+
+    //         DB::rollBack();
+
+    //         return response()->json([
+    //             'status'=>false,
+    //             'message'=>'Gagal update: '.$e->getMessage()
+    //         ],500);
+    //     }
+    // }
+
+    public function updateRumah(Request $request, $id)
+{
+    // ============================
+    // AUTH FIX (method spoofing PUT)
+    // ============================
+    $user = $request->auth;
+    
+
+    if (!$user) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Unauthorized (user not detected)'
+        ], 401);
+    }
+
+    // ======================================================
+    // JSON DECODE UNTUK FORM-DATA
+    // ======================================================
+    if ($request->has('pertanyaan')) {
+
+        $raw = $request->pertanyaan;
+
+        if (is_string($raw)) {
+            $clean = trim($raw);
+            $clean = str_replace(["\n", "\r"], '', $clean);
+
+            if (preg_match('/\[(.*?)\]/', $clean)) {
+                $clean = preg_replace('/"(\d+)]/', '"$1"]', $clean);
+            }
+
+            $decoded = json_decode($clean, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
+                $decoded = null;
+            }
+
+            $request->merge(['pertanyaan' => $decoded]);
         }
+    }
 
-        // Pastikan object auth dipasang ke request
-        //$request->merge(['auth' => $user]);
-
-        //dd($request->all());
-        // ======================================================
-        // JSON decode untuk form-data
-        // ======================================================
-        if ($request->has('pertanyaan') && is_string($request->pertanyaan)) {
-            $request->merge(['pertanyaan' => json_decode($request->pertanyaan, true)]);
+    if ($request->has('kks') && is_string($request->kks)) {
+        $kkDecoded = json_decode($request->kks, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $kkDecoded = null;
         }
+        $request->merge(['kks' => $kkDecoded]);
+    }
 
-        if ($request->has('kks') && is_string($request->kks)) {
-            $request->merge(['kks' => json_decode($request->kks, true)]);
-        }
 
+    // ======================================================
+    // VALIDASI API PERSIS SEPERTI STORE()
+    // ======================================================
+    $validator = Validator::make($request->all(), [
+        'latitude'       => 'required|numeric',
+        'longitude'      => 'required|numeric',
+        'alamat'         => 'required|string',
+        'rt'             => 'required|string',
+        'rw'             => 'required|string',
+        'kecamatan_id'   => 'required|integer',
+        'kelurahan_id'   => 'required|integer',
+
+        // Sosial ekonomi
+        'jenis_kelamin_id'       => 'required|integer',
+        'usia'                   => 'required|integer',
+        'pendidikan_terakhir_id' => 'required|integer',
+        'pekerjaan_utama_id'     => 'required|integer',
+        'besar_penghasilan_id'   => 'required|integer',
+        'besar_pengeluaran_id'   => 'required|integer',
+
+        // status kepemilikan
+        'nik_kepemilikan_rumah'         => 'nullable',
+        'status_kepemilikan_tanah_id'   => 'required|integer',
+        'bukti_kepemilikan_tanah_id'    => 'required|integer',
+        'status_kepemilikan_rumah_id'   => 'required|integer',
+        'status_imb_id'                 => 'required|integer',
+        'jenis_kawasan_lokasi_rumah_id' => 'required|integer',
+        'aset_rumah_ditempat_lain_id'   => 'required|integer',
+        'aset_tanah_ditempat_lain_id'   => 'required|integer',
+        'pernah_mendapatkan_bantuan_id' => 'required|integer',
+
+        // fisik rumah
+        'pondasi_id'                    => 'required|integer',
+        'jenis_pondasi_id'              => 'required|integer',
+        'kondisi_pondasi_id'            => 'required|integer',
+        'kondisi_sloof_id'              => 'required|integer',
+        'kondisi_kolom_tiang_id'        => 'required|integer',
+        'kondisi_balok_id'              => 'required|integer',
+        'kondisi_struktur_atap_id'      => 'required|integer',
+
+        'jendela_lubang_cahaya_id'      => 'required|integer',
+        'kondisi_jendela_lubang_cahaya_id' => 'required|integer',
+        'ventilasi_id'                  => 'required|integer',
+        'kondisi_ventilasi_id'          => 'required|integer',
+        'kamar_mandi_id'                => 'required|integer',
+        'kondisi_kamar_mandi_id'        => 'required|integer',
+        'jamban_id'                     => 'required|integer',
+        'kondisi_jamban_id'             => 'required|integer',
+        'sistem_pembuangan_air_kotor_id'=> 'required|integer',
+        'kondisi_sistem_pembuangan_air_kotor_id'=> 'required|integer',
+        'frekuensi_penyedotan_id'       => 'required|integer',
+        'sumber_air_minum_id'           => 'required|integer',
+        'kondisi_sumber_air_minum_id'   => 'required|integer',
+        'sumber_listrik_id'             => 'required|integer',
+
+        'luas_rumah'                    => 'required|numeric',
+        'jumlah_penghuni_laki'          => 'required|integer',
+        'jumlah_penghuni_perempuan'     => 'required|integer',
+        'tinggi_rata_rumah'             => 'required|numeric',
+        'ruang_keluarga_dan_tidur_id'   => 'required|integer',
+        'jumlah_kamar_tidur'            => 'required|integer',
+        'luas_rata_kamar_tidur'         => 'required|numeric',
+        'jenis_fisik_bangunan_id'       => 'required|integer',
+        'jumlah_lantai_bangunan'        => 'required|integer',
+        'fungsi_rumah_id'               => 'required|integer',
+        'tipe_rumah_id'                 => 'required|integer',
+        'status_dtks_id'                => 'required|integer',
+        'tahun_pembangunan_rumah'       => 'required|integer',
+
+        'pertanyaan' => 'nullable|array',
+        'pertanyaan.*.question_id' => 'required_with:pertanyaan',
+        'pertanyaan.*.answer'      => 'nullable'
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'status'  => false,
+            'message' => 'Validasi gagal',
+            'errors'  => $validator->errors(),
+        ], 422);
+    }
+
+
+    // ============================================================
+    // MULAI TRANSAKSI UPDATE
+    // ============================================================
+    try {
+
+        DB::beginTransaction();
 
         // ======================================================
-        // VALIDASI — IDENTIK DENGAN STORE
+        // LOAD RUMAH + OLD VALUE
         // ======================================================
-        $validator = Validator::make($request->all(), [
-            'latitude'       => 'required|numeric',
-            'longitude'      => 'required|numeric',
-            'alamat'         => 'required|string',
-            'rt'             => 'required|string',
-            'rw'             => 'required|string',
-            'kecamatan_id'   => 'required|integer',
-            'kelurahan_id'   => 'required|integer',
+        $rumah = Rumah::with([
+            'dokumen',
+            'kepalaKeluarga.anggota'
+        ])->findOrFail($id);
 
-            // sosial ekonomi
-            'jenis_kelamin_id'          => 'required|integer',
-            'usia'                      => 'required|integer',
-            'pendidikan_terakhir_id'    => 'required|integer',
-            'pekerjaan_utama_id'        => 'required|integer',
-            'besar_penghasilan_id'      => 'required|integer',
-            'besar_pengeluaran_id'      => 'required|integer',
-
-            // kepemilikan
-            'nik_kepemilikan_rumah'     => 'nullable',
-            'status_kepemilikan_tanah_id'   => 'required|integer',
-            'bukti_kepemilikan_tanah_id'    => 'required|integer',
-            'status_kepemilikan_rumah_id'   => 'required|integer',
-            'status_imb_id'                 => 'required|integer',
-            'jenis_kawasan_lokasi_rumah_id' => 'required|integer',
-            'aset_rumah_ditempat_lain_id'   => 'required|integer',
-            'aset_tanah_ditempat_lain_id'   => 'required|integer',
-            'pernah_mendapatkan_bantuan_id' => 'required|integer',
-
-            // fisik
-            'pondasi_id'                    => 'required|integer',
-            'jenis_pondasi_id'              => 'required|integer',
-            'kondisi_pondasi_id'            => 'required|integer',
-            'kondisi_sloof_id'              => 'required|integer',
-            'kondisi_kolom_tiang_id'        => 'required|integer',
-            'kondisi_balok_id'              => 'required|integer',
-            'kondisi_struktur_atap_id'      => 'required|integer',
-
-            'jendela_lubang_cahaya_id'      => 'required|integer',
-            'kondisi_jendela_lubang_cahaya_id' => 'required|integer',
-            'ventilasi_id'                  => 'required|integer',
-            'kondisi_ventilasi_id'          => 'required|integer',
-            'kamar_mandi_id'                => 'required|integer',
-            'kondisi_kamar_mandi_id'        => 'required|integer',
-            'jamban_id'                     => 'required|integer',
-            'kondisi_jamban_id'             => 'required|integer',
-            'sistem_pembuangan_air_kotor_id'=> 'required|integer',
-            'kondisi_sistem_pembuangan_air_kotor_id'=> 'required|integer',
-            'frekuensi_penyedotan_id'       => 'required|integer',
-            'sumber_air_minum_id'           => 'required|integer',
-            'kondisi_sumber_air_minum_id'   => 'required|integer',
-            'sumber_listrik_id'             => 'required|integer',
-
-            'luas_rumah'                    => 'required|numeric',
-            'jumlah_penghuni_laki'          => 'required|integer',
-            'jumlah_penghuni_perempuan'     => 'required|integer',
-            'tinggi_rata_rumah'             => 'required|numeric',
-            'ruang_keluarga_dan_tidur_id'   => 'required|integer',
-            'jumlah_kamar_tidur'            => 'required|integer',
-            'luas_rata_kamar_tidur'         => 'required|numeric',
-            'jenis_fisik_bangunan_id'       => 'required|integer',
-            'jumlah_lantai_bangunan'        => 'required|integer',
-            'fungsi_rumah_id'               => 'required|integer',
-            'tipe_rumah_id'                 => 'required|integer',
-            'status_dtks_id'                => 'required|integer',
-            'tahun_pembangunan_rumah'       => 'required|integer',
-
-            'foto_rumah_satu' => 'nullable|file|mimes:jpg,jpeg,png',
-
-            'pertanyaan' => 'nullable|array',
-            'pertanyaan.*.question_id' => 'required_with:pertanyaan',
-            'pertanyaan.*.answer'      => 'nullable'
+       
+        $oldRumah = $rumah->only([
+            'alamat','latitude','longitude','rt','rw',
+            'kecamatan_id','kelurahan_id','tahun_pembangunan_rumah'
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'status'=>false,
-                'message'=>'Validasi gagal',
-                'errors'=>$validator->errors()
-            ],422);
-        }
 
+        // ======================================================
+        // UPDATE RUMAH
+        // ======================================================
+        $newRumah = [
+            'alamat'      => $request->alamat,
+            'latitude'    => $request->latitude,
+            'longitude'   => $request->longitude,
+            'rt'          => $request->rt,
+            'rw'          => $request->rw,
+            'kecamatan_id'=> $request->kecamatan_id,
+            'kelurahan_id'=> $request->kelurahan_id,
+            'tahun_pembangunan_rumah' => $request->tahun_pembangunan_rumah,
+        ];
 
-        // ============================
-        // VALIDASI PERTANYAAN DINAMIS
-        // ============================
-        if ($request->filled('pertanyaan')) {
+        $rumah->update($newRumah);
+ //dd($rumah);
+        // Catat history perubahan rumah
+        $this->logMultiple($rumah->id_rumah, 'rumah', $oldRumah, $newRumah);
+       
 
-            $all = SurveyQuestion::active()->get();
-
-            foreach ($all as $q) {
-
-                $row = collect($request->pertanyaan)
-                    ->firstWhere('question_id', $q->id);
-
-                if (!$row) continue;
-
-                $answer = $row['answer'] ?? null;
-
-                if (!$q->is_required) continue;
-
-                if (in_array($q->type,['text','textarea','number','date'])
-                    && empty($answer)) {
-                    return response()->json([
-                        'status'=>false,
-                        'message'=>"Pertanyaan '{$q->label}' wajib diisi."
-                    ],422);
-                }
-
-                if (in_array($q->type,['select','radio'])
-                    && empty($answer)) {
-                    return response()->json([
-                        'status'=>false,
-                        'message'=>"Pertanyaan '{$q->label}' wajib dipilih."
-                    ],422);
-                }
-
-                if ($q->type==='checkbox'
-                    && (empty($answer) || count($answer)==0)) {
-                    return response()->json([
-                        'status'=>false,
-                        'message'=>"Pertanyaan '{$q->label}' minimal pilih 1."
-                    ],422);
-                }
-            }
-        }
-
-
-        try {
-
-            DB::beginTransaction();
-
-            // ======================================================
-            // GET RUMAH + OLD VALUE
-            // ======================================================
-            $rumah = Rumah::with([
-                'dokumen',
-                'kepalaKeluarga.anggota'
-            ])->findOrFail($id);
-
-            $oldRumah = $rumah->only([
-                'alamat','latitude','longitude','rt','rw',
-                'kecamatan_id','kelurahan_id','tahun_pembangunan_rumah'
-            ]);
-
-
-            // ======================================================
-            // UPDATE RUMAH
-            // ======================================================
-            $newRumah = [
-                'alamat'=>$request->alamat,
-                'latitude'=>$request->latitude,
-                'longitude'=>$request->longitude,
-                'rt'=>$request->rt,
-                'rw'=>$request->rw,
-                'kecamatan_id'=>$request->kecamatan_id,
-                'kelurahan_id'=>$request->kelurahan_id,
-                'tahun_pembangunan_rumah'=>$request->tahun_pembangunan_rumah,
+        // ======================================================
+        // UPDATE KEPALA KELUARGA + ANGGOTA
+        // ======================================================
+        $oldKK = $rumah->kepalaKeluarga->map(function($kk){
+            return [
+                'kode_kk' => $kk->kode_kk,
+                'no_kk'   => $kk->no_kk,
+                'anggota' => $kk->anggota->map(fn($a)=>[
+                    'kode_anggota'=>$a->kode_anggota,
+                    'nik'=>$a->nik,
+                    'nama'=>$a->nama
+                ])
             ];
+        })->toArray();
 
-            $rumah->update($newRumah);
+        if (!empty($request->kks)) {
 
-            // 🔥 HISTORY (trait)
-            $this->logMultiple($rumah->id_rumah,'rumah',$oldRumah,$newRumah);
+            $kkCodes = [];
 
+            foreach ($request->kks as $i => $kk) {
 
-            // ======================================================
-            // UPDATE KK + ANGGOTA + HISTORY
-            // ======================================================
-            $oldKK = $rumah->kepalaKeluarga->map(function($kk){
+                $kodeKK = chr(65 + $i);
+                $kkCodes[] = $kodeKK;
+
+                $kepala = KepalaKeluarga::updateOrCreate(
+                    ['rumah_id'=>$rumah->id_rumah,'kode_kk'=>$kodeKK],
+                    ['no_kk'=>$kk['no_kk'] ?? null]
+                );
+
+                $anggotaCodes = [];
+
+                if (!empty($kk['anggota'])) {
+
+                    foreach ($kk['anggota'] as $j=>$a) {
+                        $kodeAng = strtolower($kodeKK).chr(97 + $j);
+                        $anggotaCodes[] = $kodeAng;
+
+                        AnggotaKeluarga::updateOrCreate(
+                            ['kepala_keluarga_id'=>$kepala->id,'kode_anggota'=>$kodeAng],
+                            ['nik'=>$a['nik'] ?? null,'nama'=>$a['nama'] ?? null]
+                        );
+                    }
+                }
+
+                // Hapus anggota yang tidak ada lagi
+                $kepala->anggota()
+                    ->whereNotIn('kode_anggota',$anggotaCodes)
+                    ->delete();
+            }
+
+            // Hapus KK lama yang tidak masuk input
+            KepalaKeluarga::where('rumah_id',$rumah->id_rumah)
+                ->whereNotIn('kode_kk',$kkCodes)
+                ->delete();
+        }
+
+        $newKK = KepalaKeluarga::with('anggota')
+            ->where('rumah_id',$rumah->id_rumah)
+            ->get()
+            ->map(function($kk){
                 return [
                     'kode_kk'=>$kk->kode_kk,
                     'no_kk'=>$kk->no_kk,
@@ -1176,248 +1701,525 @@ public function search(Request $request)
                 ];
             })->toArray();
 
-            if (!empty($request->kks)) {
+        $this->logKKChange($rumah->id_rumah,$oldKK,$newKK);
 
-                $kkCodes = [];
+       
+        // ======================================================
+        // UPDATE PERTANYAAN DINAMIS — LOGIKA MIRROR LIVEWIRE
+        // ======================================================
 
-                foreach ($request->kks as $i=>$kk) {
-
-                    $kodeKK = chr(65+$i);
-                    $kkCodes[] = $kodeKK;
-
-                    $kepala = KepalaKeluarga::updateOrCreate(
-                        ['rumah_id'=>$rumah->id_rumah,'kode_kk'=>$kodeKK],
-                        ['no_kk'=>$kk['no_kk'] ?? null]
-                    );
-
-                    $anggotaCodes = [];
-
-                    if (!empty($kk['anggota'])) {
-
-                        foreach ($kk['anggota'] as $j=>$a) {
-
-                            $kodeAng = strtolower($kodeKK).chr(97+$j);
-                            $anggotaCodes[] = $kodeAng;
-
-                            AnggotaKeluarga::updateOrCreate(
-                                ['kepala_keluarga_id'=>$kepala->id,'kode_anggota'=>$kodeAng],
-                                ['nik'=>$a['nik'] ?? null,'nama'=>$a['nama'] ?? null]
-                            );
-                        }
-                    }
-
-                    $kepala->anggota()
-                        ->whereNotIn('kode_anggota',$anggotaCodes)
-                        ->delete();
-                }
-
-                KepalaKeluarga::where('rumah_id',$rumah->id_rumah)
-                    ->whereNotIn('kode_kk',$kkCodes)
-                    ->delete();
-            }
-
-            $newKK = KepalaKeluarga::with('anggota')
-                ->where('rumah_id',$rumah->id_rumah)
-                ->get()
-                ->map(function($kk){
-                    return [
-                        'kode_kk'=>$kk->kode_kk,
-                        'no_kk'=>$kk->no_kk,
-                        'anggota'=>$kk->anggota->map(fn($a)=>[
-                            'kode_anggota'=>$a->kode_anggota,
-                            'nik'=>$a->nik,
-                            'nama'=>$a->nama
-                        ])
-                    ];
-                })->toArray();
-
-            // 🔥 HISTORY (trait)
-            $this->logKKChange($rumah->id_rumah,$oldKK,$newKK);
-
-
-            // ======================================================
-            // UPDATE PERTANYAAN DINAMIS
-            // ======================================================
-            $oldAns = SurveyQuestionAnswer::where('rumah_id',$rumah->id_rumah)
-                ->get()
-                ->mapWithKeys(fn($a)=>[
-                    $a->question_id=>[
-                        'answer_text'=>$a->answer_text,
-                        'answer_option_id'=>$a->answer_option_id,
-                        'answer_option_ids'=>$a->answer_option_ids,
-                        'file_path'=>$a->file_path,
+        // Ambil jawaban lama (untuk history)
+        $oldAnswers = SurveyQuestionAnswer::where('rumah_id', $rumah->id_rumah)
+            ->get()
+            ->mapWithKeys(function ($a) {
+                return [
+                    $a->question_id => [
+                        'answer_text'       => $a->answer_text,
+                        'answer_option_id'  => $a->answer_option_id,
+                        'answer_option_ids' => $a->answer_option_ids,
+                        'file_path'         => $a->file_path,
                     ]
-                ])->toArray();
+                ];
+            })->toArray();
 
-            // ======================================================
-            // HAPUS CHILD YANG TIDAK LAGI MEMENUHI TRIGGER (WAJIB)
-            // ======================================================
-            $inputById = collect($request->pertanyaan ?? [])
-                ->mapWithKeys(fn($r) => [$r['question_id'] => $r['answer']]);
-
-            $allQuestions = \App\Models\SurveyQuestion::all();
-
-            foreach ($allQuestions as $q) {
-
-                if (!$q->parent_question_id) continue; // hanya child
-
-                $parentId = $q->parent_question_id;
-                $trigger  = $q->trigger_option_id;
-
-                $parentAnswer = $inputById[$parentId] ?? null;
-
-                // JIKA PARENT TIDAK MATCH TRIGGER → hapus CHILD
-                if ($parentAnswer != $trigger) {
-                    SurveyQuestionAnswer::where('rumah_id', $rumah->id_rumah)
-                        ->where('question_id', $q->id)
-                        ->delete();
-                }
-            }
-
-
-            $input = collect($request->pertanyaan ?? []);
-
-            foreach ($input as $pq) {
-
-                $q = SurveyQuestion::find($pq['question_id']);
-                if (!$q) continue;
-
-                $answer = $pq['answer'];
-
-                
-
-                // ---- CHILD SKIP ----
-                if ($q->parent_question_id) {
-
-                    $parentAns =
-                        $input->firstWhere('question_id',$q->parent_question_id)['answer'] ?? null;
-
-                    if ($q->trigger_option_id != $parentAns) {
-
-                        SurveyQuestionAnswer::where('rumah_id',$rumah->id_rumah)
-                            ->where('question_id',$q->id)
-                            ->delete();
-
-                        continue;
-                    }
-                }
-
-                // ---- SAVE ----
-                if (in_array($q->type,['text','textarea','number','date'])) {
-
-                    SurveyQuestionAnswer::updateOrCreate(
-                        ['rumah_id'=>$rumah->id_rumah,'question_id'=>$q->id],
-                        ['answer_text'=>$answer,'answer_option_id'=>null,'answer_option_ids'=>null]
-                    );
-                }
-
-                elseif (in_array($q->type,['select','radio'])) {
-
-                    SurveyQuestionAnswer::updateOrCreate(
-                        ['rumah_id'=>$rumah->id_rumah,'question_id'=>$q->id],
-                        ['answer_option_id'=>$answer,'answer_text'=>null,'answer_option_ids'=>null]
-                    );
-                }
-
-                elseif ($q->type==='checkbox') {
-
-                    SurveyQuestionAnswer::updateOrCreate(
-                        ['rumah_id'=>$rumah->id_rumah,'question_id'=>$q->id],
-                        ['answer_option_ids'=>$answer,'answer_text'=>null,'answer_option_id'=>null]
-                    );
-                }
-            }
-
-            $newAns = SurveyQuestionAnswer::where('rumah_id',$rumah->id_rumah)
-                ->get()
-                ->mapWithKeys(fn($a)=>[
-                    $a->question_id=>[
-                        'answer_text'=>$a->answer_text,
-                        'answer_option_id'=>$a->answer_option_id,
-                        'answer_option_ids'=>$a->answer_option_ids,
-                        'file_path'=>$a->file_path,
-                    ]
-                ])->toArray();
-
-            // 🔥 HISTORY
-            $this->logArrayChanges($rumah->id_rumah,'survey_answers',$oldAns,$newAns);
-
-
-            // ======================================================
-            // UPDATE FOTO + HISTORY
-            // ======================================================
-            $oldDok = $rumah->dokumen ? $rumah->dokumen->toArray() : [];
-            $dok = $rumah->dokumen ?? new DokumenRumah(['rumah_id'=>$rumah->id_rumah]);
-
-            $foto = ['foto_kk','foto_ktp','foto_rumah_satu','foto_rumah_dua','foto_rumah_tiga','foto_imb'];
-
-            $changed = [];
-
-            foreach ($foto as $f) {
-
-                if ($request->hasFile($f)) {
-
-                    if (!empty($dok->$f) && Storage::disk('public')->exists($dok->$f)) {
-                        Storage::disk('public')->delete($dok->$f);
-                    }
-
-                    $path = $request->file($f)->storeAs(
-                        "rumah/{$rumah->id_rumah}",
-                        "{$f}.jpg",
-                        'public'
-                    );
-
-                    $dok->$f = $path;
-
-                    $changed[$f] = [
-                        'old'=>$oldDok[$f] ?? null,
-                        'new'=>$path
-                    ];
-                }
-            }
-
-            $dok->uploaded_by = $request->auth->id_user;
-            $dok->uploaded_at = now();
-            $dok->save();
-
-            if (!empty($changed)) {
-
-                $this->logArrayChanges(
-                    $rumah->id_rumah,
-                    'dokumen_rumah',
-                    $oldDok,
-                    array_merge($oldDok,array_map(fn($c)=>$c['new'],$changed))
-                );
-            }
-
-
-            // ======================================================
-            // HITUNG PENILAIAN RTLH (versi API)
-            // ======================================================
-            $this->hitungDanSimpanPenilaianAPI($rumah->id_rumah,$request);
-
-
-            // ======================================================
-            // SUCCESS
-            // ======================================================
-            DB::commit();
-
-            return response()->json([
-                'status'=>true,
-                'message'=>'Data rumah berhasil diperbarui',
-                'id_rumah'=>$rumah->id_rumah
+        // Normalisasi input jawaban: [question_id => answer]
+        $inputAnswers = collect($request->pertanyaan ?? [])
+            ->mapWithKeys(fn($row) => [
+                $row['question_id'] => $row['answer']
             ]);
 
-        } catch (\Exception $e) {
+        // Ambil semua pertanyaan aktif (sama seperti store)
+        $questions = SurveyQuestion::where('is_active', 1)->get();
 
-            DB::rollBack();
+        // ======================================================
+        // 1) HAPUS CHILD YANG TIDAK MEMENUHI TRIGGER
+        // ======================================================
+        foreach ($questions as $q) {
 
-            return response()->json([
-                'status'=>false,
-                'message'=>'Gagal update: '.$e->getMessage()
-            ],500);
+            if (!$q->parent_question_id) {
+                continue;
+            }
+
+            $parentId = $q->parent_question_id;
+            $trigger  = $q->trigger_option_id;
+
+            $parentAnswer = $inputAnswers[$parentId] ?? null;
+
+            if ($parentAnswer != $trigger) {
+                // Hapus jawaban child existing
+                SurveyQuestionAnswer::where('rumah_id', $rumah->id_rumah)
+                    ->where('question_id', $q->id)
+                    ->delete();
+
+                // Jangan simpan ulang
+                $inputAnswers->forget($q->id);
+            }
         }
+
+        // ======================================================
+        // 2) SIMPAN SEMUA PERTANYAAN AKTIF + VALIDASI DINAMIS
+        // ======================================================
+        foreach ($questions as $q) {
+            // if($q->type === 'file'){
+            //     dd('12');
+            // }
+
+            $answer = $inputAnswers[$q->id] ?? null;
+
+            // Skip child jika parent tidak match trigger
+            if ($q->parent_question_id) {
+                $parentAnswer = $inputAnswers[$q->parent_question_id] ?? null;
+                if ($q->trigger_option_id != $parentAnswer) {
+                    continue;
+                }
+            }
+
+            // Cek kosong (untuk validasi & penghapusan)
+            $isEmpty = is_null($answer)
+                || $answer === ''
+                || (is_array($answer) && count($answer) === 0);
+
+            // ==========================
+            // VALIDASI DINAMIS (WAJIB)
+            // ==========================
+            if ($q->is_required) {
+
+                // TEXT / TEXTAREA / NUMBER / DATE
+                if (in_array($q->type, ['text','textarea','number','date']) && $isEmpty) {
+
+                    DB::rollBack();
+                    return response()->json([
+                        'status' => false,
+                        'message' => "Pertanyaan '{$q->label}' wajib diisi.",
+                    ], 422);
+                }
+
+                // SELECT / RADIO
+                if (in_array($q->type, ['select','radio']) && $isEmpty) {
+
+                   
+                    DB::rollBack();
+                    return response()->json([
+                        'status' => false,
+                        'message' => "Pertanyaan '{$q->label}' wajib dipilih.",
+                    ], 422);
+                }
+
+                // CHECKBOX
+                if ($q->type === 'checkbox' && $isEmpty) {
+
+                    DB::rollBack();
+                    return response()->json([
+                        'status' => false,
+                        'message' => "Pertanyaan '{$q->label}' wajib pilih minimal 1.",
+                    ], 422);
+                }
+            }
+
+            // ==========================
+            // JIKA TIDAK WAJIB & KOSONG
+            // ==========================
+            if (!$q->is_required && $isEmpty) {
+                // hapus jawaban lama jika ada
+                SurveyQuestionAnswer::where('rumah_id', $rumah->id_rumah)
+                    ->where('question_id', $q->id)
+                    ->delete();
+                
+            }
+
+            // ==========================
+            // SIMPAN BERDASARKAN TYPE
+            // ==========================
+
+            // TEXT / TEXTAREA / NUMBER / DATE
+            if (in_array($q->type, ['text', 'textarea', 'number', 'date'])) {
+
+                SurveyQuestionAnswer::updateOrCreate(
+                    [
+                        'rumah_id'    => $rumah->id_rumah,
+                        'question_id' => $q->id,
+                    ],
+                    [
+                        'answer_text'       => $answer,
+                        'answer_option_id'  => null,
+                        'answer_option_ids' => null,
+                        'file_path'         => null,
+                    ]
+                );
+
+               
+            }
+
+            // SELECT / RADIO (kadang dikirim ["31"])
+            else if (in_array($q->type, ['select', 'radio'])) {
+
+              
+                if (is_array($answer)) {
+                    $answer = $answer[0] ?? null;
+                }
+
+                SurveyQuestionAnswer::updateOrCreate(
+                    [
+                        'rumah_id'    => $rumah->id_rumah,
+                        'question_id' => $q->id,
+                    ],
+                    [
+                        'answer_option_id'  => $answer !== null ? intval($answer) : null,
+                        'answer_option_ids' => null,
+                        'answer_text'       => null,
+                        'file_path'         => null,
+                    ]
+                );
+
+               
+            }
+
+            // CHECKBOX (multi)
+            else if ($q->type === 'checkbox') {
+                
+
+                SurveyQuestionAnswer::updateOrCreate(
+                    [
+                        'rumah_id'    => $rumah->id_rumah,
+                        'question_id' => $q->id,
+                    ],
+                    [
+                        'answer_option_ids' => is_array($answer) ? $answer : [],
+                        'answer_option_id'  => null,
+                        'answer_text'       => null,
+                        'file_path'         => null,
+                    ]
+                );
+
+               
+            }
+
+            // FILE (API: kirim sebagai qfile_{id})
+            else if ($q->type === 'file') {
+
+                // dd('as');
+
+                $fileKey = "qfile_" . $q->id;
+                
+
+                if ($request->hasFile($fileKey)) {
+
+                    $uploaded = $request->file($fileKey);
+
+                    $old = SurveyQuestionAnswer::where('rumah_id', $rumah->id_rumah)
+                        ->where('question_id', $q->id)
+                        ->first();
+
+                    // hapus file lama
+                    if ($old && $old->file_path && Storage::disk('public')->exists($old->file_path)) {
+                        Storage::disk('public')->delete($old->file_path);
+                    }
+
+                    $path = $uploaded->store("survey_answers/{$rumah->id_rumah}_edited", 'public');
+
+                    SurveyQuestionAnswer::updateOrCreate(
+                        [
+                            'rumah_id'    => $rumah->id_rumah,
+                            'question_id' => $q->id,
+                        ],
+                        [
+                            'file_path'         => $path,
+                            'answer_text'       => null,
+                            'answer_option_id'  => null,
+                            'answer_option_ids' => null,
+                        ]
+                    );
+                }
+
+                
+            }
+        }
+
+        // ======================================================
+        // HISTORY JAWABAN BARU
+        // ======================================================
+        $newAnswers = SurveyQuestionAnswer::where('rumah_id', $rumah->id_rumah)
+            ->get()
+            ->mapWithKeys(fn($a) => [
+                $a->question_id => [
+                    'answer_text'       => $a->answer_text,
+                    'answer_option_id'  => $a->answer_option_id,
+                    'answer_option_ids' => $a->answer_option_ids,
+                    'file_path'         => $a->file_path,
+                ]
+            ])->toArray();
+
+        $this->logArrayChanges(
+            $rumah->id_rumah,
+            'survey_answers',
+            $oldAnswers,
+            $newAnswers
+        );
+        // ======================================================
+        // UPDATE SOSIAL EKONOMI RUMAH
+        // ======================================================
+        $oldSosial = $rumah->sosialEkonomi
+            ? $rumah->sosialEkonomi->toArray()
+            : [];
+
+        // Ambil no_kk pertama dari kks (kalau ada)
+        $firstNoKK = null;
+        if (!empty($request->kks) && is_array($request->kks) && isset($request->kks[0]['no_kk'])) {
+            $firstNoKK = $request->kks[0]['no_kk'];
+        }
+
+        $rumah->sosialEkonomi()->updateOrCreate(
+            ['rumah_id' => $rumah->id_rumah],
+            [
+                'jumlah_kk_id'                  => $request->jumlah_kk_id ?? null,
+                'no_kk'                         => $firstNoKK,
+                'jenis_kelamin_id'              => $request->jenis_kelamin_id,
+                'usia'                          => $request->usia,
+                'pendidikan_terakhir_id'        => $request->pendidikan_terakhir_id,
+                'pekerjaan_utama_id'            => $request->pekerjaan_utama_id,
+                'besar_penghasilan_perbulan_id' => $request->besar_penghasilan_id,
+                'besar_pengeluaran_perbulan_id' => $request->besar_pengeluaran_id,
+                'status_dtks_id'                => $request->status_dtks_id,
+            ]
+        );
+
+        $newSosial = $rumah->sosialEkonomi()->first()->toArray();
+
+        $this->logArrayChanges(
+            $rumah->id_rumah,
+            'sosial_ekonomi',
+            $oldSosial,
+            $newSosial
+        );
+
+
+        // ======================================================
+        // UPDATE FISIK RUMAH
+        // ======================================================
+        $oldFisik = $rumah->fisik
+            ? $rumah->fisik->toArray()
+            : [];
+
+        $rumah->fisik()->updateOrCreate(
+            ['rumah_id' => $rumah->id_rumah],
+            [
+                'pondasi_id'                      => $request->pondasi_id,
+                'jenis_pondasi'                   => $request->jenis_pondasi_id,
+                'kondisi_pondasi_id'              => $request->kondisi_pondasi_id,
+                'kondisi_sloof_id'                => $request->kondisi_sloof_id,
+                'kondisi_kolom_tiang_id'          => $request->kondisi_kolom_tiang_id,
+                'kondisi_balok_id'                => $request->kondisi_balok_id,
+                'kondisi_struktur_atap_id'        => $request->kondisi_struktur_atap_id,
+                'material_atap_terluas_id'        => $request->material_atap_terluas_id,
+                'kondisi_penutup_atap_id'         => $request->kondisi_penutup_atap_id,
+                'material_dinding_terluas_id'     => $request->material_dinding_terluas_id,
+                'kondisi_dinding_id'              => $request->kondisi_dinding_id,
+                'material_lantai_terluas_id'      => $request->material_lantai_terluas_id,
+                'kondisi_lantai_id'               => $request->kondisi_lantai_id,
+                'akses_ke_jalan_id'               => $request->akses_ke_jalan_id,
+                'bangunan_menghadap_jalan_id'     => $request->bangunan_menghadap_jalan_id,
+                'bangunan_menghadap_sungai_id'    => $request->bangunan_menghadap_sungai_id,
+                'bangunan_berada_limbah_id'       => $request->bangunan_berada_limbah_id,
+                'bangunan_berada_sungai_id'       => $request->bangunan_berada_sungai_id,
+                'luas_rumah'                      => $request->luas_rumah,
+                'tinggi_rata_rumah'               => $request->tinggi_rata_rumah,
+                'jumlah_penghuni_laki'            => $request->jumlah_penghuni_laki,
+                'jumlah_penghuni_perempuan'       => $request->jumlah_penghuni_perempuan,
+                'jumlah_abk'                      => $request->jumlah_abk,
+                'ruang_keluarga_dan_ruang_tidur_id' => $request->ruang_keluarga_dan_tidur_id,
+                'jumlah_kamar_tidur'              => $request->jumlah_kamar_tidur,
+                'luas_rata_kamar_tidur'           => $request->luas_rata_kamar_tidur,
+                'jenis_fisik_bangunan_id'         => $request->jenis_fisik_bangunan_id,
+                'fungsi_rumah_id'                 => $request->fungsi_rumah_id,
+                'tipe_rumah_id'                   => $request->tipe_rumah_id,
+                'jumlah_lantai_bangunan'          => $request->jumlah_lantai_bangunan,
+            ]
+        );
+
+        $newFisik = $rumah->fisik()->first()->toArray();
+
+        $this->logArrayChanges(
+            $rumah->id_rumah,
+            'fisik_rumah',
+            $oldFisik,
+            $newFisik
+        );
+
+
+        // ======================================================
+        // UPDATE SANITASI RUMAH
+        // ======================================================
+        $oldSanitasi = $rumah->sanitasi
+            ? $rumah->sanitasi->toArray()
+            : [];
+
+        $rumah->sanitasi()->updateOrCreate(
+            ['rumah_id' => $rumah->id_rumah],
+            [
+                'jendela_lubang_cahaya_id'               => $request->jendela_lubang_cahaya_id,
+                'kondisi_jendela_lubang_cahaya_id'       => $request->kondisi_jendela_lubang_cahaya_id,
+                'ventilasi_id'                           => $request->ventilasi_id,
+                'keterangan_ventilasi'                   => $request->keterangan_ventilasi,
+                'kondisi_ventilasi_id'                   => $request->kondisi_ventilasi_id,
+                'kamar_mandi_id'                         => $request->kamar_mandi_id,
+                'kondisi_kamar_mandi_id'                 => $request->kondisi_kamar_mandi_id,
+                'jamban_id'                              => $request->jamban_id,
+                'kondisi_jamban_id'                      => $request->kondisi_jamban_id,
+                'sistem_pembuangan_air_kotor_id'         => $request->sistem_pembuangan_air_kotor_id,
+                'kondisi_sistem_pembuangan_air_kotor_id' => $request->kondisi_sistem_pembuangan_air_kotor_id,
+                'frekuensi_penyedotan_id'                => $request->frekuensi_penyedotan_id,
+                'sumber_air_minum_id'                    => $request->sumber_air_minum_id,
+                'kondisi_sumber_air_minum_id'            => $request->kondisi_sumber_air_minum_id,
+                'sumber_listrik_id'                      => $request->sumber_listrik_id,
+            ]
+        );
+
+        $newSanitasi = $rumah->sanitasi()->first()->toArray();
+
+        $this->logArrayChanges(
+            $rumah->id_rumah,
+            'sanitasi_rumah',
+            $oldSanitasi,
+            $newSanitasi
+        );
+
+
+        // ======================================================
+        // UPDATE BANTUAN RUMAH
+        // ======================================================
+        $oldBantuan = $rumah->bantuan
+            ? $rumah->bantuan->toArray()
+            : [];
+
+        $rumah->bantuan()->updateOrCreate(
+            ['rumah_id' => $rumah->id_rumah],
+            [
+                'pernah_mendapatkan_bantuan_id' => $request->pernah_mendapatkan_bantuan_id,
+                'no_kk_penerima'                => $request->no_kk_penerima,
+                'tahun_bantuan'                 => $request->tahun_bantuan,
+                'nama_bantuan'                  => $request->nama_bantuan,
+                'nama_program_bantuan'          => $request->nama_program_bantuan,
+                'nominal_bantuan'               => $request->nominal_bantuan,
+            ]
+        );
+
+        $newBantuan = $rumah->bantuan()->first()->toArray();
+
+        $this->logArrayChanges(
+            $rumah->id_rumah,
+            'bantuan_rumah',
+            $oldBantuan,
+            $newBantuan
+        );
+
+
+        // ======================================================
+        // UPDATE KEPEMILIKAN RUMAH
+        // ======================================================
+        $oldKepemilikan = $rumah->kepemilikan
+            ? $rumah->kepemilikan->toArray()
+            : [];
+
+        $rumah->kepemilikan()->updateOrCreate(
+            ['rumah_id' => $rumah->id_rumah],
+            [
+                'status_kepemilikan_tanah_id'   => $request->status_kepemilikan_tanah_id,
+                'bukti_kepemilikan_tanah_id'    => $request->bukti_kepemilikan_tanah_id,
+                'status_kepemilikan_rumah_id'   => $request->status_kepemilikan_rumah_id,
+                'nik_kepemilikan_rumah'         => $request->nik_kepemilikan_rumah,
+                'status_imb_id'                 => $request->status_imb_id,
+                'nomor_imb'                     => $request->nomor_imb,
+                'aset_rumah_ditempat_lain_id'   => $request->aset_rumah_ditempat_lain_id,
+                'aset_tanah_ditempat_lain_id'   => $request->aset_tanah_ditempat_lain_id,
+                'jenis_kawasan_lokasi_rumah_id' => $request->jenis_kawasan_lokasi_rumah_id,
+            ]
+        );
+
+        $newKepemilikan = $rumah->kepemilikan()->first()->toArray();
+
+        $this->logArrayChanges(
+            $rumah->id_rumah,
+            'kepemilikan_rumah',
+            $oldKepemilikan,
+            $newKepemilikan
+        );
+
+
+        // ======================================================
+        // HITUNG ULANG PENILAIAN RTLH (VERSI API)
+        // ======================================================
+        $this->hitungDanSimpanPenilaianAPI($rumah->id_rumah, $request);
+        // ======================================================
+        // UPDATE FOTO / DOKUMEN + HISTORY
+        // ======================================================
+        $oldDok = $rumah->dokumen ? $rumah->dokumen->toArray() : [];
+        $dok = $rumah->dokumen ?? new DokumenRumah(['rumah_id' => $rumah->id_rumah]);
+
+        $fotoFields = ['foto_kk','foto_ktp','foto_rumah_satu','foto_rumah_dua','foto_rumah_tiga','foto_imb'];
+
+        $changed = [];
+
+        foreach ($fotoFields as $f) {
+
+            if ($request->hasFile($f)) {
+
+                // hapus file lama bila ada
+                if (!empty($dok->$f) && Storage::disk('public')->exists($dok->$f)) {
+                    Storage::disk('public')->delete($dok->$f);
+                }
+
+                // simpan file baru
+                $path = $request->file($f)->storeAs(
+                    "rumah/{$rumah->id_rumah}",
+                    "{$f}_edited.jpg",
+                    'public'
+                );
+
+                $dok->$f = $path;
+
+                $changed[$f] = [
+                    'old' => $oldDok[$f] ?? null,
+                    'new' => $path,
+                ];
+            }
+        }
+
+        $dok->uploaded_by = $user->id_user;
+        $dok->uploaded_at = now();
+        $dok->save();
+
+        if (!empty($changed)) {
+            $this->logArrayChanges(
+                $rumah->id_rumah,
+                'dokumen_rumah',
+                $oldDok,
+                array_merge($oldDok, array_map(fn($c) => $c['new'], $changed))
+            );
+        }
+
+
+        // ======================================================
+        // COMMIT & RESPONSE
+        // ======================================================
+        DB::commit();
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Data rumah berhasil diperbarui',
+            'id_rumah'=> $rumah->id_rumah
+        ]);
+
+    } catch (\Exception $e) {
+
+        DB::rollBack();
+
+        return response()->json([
+            'status'  => false,
+            'message' => 'Gagal update: '.$e->getMessage(),
+        ], 500);
     }
+}
+
 
     private function hitungDanSimpanPenilaianAPI($rumahId, Request $request)
     {

@@ -69,6 +69,7 @@ use App\Models\SurveyQuestionAnswer;
 use App\Models\TblJenisPondasi;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -367,38 +368,106 @@ class Add extends Component
         }
     }
 
-    #[On('select2Changed')]
-    public function select2Changed($data)
-    {
-        $name = $data['name'] ?? null;
-        $value = $data['value'] ?? null;
+    // #[On('select2Changed')]
+    // public function select2Changed($data)
+    // {
+    //     $name = $data['name'] ?? null;
+    //     $value = $data['value'] ?? null;
 
-        if ($name && property_exists($this, $name)) {
-            $this->$name = $value;
-            logger("Livewire menerima {$name} = {$value}");
-        }
+    //     if ($name && property_exists($this, $name)) {
+    //         $this->$name = $value;
+    //         logger("Livewire menerima {$name} = {$value}");
+    //     }
 
-        if (str_starts_with($name, 'questionAnswers.')) {
+    //     if (str_starts_with($name, 'questionAnswers.')) {
 
-            // Contoh name: questionAnswers.6
-            Arr::set($this->questionAnswers, str_replace('questionAnswers.', '', $name), $value);
+    //         // Contoh name: questionAnswers.6
+    //         Arr::set($this->questionAnswers, str_replace('questionAnswers.', '', $name), $value);
 
-            logger("Updated $name = $value");
-        }
+    //         logger("Updated $name = $value");
+    //     }
 
 
-        // 🔹 Jika kecamatan berubah, filter kelurahan
-        if ($name === 'kecamatan_id') {
-            $this->filterKelurahan();
-        }
+    //     // 🔹 Jika kecamatan berubah, filter kelurahan
+    //     if ($name === 'kecamatan_id') {
+    //         $this->filterKelurahan();
+    //     }
 
-        if($name)
+    //     if($name)
 
-        if ($name === 'pernah_mendapatkan_bantuan_id') {
-            $this->updatedPernahMendapatkanBantuanId($value);
-        }
-        $this->dispatch('refreshChildQuestions');
+    //     if ($name === 'pernah_mendapatkan_bantuan_id') {
+    //         $this->updatedPernahMendapatkanBantuanId($value);
+    //     }
+    //     $this->dispatch('refreshChildQuestions');
+    // }
+
+       #[On('select2Changed')]
+public function select2Changed($data)
+{
+    $name  = $data['name'] ?? null;
+    $value = $data['value'] ?? null;
+
+    if (!$name) return;
+
+    // ============================================================
+    // 1️⃣  SPECIAL: QUESTION ANSWERS (selalu array / multiple)
+    // ============================================================
+    if (str_starts_with($name, 'questionAnswers.')) {
+
+        $key = str_replace('questionAnswers.', '', $name);
+  $question = SurveyQuestion::find($key);
+        
+         // 🔹 RADIO → single value
+    if ($question && $question->type === 'radio') {
+        $this->questionAnswers[$key] = (int) $value;
+        return;
     }
+
+    // 🔹 SELECT → single value
+    if ($question && $question->type === 'select') {
+        $this->questionAnswers[$key] = (int) $value;
+        return;
+    }
+
+
+        // Value harus array
+        if (!is_array($value)) {
+            $value = [$value];
+        }
+
+        Arr::set($this->questionAnswers, $key, $value);
+
+        logger("Updated questionAnswers[$key] = " . json_encode($value));
+        return;
+    }
+
+    // ============================================================
+    // 2️⃣  UNTUK PROPERTY BIASA
+    // ============================================================
+    if (property_exists($this, $name)) {
+
+        // JIKA VALUE ARRAY, TAPI PROPERTYNYA BUKAN ARRAY → SKIP
+        if (is_array($value) && !is_array($this->$name)) {
+            logger("⚠️ Skip set $name karena menerima array.");
+            return;
+        }
+
+        $this->$name = $value;
+
+        logger("Updated $name = " . json_encode($value));
+    }
+
+    // ============================================================
+    // 3️⃣  TRIGGER EVENT INTERNAL
+    // ============================================================
+    if ($name === 'kecamatan_id') {
+        $this->filterKelurahan();
+    }
+
+    if ($name === 'pernah_mendapatkan_bantuan_id') {
+        $this->updatedPernahMendapatkanBantuanId($value);
+    }
+}
 
     public function updatedPernahMendapatkanBantuanId($value)
     {
@@ -438,10 +507,11 @@ class Add extends Component
     }
 
     /** Ubah step saat tombol Next/Prev ditekan */
-    #[On('setStep')]
+   
     public function setStep($step)
     {
 
+        //  dd($step);
         if ($this->currentStep === 1 && $step > 1) {
             if (empty($this->latitude) || empty($this->longitude)) {
                 $this->dispatch('swal:error', [
@@ -1257,6 +1327,15 @@ class Add extends Component
                         ]);
                     }
                 }
+
+                 if ($q->type === 'file') {
+                    if (empty($answer) || count($answer) === 0) {
+                        return $this->dispatch('swal:error', [
+                            'title' => 'Pertanyaan Belum Terjawab',
+                            'text'  => "Pertanyaan '{$q->label}' wajib upload file.",
+                        ]);
+                    }
+                }
             }
            
         }
@@ -1351,13 +1430,24 @@ class Add extends Component
                 }
 
                 // SELECT dan RADIO → Simpan 1 ID option
-                elseif (in_array($q->type, ['select','radio'])) {
+               elseif (in_array($q->type, ['select', 'radio'])) {
+
+                    $optionValue = $answer;
+
+                    // Jika radio disimpan sebagai array → ambil item pertama
+                    if (is_array($answer)) {
+                        $optionValue = $answer[0] ?? null;
+                    }
+
                     SurveyQuestionAnswer::create([
                         'rumah_id'          => $rumah->id_rumah,
                         'question_id'       => $q->id,
-                        'answer_option_id'  => $answer,
+                        'answer_option_id'  => $optionValue,
+                        'answer_option_ids' => null, // pastikan yang multi kosong
+                        'answer_text'       => null, // pastikan text kosong
                     ]);
                 }
+
 
                 // CHECKBOX → Simpan sebagai array of IDs
                 elseif ($q->type === 'checkbox') {
@@ -1369,15 +1459,32 @@ class Add extends Component
                 }
 
                 // FILE (jika suatu saat kamu aktifkan)
-                elseif ($q->type === 'file' && $answer) {
-                    $filePath = $answer->store('survey_answers', 'public');
+                elseif ($q->type === 'file') {
+                    if (!empty($answer)) {
+                        $filePath = $answer->store('survey_answers', 'public');
 
-                    SurveyQuestionAnswer::create([
-                        'rumah_id'      => $rumah->id_rumah,
-                        'question_id'   => $q->id,
-                        'file_path'     => $filePath,
-                    ]);
+                        SurveyQuestionAnswer::create([
+                                    'rumah_id'    => $rumah->id_rumah,
+                                    'question_id' => $q->id,
+                                    'file_path'   => $filePath,
+                                ]);
+                    }
+
+                    // Ambil file dari inputan file, bukan dari questionAnswers
+                   // $file = $this->fileAnswers[$q->id] ?? null;
+
+                    // if ($answer && $answer instanceof \Illuminate\Http\UploadedFile) {
+
+                    //     $filePath = $answer->store('survey_answers', 'public');
+
+                    //     SurveyQuestionAnswer::create([
+                    //         'rumah_id'    => $rumah->id_rumah,
+                    //         'question_id' => $q->id,
+                    //         'file_path'   => $filePath,
+                    //     ]);
+                    // }
                 }
+
             }
 
             // 👨‍👩‍👧 Data sosial ekonomi

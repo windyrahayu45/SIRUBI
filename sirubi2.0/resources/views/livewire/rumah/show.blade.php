@@ -1195,130 +1195,121 @@
 
                             <div class="tab-pane fade" id="kt_user_view_overview_security" role="tabpanel">
 													<!--begin::Card-->
-                              @foreach($this->historyByDate as $date => $users)
-    <div class="card my-10">
+                    @foreach($this->historyByDate as $date => $times)
 
-        <!-- Tanggal -->
-        <div class="card-header">
-            <h3 class="fw-bold text-gray-800">
-                {{ \Carbon\Carbon::parse($date)->translatedFormat('d F Y') }}
-            </h3>
-        </div>
+                    <div class="card my-10">
 
-        <div class="card-body">
-
-            <div class="timeline">
-
-                @foreach($users as $userId => $changes)
-                <!-- Timeline item per User -->
-                <div class="timeline-item">
-
-                    <!-- Garis -->
-                    <div class="timeline-line w-40px"></div>
-
-                    <!-- Icon User -->
-                    <div class="timeline-icon symbol symbol-circle symbol-40px me-4">
-                        <div class="symbol-label bg-light">
-                            <span class="text-primary fw-bold">
-                                {{ strtoupper(substr($changes->first()->user->name, 0, 1)) }}
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Konten -->
-                    <div class="timeline-content mb-10">
-
-                        <!-- Header -->
-                        <div class="pe-3 mb-5">
-                            <div class="fw-bold fs-5 text-gray-700">
-                                {{ $changes->first()->user->name }}
-                            </div>
-
-                            <div class="text-muted fs-7">
-                                Total perubahan: {{ $changes->count() }}
-                            </div>
-
-                            <div class="text-muted fs-8">
-                                        {{ $changes->first()->changed_at->format('H:i') }} WIB
-                                    </div>
+                        <div class="card-header">
+                            <h3 class="fw-bold text-gray-800 mt-7">
+                                {{ \Carbon\Carbon::parse($date)->translatedFormat('d F Y') }}
+                            </h3>
                         </div>
 
-                        <!-- Detail Changes -->
-                        <div class="border rounded p-5">
+                        <div class="card-body">
+                            <div class="timeline">
+                                @php $no=1; @endphp
+                                @foreach($times as $time => $users)
+                                <div class="timeline-item">
 
-                            @foreach($changes as $item)
-                                <div class="d-flex flex-column border-bottom pb-3 mb-3">
+                                    <div class="timeline-line w-40px"></div>
 
-                                    <div class="fw-bold mb-1">
-                                        {{ $this->formatKategori($item->kategori) }} → 
-                                        <span class="text-primary">{{ $this->translateSurveyField($item->field) }}</span>
+                                    {{-- Waktu --}}
+                                    <div class="timeline-icon symbol symbol-circle symbol-40px me-4">
+                                        <div class="symbol-label bg-light fw-bold text-primary">
+                                            {{ $no++ }}
+                                        </div>
                                     </div>
 
-                                    
+                                    <div class="timeline-content mb-10">
 
-                                    <div class="fs-7 mt-1">
-                                        {{-- <span class="text-danger">Old:</span> {{ $this->translateValue($item->kategori, $item->field, $item->old_value) }} <br>
-                                        <span class="text-success">New:</span> {{ $this->translateValue($item->kategori, $item->field, $item->new_value) }} --}}
-                                        @if($item->field === 'updated_at')
+                                        <div class="mb-5">
+                                            <div class="fw-bold fs-5">Perubahan pada {{ $time }} WIB</div>
+                                            <div class="text-muted fs-7">
+                                                Total: {{ collect($users)->flatten()->count() }} perubahan
+                                            </div>
+                                        </div>
 
-                                        
-                                            <span class="text-danger fw-semibold">Data Lama:</span><br>
-                                            {{ $item->old_value ? \Carbon\Carbon::parse($item->old_value)->translatedFormat('d F Y • H:i') . ' WIB' : '-' }}
-                                            <br>
+                                        {{-- Group per user --}}
+                                        @foreach($users as $userId => $changes)
+                                        <div class="border rounded p-4 mb-5">
 
-                                            <span class="text-success fw-semibold">Data Baru:</span><br>
-                                            {{ $item->new_value ? \Carbon\Carbon::parse($item->new_value)->translatedFormat('d F Y • H:i') . ' WIB' : '-' }}
+                                            <div class="fw-bold fs-6 mb-2 text-gray-700">
+                                                {{ $changes->first()->user->name }}
+                                            </div>
 
-                                         @elseif($item->kategori === 'kk')
-                                            <div class="mb-2 fw-bold">📌 Perubahan KK/Anggota</div>
+                                            @foreach($changes as $item)
+                                            <div class="border-bottom pb-3 mb-3">
 
-                                            @if(empty($item->old_value))
-                                                <span class="badge badge-success">Tambah</span>
-                                                → {{ $this->translateValue('kk', $item->field, $item->new_value) }}
+                                                <div class="fw-bold">
+                                                    {{ $this->formatKategori($item->kategori) }} →
+                                                    <span class="text-primary">{{ $this->translateSurveyField($item->field) }}</span>
+                                                </div>
 
-                                            @elseif(empty($item->new_value))
-                                                <span class="badge badge-danger">Hapus</span>
-                                                → {{ $this->translateValue('kk', $item->field, $item->old_value) }}
+                                                {{-- Data Lama & Baru --}}
+                                                <div class="fs-7 mt-1">
 
-                                            @else
-                                                <table class="table table-sm table-bordered w-auto">
-                                                    <tr>
-                                                        <th>Data Lama</th>
-                                                        <td>{{ $this->translateValue('kk', $item->field, $item->old_value) }}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <th>Data Baru</th>
-                                                        <td>{{ $this->translateValue('kk', $item->field, $item->new_value) }}</td>
-                                                    </tr>
-                                                </table>
-                                            @endif
+                                                    {{-- FILE --}}
+                                                    @php
+                                                        $isFile =
+                                                            str_contains(strtolower($item->kategori), 'foto') ||
+                                                            str_contains(strtolower($item->kategori), 'file') ||
+                                                            (is_string($item->old_value) && str_contains($item->old_value, '/')) ||
+                                                            (is_string($item->new_value) && str_contains($item->new_value, '/'));
+                                                    @endphp
 
-                                        @else
-                                            {{-- Default --}}
-                                            <span class="text-danger">Data Lama:</span> 
-                                            {{ $this->translateValue($item->kategori, $item->field, $item->old_value) }} <br>
+                                                    @if ($isFile)
 
-                                            <span class="text-success">Data Baru:</span> 
-                                            {{ $this->translateValue($item->kategori, $item->field, $item->new_value) }}
-                                        @endif
+                                                        <span class="text-danger fw-bold">Lama:</span><br>
+                                                        @if ($item->old_value)
+                                                            <a href="{{ asset('storage/'.$item->old_value) }}" target="_blank">Lihat File Lama</a>
+                                                        @else
+                                                            <span class="text-muted">-</span>
+                                                        @endif
+                                                        <br>
+
+                                                        <span class="text-success fw-bold">Baru:</span><br>
+                                                        @if ($item->new_value)
+                                                            <a href="{{ asset('storage/'.$item->new_value) }}" target="_blank">Lihat File Baru</a>
+                                                        @else
+                                                            <span class="text-muted">-</span>
+                                                        @endif
+
+                                                    {{-- UPDATED_AT --}}
+                                                    @elseif($item->field === 'updated_at')
+
+                                                        <span class="text-danger fw-bold">Lama:</span>
+                                                        {{ $item->old_value ? \Carbon\Carbon::parse($item->old_value)->timezone('Asia/Jakarta')->format('d F Y • H:i') . ' WIB' : '-' }}
+                                                        <br>
+
+                                                        <span class="text-success fw-bold">Baru:</span>
+                                                        {{ $item->new_value ? \Carbon\Carbon::parse($item->new_value)->timezone('Asia/Jakarta')->format('d F Y • H:i') . ' WIB' : '-' }}
+
+                                                    {{-- DEFAULT --}}
+                                                    @else
+                                                        <span class="text-danger">Lama:</span>
+                                                        {{ $this->translateValue($item->kategori, $item->field, $item->old_value) }}<br>
+
+                                                        <span class="text-success">Baru:</span>
+                                                        {{ $this->translateValue($item->kategori, $item->field, $item->new_value) }}
+                                                    @endif
+
+                                                </div>
+
+                                            </div>
+                                            @endforeach
+
+                                        </div>
+                                        @endforeach
 
                                     </div>
-
                                 </div>
-                            @endforeach
+                                @endforeach
 
+                            </div>
                         </div>
+
                     </div>
-
-                </div>
-                @endforeach
-
-            </div>
-
-        </div>
-
-    </div>
-@endforeach
+                    @endforeach
 
 
 

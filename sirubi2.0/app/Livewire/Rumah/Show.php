@@ -232,20 +232,37 @@ class Show extends Component
         return $answer;
     }
 
-
-    public function getHistoryByDateProperty()
+public function getHistoryByDateProperty()
 {
     return RumahHistory::with('user')
         ->where('rumah_id', $this->rumah->id_rumah)
         ->orderBy('changed_at', 'desc')
         ->get()
+
+        // Paksa ke timezone WIB
+        ->map(function ($item) {
+            $item->changed_at = \Carbon\Carbon::parse($item->changed_at)
+                ->timezone('Asia/Jakarta');
+            return $item;
+        })
+
+        // 1️⃣ Group per tanggal
         ->groupBy(function ($item) {
             return $item->changed_at->format('Y-m-d');
         })
-        ->map(function ($group) {
-            return $group->groupBy('changed_by');
+
+        // 2️⃣ Group per jam-menit-detik
+        ->map(function ($itemsPerDate) {
+            return $itemsPerDate->groupBy(function ($item) {
+                return $item->changed_at->format('H:i:s');
+            })
+            // 3️⃣ Dalam setiap waktu, group lagi per user
+            ->map(function ($itemsPerTime) {
+                return $itemsPerTime->groupBy('changed_by');
+            });
         });
 }
+
 
     public function cetakPdf()
     {
