@@ -15,6 +15,8 @@ class PengaduanRumah extends Model
         'rw',
         'keterangan',
         'status',
+        'kecamatan_id',
+        'kelurahan_id',
         'catatan_admin',
     ];
 

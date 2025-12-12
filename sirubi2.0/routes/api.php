@@ -15,7 +15,12 @@ Route::post('auth/refreshToken', [AuthController::class, 'refreshToken']);
 Route::get('/rumah-export', [AuthController::class, 'export']);
 Route::get('/exportXlsx', [AuthController::class, 'exportXlsx2']);
 Route::get('/pengaduan/check', [PengaduanController::class, 'check']);
-    Route::post('/pengaduan/submit', [PengaduanController::class, 'store']);
+Route::post('/pengaduan/submit', [PengaduanController::class, 'store']);
+
+
+Route::get('/kecamatan', [PengaduanController::class, 'getKecamatan']);
+Route::get('/kecamatan/{id}/kelurahan', [PengaduanController::class, 'getKelurahan']);
+
 
 Route::middleware('jwt')->group(function () {
 

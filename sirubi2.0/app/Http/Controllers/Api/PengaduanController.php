@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Storage;
 
 use App\Models\KepalaKeluarga;
 use App\Models\AnggotaKeluarga;
+use App\Models\IKecamatan;
+use App\Models\IKelurahan;
 use App\Models\PengaduanFoto;
 use App\Models\Rumah;
 use App\Models\PengaduanRumah;
@@ -75,6 +77,42 @@ class PengaduanController extends Controller
         ]);
     }
 
+    public function getKecamatan()
+    {
+        $data = IKecamatan::orderBy('nama_kecamatan')->get([
+            'id_kecamatan',
+            'nama_kecamatan'
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'kecamatan' => $data
+        ]);
+    }
+
+
+    /**
+     * ===========================================================
+     *  API GET KELURAHAN BERDASARKAN KECAMATAN
+     *  GET /api/kecamatan/{id}/kelurahan
+     * ===========================================================
+     */
+    public function getKelurahan($id)
+    {
+        $kelurahan = IKelurahan::where('kecamatan_id', $id)
+            ->orderBy('nama_kelurahan')
+            ->get([
+                'id_kelurahan',
+                'nama_kelurahan'
+            ]);
+
+        return response()->json([
+            'status' => true,
+            'kecamatan_id' => $id,
+            'kelurahan' => $kelurahan
+        ]);
+    }
+
 
     /**
      * ===========================================================
@@ -83,17 +121,33 @@ class PengaduanController extends Controller
      */
     public function store(Request $request)
     {
+        
         $validator = Validator::make($request->all(), [
+
             'nik'      => 'required|string',
             'kk'       => 'required|string',
-            'alamat'   => 'required|string',
-            'rt'       => 'nullable|string',
-            'rw'       => 'nullable|string',
-            'keterangan'       => 'required|string',
 
+            // rumah_id opsional → kalau ada berarti user terdata
+            'rumah_id' => 'nullable|integer|exists:rumah,id_rumah',
+
+            // alamat wajib hanya jika rumah_id kosong
+            'alamat'       => 'required_if:rumah_id,null|string',
+            'rt'           => 'required_if:rumah_id,null|string',
+            'rw'           => 'required_if:rumah_id,null|string',
+            'kecamatan_id' => 'required_if:rumah_id,null|integer',
+            'kelurahan_id' => 'required_if:rumah_id,null|integer',
+
+            'keterangan'   => 'required|string',
 
             'foto.*'      => 'required|image|max:5120',
             'deskripsi.*' => 'nullable|string',
+        ], [
+            // Custom error biar lebih ramah user
+            'alamat.required_if' => 'Alamat wajib diisi jika rumah tidak ditemukan.',
+            'rt.required_if' => 'RT wajib diisi jika rumah tidak ditemukan.',
+            'rw.required_if' => 'RW wajib diisi jika rumah tidak ditemukan.',
+            'kecamatan_id.required_if' => 'Kecamatan wajib diisi jika rumah tidak ditemukan.',
+            'kelurahan_id.required_if' => 'Kelurahan wajib diisi jika rumah tidak ditemukan.',
         ]);
 
         if ($validator->fails()) {
@@ -103,29 +157,30 @@ class PengaduanController extends Controller
             ], 422);
         }
 
-        // Cari rumah berdasarkan KK (jika ada)
-        $kkData = KepalaKeluarga::with('rumah')
-                ->where('no_kk', $request->kk)
-                ->first();
-
-        $rumahId = $kkData->rumah->id_rumah ?? null;
-
-        // =======================================
+        // ======================================================
         // SIMPAN DATA PENGADUAN
-        // =======================================
+        // ======================================================
+
         $pengaduan = PengaduanRumah::create([
-            'rumah_id' => $rumahId,
-            'nik'      => $request->nik,
-            'kk'       => $request->kk,
-            'alamat'   => $request->alamat,
-            'rt'       => $request->rt,
-            'rw'       => $request->rw,
-            'keterangan' => $request->keterangan
+            'rumah_id'     => $request->rumah_id,   // langsung dari parameter
+            'nik'          => $request->nik,
+            'kk'           => $request->kk,
+
+            // Jika rumah_id ada → alamat boleh null
+            'alamat'       => $request->alamat,
+            'rt'           => $request->rt,
+            'rw'           => $request->rw,
+
+            'kecamatan_id' => $request->kecamatan_id,
+            'kelurahan_id' => $request->kelurahan_id,
+
+            'keterangan'   => $request->keterangan
         ]);
 
-        // =======================================
+        // ======================================================
         // SIMPAN FOTO-FOTO MULTIPLE
-        // =======================================
+        // ======================================================
+
         if ($request->hasFile('foto')) {
             foreach ($request->file('foto') as $index => $file) {
 
@@ -133,8 +188,8 @@ class PengaduanController extends Controller
 
                 PengaduanFoto::create([
                     'pengaduan_id' => $pengaduan->id,
-                    'file_path' => $path,
-                    'deskripsi' => $request->deskripsi[$index] ?? null,
+                    'file_path'    => $path,
+                    'deskripsi'    => $request->deskripsi[$index] ?? null,
                 ]);
             }
         }
@@ -145,4 +200,6 @@ class PengaduanController extends Controller
             'pengaduan_id' => $pengaduan->id
         ]);
     }
+
+
 }
