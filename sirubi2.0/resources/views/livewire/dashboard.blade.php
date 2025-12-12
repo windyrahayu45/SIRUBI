@@ -748,7 +748,7 @@ document.addEventListener("livewire:navigated", () => {
 
 <script>
 document.addEventListener("livewire:init", () => {
-
+    // alert('2')
     let chart = null;
    
     function renderChart(labels, data) {
@@ -810,7 +810,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }, function(start, end) {
 
         display.innerHTML = start.format("DD MMM YYYY") + " - " + end.format("DD MMM YYYY");
-       
+      // alert('12')
         // Kirim ke Livewire
        Livewire.dispatch('updateRange', {
             start: start.format("YYYY-MM-DD"),

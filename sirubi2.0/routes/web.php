@@ -10,6 +10,7 @@ use App\Livewire\Dashboard;
 use App\Livewire\Data;
 use App\Livewire\Dokumentasi;
 use App\Livewire\Home;
+use App\Livewire\ListPengaduan;
 use App\Livewire\Pengaduan as LivewirePengaduan;
 use App\Livewire\Peta;
 use App\Livewire\Polygon;
@@ -72,12 +73,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/users', Users::class)->name('users');
     Route::get('/pertanyaan', Daftar::class)->name('pertanyaan');
     Route::get('/setting', Setting::class)->name('setting');
+    Route::get('/list', ListPengaduan::class)->name('list');
     Route::get('/datatable/rumah', [Data::class, 'getData'])->name('livewire.datatables.rumah');
     Route::get('/datatable/bantuan', [Bantuan::class, 'getData'])->name('livewire.datatables.bantuan');
     Route::get('/datatable/polygon', [Polygon::class, 'getData'])->name('livewire.datatables.polygon');
     Route::get('/datatable/dokumentasi', [Dokumentasi::class, 'getData'])->name('livewire.datatables.dokumentasi');
     Route::get('/datatable/question', [Daftar::class, 'getData'])->name('livewire.datatables.question');
     Route::get('/datatable/user', [Users::class, 'getData'])->name('livewire.datatables.user');
+    Route::get('/datatable/pengaduan', [ListPengaduan::class, 'getData'])->name('livewire.datatables.pengaduan');
     Route::get('/master', \App\Livewire\MasterCrud::class)->name('master.crud');
 
     Route::get('/datatable/rumah/detail/{id}', function ($id) {
