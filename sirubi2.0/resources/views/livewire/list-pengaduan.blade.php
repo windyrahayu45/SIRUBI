@@ -154,7 +154,11 @@
                         <div class="mb-0">
                             <h3 class="fs-6 fw-semibold mb-2">Keterangan Pengaduan</h3>
                             <div class="text-gray-700 fw-semibold">
-                                {{ $detailData['keterangan'] ?? '-' }}
+                                {{ $detailData['keterangan'] ?? '-' }} <br>
+                               <p><b>Status Rumah:</b> <span class="badge {{ !empty($detailData['rumah_id']) ? 'badge-light-success' : 'badge-light-danger' }} fw-bold">
+    {{ !empty($detailData['rumah_id']) ? 'Terdata' : 'Rumah Belum Terdata' }}
+</span></p>
+
                             </div>
                         </div>
                         
