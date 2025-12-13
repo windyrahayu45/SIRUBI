@@ -127,14 +127,14 @@
             <!--======================
                 BODY
             =======================-->
-            <div class="modal-body scroll-y mx-5 mx-xl-10 pt-0 pb-10">
+            <div class="modal-body mx-5 mx-xl-10 pt-0 pb-10">
 
-                <div class="row g-10">
+                <div class="row g-10 mt-10">
 
                     <!-- LEFT SIDE -->
                     <div class="col-md-6">
                         <div class="mb-8">
-                            <h3 class="fs-5 fw-bold mb-4">Identitas Pelapor</h3>
+                            <h3 class="fs-6 fw-semibold mb-2">Identitas Pelapor</h3>
 
                             <div class="fs-6 text-gray-700">
                                 <p><b>NIK:</b> {{ $detailData['nik'] ?? '-' }}</p>
@@ -146,31 +146,36 @@
                             </div>
                         </div>
 
-                        <div class="mb-0">
-                            <h3 class="fs-5 fw-bold mb-4">Keterangan Pengaduan</h3>
-                            <div class="text-gray-700 fw-semibold">
-                                {{ $detailData['keterangan'] ?? '-' }}
-                            </div>
-                        </div>
                     </div>
 
                     <!-- RIGHT SIDE -->
                     <div class="col-md-6">
-                        <h3 class="fs-5 fw-bold mb-4">Foto Pengaduan</h3>
+                        
+                        <div class="mb-0">
+                            <h3 class="fs-6 fw-semibold mb-2">Keterangan Pengaduan</h3>
+                            <div class="text-gray-700 fw-semibold">
+                                {{ $detailData['keterangan'] ?? '-' }}
+                            </div>
+                        </div>
+                        
+                    </div>
 
-                        <div class="row g-5 mh-350px scroll-y pe-3">
+                    <div class="col-md-12">
+                        <h3 class="fs-6 fw-semibold mb-2">Foto Pengaduan</h3>
+
+                        <div class="row g-5 mh-350px  pe-3">
 
                             @foreach ($detailFotos as $item)
                                 <div class="col-6">
 
-                                    <div class="symbol symbol-150px symbol-circle mb-3"
-                                         style="cursor: pointer; overflow:hidden;"
-                                         data-bs-toggle="modal"
-                                         data-bs-target="#previewModal"
-                                         data-src="{{ asset('storage/' . $item->file_path) }}">
-
-                                        <img src="{{ asset('storage/' . $item->file_path) }}"
-                                             class="w-100 h-100 object-fit-cover">
+                                   <div class="overlay">
+                                              
+                                                        <img src="{{ asset('storage/' . $item->file_path) }}"
+                                                            class="img-fluid w-100 h-250px object-fit-cover rounded-top preview-foto"
+                                                            style="max-height: 200px; object-fit: cover; cursor: pointer;"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#previewModal"
+                                                            data-src="{{ asset('storage/' . $item->file_path) }}">
                                     </div>
 
                                     <div class="text-center text-gray-600 small fw-semibold">

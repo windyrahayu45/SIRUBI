@@ -23,11 +23,10 @@ class PengaduanController extends Controller
      *  API 1 → CEK NIK & KK (NO SAVE)
      * ===========================================================
      */
-    public function check(Request $request)
+   public function check(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'nik' => 'required|string',
-            'kk'  => 'required|string',
         ]);
 
         if ($validator->fails()) {
@@ -37,45 +36,49 @@ class PengaduanController extends Controller
             ], 422);
         }
 
-        // Cari KK
-        $kkData = KepalaKeluarga::with(['rumah', 'anggota'])
-                ->where('no_kk', $request->kk)
-                ->first();
+        // 🔍 Cari anggota keluarga berdasarkan NIK
+        $anggota = AnggotaKeluarga::with([
+            'kepalaKeluarga.rumah',
+            'kepalaKeluarga.anggota'
+        ])->where('nik', $request->nik)->first();
 
-        if (!$kkData) {
+        // ❌ NIK tidak ditemukan
+        if (!$anggota) {
             return response()->json([
                 'status' => true,
                 'found'  => false,
-                'status_verifikasi' => 'kk_tidak_ditemukan',
-                'rumah'   => null,
+                'status_verifikasi' => 'nik_tidak_ditemukan',
+                'rumah'  => null,
+                'kepala_keluarga' => null,
                 'anggota' => [],
             ]);
         }
 
-        // Cek NIK pada anggota keluarga
-        $anggota = $kkData->anggota->where('nik', $request->nik)->first();
+        $kk = $anggota->kepalaKeluarga;
 
-        if (!$anggota) {
+        // ❌ Data KK rusak / tidak terhubung
+        if (!$kk) {
             return response()->json([
                 'status' => true,
                 'found'  => true,
-                'status_verifikasi' => 'nik_tidak_cocok',
-                'rumah'   => $kkData->rumah,
-                'kepala_keluarga' => $kkData,
-                'anggota' => $kkData->anggota,
+                'status_verifikasi' => 'kk_tidak_terhubung',
+                'rumah'  => null,
+                'kepala_keluarga' => null,
+                'anggota' => [],
             ]);
         }
 
-        // ✔ Jika NIK & KK cocok
+        // ✔ NIK valid & terhubung ke KK
         return response()->json([
             'status' => true,
             'found'  => true,
             'status_verifikasi' => 'terverifikasi',
-            'rumah'   => $kkData->rumah,
-            'kepala_keluarga' => $kkData,
-            'anggota' => $kkData->anggota,
+            'rumah'  => $kk->rumah,
+            'kepala_keluarga' => $kk,
+            'anggota' => $kk->anggota,
         ]);
     }
+
 
     public function getKecamatan()
     {
