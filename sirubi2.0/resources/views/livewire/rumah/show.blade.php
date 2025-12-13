@@ -363,7 +363,7 @@
                                                 </tr>
                                                 <tr>
                                                     <td>Jenis Pondasi</td>
-                                                    <td>{{ $rumah->fisik?->jenisPondasi?->jenis_pondasi ?? '-' }}</td>
+                                                    <td>{{ $rumah->fisik?->jenisPondasi?->nama_jenis_pondasi ?? '-' }}</td>
                                                 </tr>
                                                 <tr>
                                                     <td>Kondisi Pondasi</td>
@@ -549,16 +549,16 @@
                                                 <td>Tipe Rumah</td>
                                                 <td>{{ $rumah->fisik->tipeRumah->tipe_rumah ?? '-' }}</td>
                                             </tr>
-                                            <tr>
-                                                <td>Status DTKS</td>
-                                                <td>
-                                                    @if(($rumah->status_dtks ?? 'Tidak') === 'Ya')
-                                                        <span class="badge badge-light-success fw-bold px-3 py-2">Terdaftar</span>
-                                                    @else
-                                                        <span class="badge badge-light-secondary fw-bold px-3 py-2">Tidak</span>
-                                                    @endif
-                                                </td>
-                                            </tr>
+                                           <tr>
+                                                        <td>Status DTKS</td>
+                                                        <td>
+                                                            @if($rumah->sosialEkonomi->status_dtks_id == 1)
+                                                                <span class="badge badge-light-success fw-bold px-3 py-2">Terdaftar</span>
+                                                            @else
+                                                                <span class="badge badge-light-secondary fw-bold px-3 py-2">Tidak Terdaftar</span>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
                                             <tr>
                                                 <td>Tahun Pembangunan Rumah</td>
                                                 <td>{{ $rumah->tahun_pembangunan_rumah ?? '-' }}</td>
@@ -868,7 +868,7 @@
                                                         <td>{{ $rumah->sosialEkonomi->jenisKelamin->jenis_kelamin ?? '-' }}</td>
                                                     </tr>
                                                     <tr>
-                                                        <td>Kecamatan</td>
+                                                        <td>Usia</td>
                                                         <td>{{ $rumah->sosialEkonomi->usia ?? '-' }} Tahun</td>
                                                     </tr>
                                                     <tr>
@@ -936,7 +936,7 @@
                                                         <td>
                                                             {{ $rumah->bantuan->pernahMendapatkanBantuan->pernah_mendapatkan_bantuan ?? '-' }}
 
-                                                            @if(!empty($rumah->kepemilikan?->nik_kepemilikan_rumah))
+                                                            {{-- @if(!empty($rumah->kepemilikan?->nik_kepemilikan_rumah))
                                                                 <div class="mt-2">
                                                                     <span class="fw-bold text-gray-700 me-2">Pemilik Rumah:</span>
                                                                     <a href="{{ url('rumah/nik/' . $rumah->kepemilikan->nik_kepemilikan_rumah) }}"
@@ -945,7 +945,7 @@
                                                                     {{ $rumah->kepemilikan->nik_kepemilikan_rumah }}
                                                                     </a>
                                                                 </div>
-                                                            @endif
+                                                            @endif --}}
                                                         </td>
                                                     </tr>
                                                 </tbody>
